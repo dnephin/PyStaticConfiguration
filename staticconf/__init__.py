@@ -1,0 +1,3 @@
+
+from staticconf.config import *
+
