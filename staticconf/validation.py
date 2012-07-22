@@ -9,21 +9,24 @@ from staticconf.errors import ValidationError
 def validate_string(value):
     return unicode(value)
 
+
 def validate_bool(value):
     return bool(value)
 
-def validate_int(value):
+
+def validate_numeric(type_func, value):
     try:
-        return int(value)
+        return type_func(value)
     except ValueError:
-        raise ValidationError("Invalid integer: %s" % value)
+        raise ValidationError("Invalid %s: %s" % (type_func.__name__, value))
+
+
+def validate_int(value):
+    return validate_numeric(int, value)
 
 
 def validate_float(value):
-    try:
-        return float(value)
-    except ValueError:
-        raise ValidationError("Invalid float: %s" % value)
+    return validate_numeric(float, value)
 
 
 date_formats = [
@@ -53,6 +56,7 @@ time_formats = [
     "%H:%M:%S",
     "%I:%M:%S %p"
 ]
+
 
 def validate_time(value):
     for format in time_formats:

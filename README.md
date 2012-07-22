@@ -39,7 +39,9 @@ Documentation
 ### Use the configuration
 
 The following calls are used to retrieve a value from the configuration.  They
-can be used at import time before a configuration has been loaded (see examples).
+can be called at import time before a configuration has been loaded, but
+trying to use the returned value before a configuration is loaded will raise
+`ConfigurationError`.
 
     staticconf.get(config_key, [default=None])
     staticconf.get_bool(config_key, [default=None])
@@ -57,20 +59,22 @@ can be used at import time before a configuration has been loaded (see examples)
         returns a proxy around the future configuration value. This object can
         be used directly as the proxied object.
 
+        raises `ConfigurationError` if the value in the config fails to validate.
+
 
 ### Load the configuration
 
 Load one or more configurations using the following methods. Each configuration
 overrides any duplicate keys in the previous.
 
-    staticconf.AutoConfiguration(base_dir='.', **kwargs),
-    staticconf.YamlConfiguration(filename, **kwargs),
-    staticconf.JSONConfiguration(filename, **kwargs),
-    staticconf.INIConfiguration(filename, **kwargs),
+    staticconf.AutoConfiguration(base_dir='.', **kwargs)
+    staticconf.YamlConfiguration(filename, **kwargs)
+    staticconf.JSONConfiguration(filename, **kwargs)
+    staticconf.INIConfiguration(filename, **kwargs)
     staticconf.XMLConfiguration(filename, **kwargs)
-    staticconf.ListConfiguration(sequence, **kwargs),
-    staticconf.DictConfiguration(dict, **kwargs),
-    staticconf.PythonConfiguration(module_name, **kwargs),
+    staticconf.ListConfiguration(sequence, **kwargs)
+    staticconf.DictConfiguration(dict, **kwargs)
+    staticconf.PythonConfiguration(module_name, **kwargs)
 
         error_on_unknown:   raises an error if there are keys in the config that
                             have not been retrieved (using get_*).

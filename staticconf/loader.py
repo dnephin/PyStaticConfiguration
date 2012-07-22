@@ -1,4 +1,18 @@
-"""Load configuration data from a file."""
+"""
+Load configuration data from different file formats and python structures.
+Nested dictionaries are flattened using dotted notation.
+
+Create your own loader:
+
+    from staticconf import loader
+    def custom_loader(*args):
+        ...
+        return config_dict
+    CustomConfiguration = loader.build_loader(custom_loader)
+    CustomConfiguration()
+
+
+."""
 import logging
 import os
 from staticconf import config
@@ -68,8 +82,8 @@ def list_loader(seq):
     return dict(pair.split('=', 1) for pair in seq)
 
 
-def auto_loader(base_dir='.'):
-    auto_configurations = [
+def auto_loader(base_dir='.', auto_configurations=None):
+    auto_configurations = auto_configurations or [
         (yaml_loader,       'config.yaml'),
         (json_loader,       'config.json'),
         (ini_file_loader,   'config.ini'),
@@ -121,11 +135,11 @@ def xml_loader(filename):
     return build_from_element(tree.getroot())
 
 
-YamlConfiguration = build_loader(yaml_loader)
-JSONConfiguration = build_loader(json_loader)
-ListConfiguration = build_loader(list_loader)
-DictConfiguration = build_loader(lambda d: d)
-AutoConfiguration = build_loader(auto_loader)
+YamlConfiguration   = build_loader(yaml_loader)
+JSONConfiguration   = build_loader(json_loader)
+ListConfiguration   = build_loader(list_loader)
+DictConfiguration   = build_loader(lambda d: d)
+AutoConfiguration   = build_loader(auto_loader)
 PythonConfiguration = build_loader(python_loader)
-INIConfiguration = build_loader(ini_file_loader)
-XMLConfiguration = build_loader(xml_loader)
+INIConfiguration    = build_loader(ini_file_loader)
+XMLConfiguration    = build_loader(xml_loader)

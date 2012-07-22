@@ -1,7 +1,16 @@
+"""
+Proxy a configuration value. Defers the lookup until the value is used, so that
+values can be read statically at import time.
+
+
+"""
 import operator
 from staticconf import errors
 
 class UndefToken(object):
+    """A token to represent an undefined value, so that None can be used
+    as a default value.
+    """
     pass
 
 
@@ -20,7 +29,7 @@ _special_names = [
     '__rmul__', '__ror__', '__rpow__', '__rrshift__', '__rshift__', '__rsub__',
     '__rtruediv__', '__rxor__', '__setitem__', '__setslice__', '__sub__',
     '__truediv__', '__xor__', 'next', '__nonzero__'
-    ]
+]
 
 
 class ValueProxy(object):
