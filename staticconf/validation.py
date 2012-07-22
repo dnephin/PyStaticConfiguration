@@ -16,7 +16,7 @@ def validate_int(value):
     try:
         return int(value)
     except ValueError:
-        raise ValiationError("Invalid integer: %s" % value)
+        raise ValidationError("Invalid integer: %s" % value)
 
 
 def validate_float(value):

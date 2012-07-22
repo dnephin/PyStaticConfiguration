@@ -2,8 +2,9 @@ import os
 import mock
 from testify import assert_equal, TestCase, run, teardown, setup
 import tempfile
+import textwrap
 
-from staticconf import loader, config
+from staticconf import loader
 
 class LoaderTestCase(TestCase):
 
@@ -51,11 +52,11 @@ class FlattenDictTestCase(LoaderTestCase):
 
 class YamlConfigurationTestCase(LoaderTestCase):
 
-    config = """
-somekey:
-    token: "smarties"
-another: blind
-    """
+    config = textwrap.dedent("""
+        somekey:
+            token: "smarties"
+        another: blind
+    """)
 
     def test_loader(self):
         tmpfile = tempfile.NamedTemporaryFile()
@@ -114,6 +115,51 @@ class PythonConfigurationTestCase(LoaderTestCase):
         config_data = loader.PythonConfiguration(self.module)
         assert_equal(config_data['some_value'], 'test')
         assert_equal(config_data['more_values.depth'], 'one')
+
+
+class INIConfigurationTestCase(LoaderTestCase):
+
+    contents = textwrap.dedent("""
+        [Something]
+        mars=planet
+        stars=sun
+
+        [Business]
+        is_good=True
+        always=False
+        why=not today
+    """)
+
+    def test_prop_configuration(self):
+        tmpfile = tempfile.NamedTemporaryFile()
+        tmpfile.write(self.contents)
+        tmpfile.flush()
+        config_data = loader.INIConfiguration(tmpfile.name)
+        assert_equal(config_data['Something.mars'], 'planet')
+        assert_equal(config_data['Business.why'], 'not today')
+
+
+class XMLConfigurationTestCase(TestCase):
+
+    contents = """
+        <config>
+            <something a="here">
+                <depth>1</depth>
+                <stars b="there">ok</stars>
+            </something>
+            <another>foo</another>
+        </config>
+    """
+
+    def test_xml_configuration(self):
+        tmpfile = tempfile.NamedTemporaryFile()
+        tmpfile.write(self.contents)
+        tmpfile.flush()
+        config_data = loader.XMLConfiguration(tmpfile.name)
+        assert_equal(config_data['something.a'], 'here')
+        assert_equal(config_data['something.stars.value'], 'ok')
+        assert_equal(config_data['something.stars.b'], 'there')
+        assert_equal(config_data['another.value'], 'foo')
 
 
 if __name__ == "__main__":

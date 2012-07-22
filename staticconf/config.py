@@ -2,7 +2,7 @@
 Singleton configuration object and value proxies.
 """
 import logging
-from staticconf import proxy, validation, errors
+from staticconf import proxy, errors
 
 log = logging.getLogger(__name__)
 

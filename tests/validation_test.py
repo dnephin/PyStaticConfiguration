@@ -1,5 +1,5 @@
 import datetime
-from testify import assert_equal, run, setup, TestCase
+from testify import assert_equal, run, TestCase
 from staticconf import validation
 
 
@@ -29,3 +29,7 @@ class DateTimeValidationTestCase(TestCase):
         actual = validation.validate_time("4:12:14 pm")
         expected = datetime.time(16, 12, 14)
         assert_equal(actual, expected)
+
+
+if __name__ == "__main__":
+    run()

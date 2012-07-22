@@ -8,7 +8,9 @@ __all__ = [
     'ListConfiguration',
     'DictConfiguration',
     'AutoConfiguration',
-    'PythonConfiguration'
+    'PythonConfiguration',
+    'INIConfiguration',
+    'XMLConfiguration'
 ]
 
 
@@ -59,6 +61,8 @@ def auto_loader(base_dir='.'):
     auto_configurations = [
         (yaml_loader, 'config.yaml'),
         (json_loader, 'config.json'),
+        (ini_file_loader, 'config.ini'),
+        (xml_loader, 'config.xml'),
     ]
 
     for config_loader, config_arg in auto_configurations:
@@ -78,9 +82,39 @@ def python_loader(module_name):
     return config_dict
 
 
+def ini_file_loader(filename):
+    import ConfigParser
+    parser = ConfigParser.SafeConfigParser()
+    parser.read([filename])
+    config_dict = {}
+
+    for section in parser.sections():
+        for key, value in parser.items(section, True):
+            config_dict['%s.%s' % (section, key)] = value
+
+    return config_dict
+
+
+def xml_loader(filename):
+    from xml.etree import ElementTree
+
+    def build_from_element(element):
+        items = dict(element.items())
+        items.update((child.tag, build_from_element(child)) for child in element)
+        # TODO: value overrides, and childs override attributes
+        if element.text:
+            items['value'] = element.text
+        return items
+
+    tree = ElementTree.parse(filename)
+    return build_from_element(tree.getroot())
+
+
 YamlConfiguration = build_loader(yaml_loader)
 JSONConfiguration = build_loader(json_loader)
 ListConfiguration = build_loader(list_loader)
 DictConfiguration = build_loader(lambda d: d)
 AutoConfiguration = build_loader(auto_loader)
 PythonConfiguration = build_loader(python_loader)
+INIConfiguration = build_loader(ini_file_loader)
+XMLConfiguration = build_loader(xml_loader)

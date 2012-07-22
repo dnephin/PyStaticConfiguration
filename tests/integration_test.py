@@ -1,4 +1,4 @@
-from testify import assert_equal, TestCase, run, setup, teardown
+from testify import assert_equal, TestCase, run, teardown
 
 import staticconf
 from staticconf import config
