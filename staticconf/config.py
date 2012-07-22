@@ -6,9 +6,6 @@ from staticconf import proxy, validation, errors
 
 log = logging.getLogger(__name__)
 
-__all__ = ['get', 'get_int', 'get_float', 'get_date', 'get_datetime']
-
-
 value_proxies = []
 configuration_values = {}
 
@@ -37,14 +34,6 @@ def build_getter(validator):
         return value_proxy
 
     return proxy_register
-
-
-get             = build_getter(validation.no_validation)
-get_string      = build_getter(validation.validate_string)
-get_int         = build_getter(validation.validate_int)
-get_float       = build_getter(validation.validate_float)
-get_date        = build_getter(validation.validate_date)
-get_datetime    = build_getter(validation.validate_datetime)
 
 
 def validate_keys(keys, error_on_unknown):

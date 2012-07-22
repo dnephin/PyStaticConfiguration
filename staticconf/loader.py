@@ -5,7 +5,10 @@ from staticconf import config
 __all__ = [
     'YamlConfiguration',
     'JSONConfiguration',
-    'ListConfiguration'
+    'ListConfiguration',
+    'DictConfiguration',
+    'AutoConfiguration',
+    'PythonConfiguration'
 ]
 
 
@@ -52,22 +55,32 @@ def list_loader(seq):
     return dict(pair.split('=', 1) for pair in seq)
 
 
-def auto_configuration(base_dir='.'):
+def auto_loader(base_dir='.'):
     auto_configurations = [
         (yaml_loader, 'config.yaml'),
         (json_loader, 'config.json'),
     ]
 
-
     for config_loader, config_arg in auto_configurations:
         path = os.path.join(base_dir, config_arg)
         if os.path.isfile(path):
-            return config_loader(config_arg)
+            return config_loader(path)
     return {}
+
+
+def python_loader(module_name):
+    module = __import__(module_name, fromlist=['*'])
+    config_dict = {}
+    for name in dir(module):
+        if name.startswith('__'):
+            continue
+        config_dict[name] = getattr(module, name)
+    return config_dict
 
 
 YamlConfiguration = build_loader(yaml_loader)
 JSONConfiguration = build_loader(json_loader)
 ListConfiguration = build_loader(list_loader)
 DictConfiguration = build_loader(lambda d: d)
-AutoConfiguration = build_loader(auto_configuration)
+AutoConfiguration = build_loader(auto_loader)
+PythonConfiguration = build_loader(python_loader)
