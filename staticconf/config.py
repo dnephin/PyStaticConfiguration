@@ -2,6 +2,8 @@
 Singleton configuration object and value proxies.
 """
 import logging
+import os
+import time
 from staticconf import proxy, errors
 
 log = logging.getLogger(__name__)
@@ -53,3 +55,36 @@ def validate_keys(keys, error_on_unknown):
         log.warn(msg)
         return
     raise errors.ConfigurationError(msg)
+
+
+class ConfigurationWatcher(object):
+    """Watches a file for modification and reloads the configuration
+    when it's modified.  Accepts a max_interval to throttle checks.
+    """
+
+    def __init__(self, config_loader, filename, max_interval=0, **kwargs):
+        self.config_loader  = config_loader
+        self.filename       = os.path.abspath(filename)
+        self.max_interval   = max_interval
+        self.loader_kwargs  = kwargs
+        self.last_check     = time.time()
+        self.last_modified  = os.path.getmtime(self.filename)
+
+    @property
+    def should_check(self):
+        return self.last_check + self.max_interval <= time.time()
+
+    def reload_if_changed(self, force=False):
+        if (force or self.should_check) and self.file_modified():
+            return self.reload()
+
+    def file_modified(self):
+        self.last_check     = time.time()
+        prev_modified       = self.last_modified
+        self.last_modified  = os.path.getmtime(self.filename)
+        return prev_modified < self.last_modified
+
+    def reload(self):
+        config_dict = self.config_loader(self.filename, **self.loader_kwargs)
+        reload()
+        return config_dict

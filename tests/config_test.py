@@ -1,4 +1,5 @@
 import mock
+import tempfile
 from testify import run, assert_equal, TestCase, setup, teardown
 from testify.assertions import assert_in, assert_raises
 
@@ -64,6 +65,63 @@ class ReloadTestCase(TestCase):
         assert_equal(one, 'ten')
         assert_equal(seven, 'el')
 
+
+class ConfigurationWatcherTestCase(TestCase):
+
+    @setup
+    def setup_config_watcher(self):
+        self.loader = mock.Mock()
+        file = tempfile.NamedTemporaryFile()
+        # Create the file
+        file.flush()
+        self.filename = file.name
+        self.watcher = config.ConfigurationWatcher(
+                    self.loader, self.filename, some_kw_arg='something')
+
+    @setup
+    def setup_mock_time(self):
+        self.patcher = mock.patch('staticconf.config.time')
+        self.mock_time = self.patcher.start()
+        self.file_patcher = mock.patch('staticconf.config.os.path')
+        self.mock_path = self.file_patcher.start()
+
+    @teardown
+    def teardown_mock_time(self):
+        self.patcher.stop()
+        self.file_patcher.stop()
+
+    def test_should_check(self):
+        self.watcher.last_check = 123456789
+
+        self.mock_time.time.return_value = 123456789
+        # Still current, but no max_interval
+        assert self.watcher.should_check
+
+        # With max interval
+        self.watcher.max_interval = 3
+        assert not self.watcher.should_check
+
+        # Time has passed
+        self.mock_time.time.return_value = 123456794
+        assert self.watcher.should_check
+
+    def test_file_modified_not_modified(self):
+        self.watcher.last_modified = self.mock_path.getmtime.return_value = 222
+        self.mock_time.time.return_value = 123456
+        assert not self.watcher.file_modified()
+        assert_equal(self.watcher.last_check, self.mock_time.time.return_value)
+
+    def test_file_modified_(self):
+        self.watcher.last_modified = 123456
+        self.mock_time.time.return_value = 123460
+        self.mock_path.getmtime.return_value = self.watcher.last_modified + 200
+
+        assert self.watcher.file_modified()
+        assert_equal(self.watcher.last_check, self.mock_time.time.return_value)
+
+    def test_reload(self):
+        self.watcher.reload()
+        self.loader.assert_called_with(self.filename, some_kw_arg='something')
 
 if __name__ == "__main__":
     run()

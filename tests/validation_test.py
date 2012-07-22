@@ -46,6 +46,5 @@ class DateTimeValidationTestCase(TestCase):
         assert_equal(actual, expected)
 
 
-
 if __name__ == "__main__":
     run()

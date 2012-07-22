@@ -106,6 +106,32 @@ A new configuration should be loaded immediately before `reload`.
     staticconf.YamlConfiguration(...)
     staticconf.reload()
 
+### Watch a file for modifications
+
+`ConfigurationWatcher` will monitor a files modification time and reload the
+configuration from that file.
+
+    staticconf.ConfigurationWatcher(config_loader, filename, max_interval=0, **kwargs)
+
+        config_loader:  one of the configuration loaders enumerated above
+        filename:       name of the file to monitor
+        max_interval:   the number of seconds to watch before stat'ing the file
+                        again.  If the file was checked within the last
+                        `max_interval` seconds, the call to `reload_if_changed()`
+                        will return immediately.
+        kwargs:         keyword arguments passed to the config loader to reload
+                        the configuration
+
+`ConfigurationWatcher` objects has the following method:
+
+    ConfigurationWatcher.reload_if_change(force=False)
+
+        If more then `max_interval` seconds have passed since the last check of
+        the modification time, then check the modification time of the time and
+        reload the configuration if it has changed.
+
+        force: if True, forces the check for modification, ignoring max_interval
+
 
 Notes
 -----
@@ -113,6 +139,8 @@ Notes
 * Properties files only support `=` and `:` key value separators. Keys without
   a separator, and space separators are not supported. Comments (`#`) and blank
   lines are accepted.
+* `ConfigurationWatcher` does not support composite configurations yet. Reloading
+  any configuration overrides the current values.
 
 Examples
 --------

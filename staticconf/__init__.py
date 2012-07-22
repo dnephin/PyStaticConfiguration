@@ -13,3 +13,4 @@ get_time        = config.build_getter(validation.validate_time)
 
 
 reload = config.reload
+ConfigurationWatcher = config.ConfigurationWatcher
