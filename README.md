@@ -122,7 +122,7 @@ configuration from that file.
         kwargs:         keyword arguments passed to the config loader to reload
                         the configuration
 
-`ConfigurationWatcher` objects has the following method:
+`ConfigurationWatcher` has the following method:
 
     ConfigurationWatcher.reload_if_change(force=False)
 
@@ -144,7 +144,8 @@ Notes
 
 Examples
 --------
-Most trivial example:
+
+Using AutoConfiguration:
 
     # Look for a config file in a standard location and load it (ex: config.yaml)
     staticconf.AutoConfiguration(base_dir='./config')
@@ -186,3 +187,16 @@ Use these values in your code:
         ratio     = staticconf.get_float('useful.ratio')
         msg       = staticconf.get('useful.msg_string', default="Welcome")
 
+
+Periodically check the configuration file for changes:
+
+    loader = staticconf.YamlConfiguration
+    filename = 'config.yaml'
+    # Initial load
+    loader(filename)
+
+    watcher = staticconf.ConfigurationWatcher(loader, filename, max_interval=3)
+    ...
+    for work in work_to_do:
+        ...
+        watcher.reload_if_changed()
