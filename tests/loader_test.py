@@ -1,6 +1,7 @@
 import os
 import mock
 from testify import assert_equal, TestCase, run, teardown, setup
+from testify.assertions import assert_raises
 import tempfile
 import textwrap
 
@@ -48,6 +49,22 @@ class FlattenDictTestCase(LoaderTestCase):
     def test_flatten(self):
         actual = dict(loader.flatten_dict(self.source))
         assert_equal(actual, self.expected)
+
+
+class BuildLoaderTestCase(LoaderTestCase):
+
+    def test_build_loader(self):
+        loader_func = mock.Mock()
+        assert callable(loader.build_loader(loader_func))
+
+    def test_build_loader_optional(self):
+        err_msg = "Failed to do"
+        loader_func = mock.Mock()
+        loader_func.side_effect = ValueError(err_msg)
+        config_loader = loader.build_loader(loader_func)
+
+        config_loader(optional=True)
+        assert_raises(ValueError, config_loader)
 
 
 class YamlConfigurationTestCase(LoaderTestCase):

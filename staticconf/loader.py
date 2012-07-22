@@ -1,4 +1,5 @@
 """Load configuration data from a file."""
+import logging
 import os
 from staticconf import config
 
@@ -14,6 +15,8 @@ __all__ = [
 ]
 
 
+log = logging.getLogger(__name__)
+
 
 def flatten_dict(config_data):
     for key, value in config_data.iteritems():
@@ -28,7 +31,15 @@ def flatten_dict(config_data):
 def build_loader(loader_func):
     def loader(*args, **kwargs):
         error_on_unknown    = kwargs.pop('error_on_unknown', False)
-        config_data         = loader_func(*args, **kwargs)
+        optional            = kwargs.pop('optional', False)
+
+        try:
+            config_data     = loader_func(*args, **kwargs)
+        except Exception, e:
+            log.warn("Optional configuration failed: %s" % e)
+            if not optional:
+                raise
+            return {}
 
         config_data = dict(flatten_dict(config_data))
         config.validate_keys(config_data.keys(), error_on_unknown)
@@ -59,10 +70,10 @@ def list_loader(seq):
 
 def auto_loader(base_dir='.'):
     auto_configurations = [
-        (yaml_loader, 'config.yaml'),
-        (json_loader, 'config.json'),
-        (ini_file_loader, 'config.ini'),
-        (xml_loader, 'config.xml'),
+        (yaml_loader,       'config.yaml'),
+        (json_loader,       'config.json'),
+        (ini_file_loader,   'config.ini'),
+        (xml_loader,        'config.xml'),
     ]
 
     for config_loader, config_arg in auto_configurations:

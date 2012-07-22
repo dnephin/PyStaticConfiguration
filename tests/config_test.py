@@ -3,6 +3,7 @@ from testify import run, assert_equal, TestCase, setup, teardown
 from testify.assertions import assert_in, assert_raises
 
 from staticconf import config, errors
+import staticconf
 
 
 class BuildGetterTestCase(TestCase):
@@ -50,6 +51,18 @@ class ValidateKeysTestCase(TestCase):
         proxies = []
         self.mock_proxies.__iter__.return_value = proxies
         assert_raises(errors.ConfigurationError, config.validate_keys, self.keys, True)
+
+
+class ReloadTestCase(TestCase):
+
+    def test_reload(self):
+        staticconf.DictConfiguration(dict(one='three', seven='nine'))
+        one, seven = staticconf.get('one'), staticconf.get('seven')
+
+        staticconf.reload()
+        staticconf.DictConfiguration(dict(one='ten', seven='el'))
+        assert_equal(one, 'ten')
+        assert_equal(seven, 'el')
 
 
 if __name__ == "__main__":

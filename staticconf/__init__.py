@@ -10,3 +10,6 @@ get_float       = config.build_getter(validation.validate_float)
 get_date        = config.build_getter(validation.validate_date)
 get_datetime    = config.build_getter(validation.validate_datetime)
 get_time        = config.build_getter(validation.validate_time)
+
+
+reload = config.reload
