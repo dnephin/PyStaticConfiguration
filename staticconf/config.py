@@ -16,8 +16,7 @@ def register_proxy(proxy):
 
 def reload():
     for value_proxy in value_proxies:
-        value_proxy.value = proxy.UndefToken
-    configuration_values.clear()
+        value_proxy.reset()
 
 
 def set_configuration(config_data):

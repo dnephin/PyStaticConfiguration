@@ -13,13 +13,25 @@ This library provides the following:
 * configuration can be reloaded
 
 
+### Why use PyStaticConfiguration?
+
+* it makes your configuration flexible
+* it handles overriding default configuration (from command line, environment
+ variables, or other configuration files)
+* it allows you to define your configuration keys statically at import time,
+  and defer loading the configuration until later (after optparse for example)
+* it supports reloading the config when a file changes
+* it has complete test coverage
+* it is easily extensible
+
+
 Supported Formats
 -----------------
 
 * YaML
 * XML
 * JSON
-* Property files (in progress)
+* Property files
 * INI files in a format supported by the `ConfigParser` module
 * Python modules
 * Python dictionaries
@@ -67,14 +79,17 @@ trying to use the returned value before a configuration is loaded will raise
 Load one or more configurations using the following methods. Each configuration
 overrides any duplicate keys in the previous.
 
-    staticconf.AutoConfiguration(base_dir='.', **kwargs)
-    staticconf.YamlConfiguration(filename, **kwargs)
-    staticconf.JSONConfiguration(filename, **kwargs)
-    staticconf.INIConfiguration(filename, **kwargs)
-    staticconf.XMLConfiguration(filename, **kwargs)
-    staticconf.ListConfiguration(sequence, **kwargs)
-    staticconf.DictConfiguration(dict, **kwargs)
-    staticconf.PythonConfiguration(module_name, **kwargs)
+    staticconf.AutoConfiguration(base_dir='.', ...)
+    staticconf.YamlConfiguration(filename, ...)
+    staticconf.JSONConfiguration(filename, ...)
+    staticconf.INIConfiguration(filename, ...)
+    staticconf.XMLConfiguration(filename, ...)
+    staticconf.PropertiesConfiguration(filename, ...)
+    staticconf.ListConfiguration(sequence, ...)
+    staticconf.DictConfiguration(dict, ...)
+    staticconf.PythonConfiguration(module_name, ...)
+
+        These keyword params are supported by all configuration loaders:
 
         error_on_unknown:   raises an error if there are keys in the config that
                             have not been retrieved (using get_*).
@@ -92,6 +107,13 @@ A new configuration should be loaded immediately before `reload`.
     staticconf.reload()
 
 
+Notes
+-----
+
+* Properties files only support `=` and `:` key value separators. Keys without
+  a separator, and space separators are not supported. Comments (`#`) and blank
+  lines are accepted.
+
 Examples
 --------
 Most trivial example:
@@ -108,6 +130,10 @@ Most trivial example:
     staticconf.AutoConfiguration()
     staticconf.ListConfiguration(opts.config)
 
+    # Allow environment variables to override defaults
+    import os
+    staticconf.AutoConfiguration()
+    staticconf.DictConfiguration(os.environ)
 
 Using a YaML file, raise an exception if there are any unexpected configuration
 keys in the file.

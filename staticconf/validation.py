@@ -40,6 +40,9 @@ date_formats = [
 
 
 def validate_datetime(value):
+    if isinstance(value, datetime.datetime):
+        return value
+
     for format in date_formats:
         try:
             return datetime.datetime.strptime(value, format)
@@ -49,16 +52,25 @@ def validate_datetime(value):
 
 
 def validate_date(value):
+    if isinstance(value, datetime.date):
+        return value
+
     return validate_datetime(value).date()
 
 
 time_formats = [
+    "%I %p",
+    "%H:%M",
+    "%I:%M %p",
     "%H:%M:%S",
     "%I:%M:%S %p"
 ]
 
 
 def validate_time(value):
+    if isinstance(value, datetime.time):
+        return value
+
     for format in time_formats:
         try:
             return datetime.time(*time.strptime(value, format)[3:6])

@@ -59,8 +59,8 @@ class ReloadTestCase(TestCase):
         staticconf.DictConfiguration(dict(one='three', seven='nine'))
         one, seven = staticconf.get('one'), staticconf.get('seven')
 
-        staticconf.reload()
         staticconf.DictConfiguration(dict(one='ten', seven='el'))
+        staticconf.reload()
         assert_equal(one, 'ten')
         assert_equal(seven, 'el')
 

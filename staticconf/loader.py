@@ -15,7 +15,9 @@ Create your own loader:
 ."""
 import logging
 import os
-from staticconf import config
+import itertools
+import re
+from staticconf import config, errors
 
 __all__ = [
     'YamlConfiguration',
@@ -25,7 +27,8 @@ __all__ = [
     'AutoConfiguration',
     'PythonConfiguration',
     'INIConfiguration',
-    'XMLConfiguration'
+    'XMLConfiguration',
+    'PropertiesConfiguration',
 ]
 
 
@@ -88,13 +91,15 @@ def auto_loader(base_dir='.', auto_configurations=None):
         (json_loader,       'config.json'),
         (ini_file_loader,   'config.ini'),
         (xml_loader,        'config.xml'),
+        (properties_loader, 'config.properties')
     ]
 
     for config_loader, config_arg in auto_configurations:
         path = os.path.join(base_dir, config_arg)
         if os.path.isfile(path):
             return config_loader(path)
-    return {}
+    msg = "Failed to auto-load configuration. No configuration files found."
+    raise errors.ConfigurationError(msg)
 
 
 def python_loader(module_name):
@@ -135,11 +140,33 @@ def xml_loader(filename):
     return build_from_element(tree.getroot())
 
 
-YamlConfiguration   = build_loader(yaml_loader)
-JSONConfiguration   = build_loader(json_loader)
-ListConfiguration   = build_loader(list_loader)
-DictConfiguration   = build_loader(lambda d: d)
-AutoConfiguration   = build_loader(auto_loader)
-PythonConfiguration = build_loader(python_loader)
-INIConfiguration    = build_loader(ini_file_loader)
-XMLConfiguration    = build_loader(xml_loader)
+split_pattern = re.compile(r'[=:]')
+
+def properties_loader(filename):
+
+    def parse_line(line):
+        line = line.strip()
+        if not line or line.startswith('#'):
+            return
+
+        try:
+            key, value = split_pattern.split(line, 1)
+        except ValueError:
+            msg = "Invalid properties line: %s" % line
+            raise errors.ConfigurationError(msg)
+        return key.strip(), value.strip()
+
+    with open(filename) as fh:
+        return dict(itertools.ifilter(None, (parse_line(line) for line in fh)))
+
+
+
+YamlConfiguration       = build_loader(yaml_loader)
+JSONConfiguration       = build_loader(json_loader)
+ListConfiguration       = build_loader(list_loader)
+DictConfiguration       = build_loader(lambda d: d)
+AutoConfiguration       = build_loader(auto_loader)
+PythonConfiguration     = build_loader(python_loader)
+INIConfiguration        = build_loader(ini_file_loader)
+XMLConfiguration        = build_loader(xml_loader)
+PropertiesConfiguration = build_loader(properties_loader)

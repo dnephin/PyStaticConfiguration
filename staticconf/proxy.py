@@ -48,12 +48,13 @@ class ValueProxy(object):
         self.validator      = validator
         self.config_key     = key
         self.default        = default
-        self.value          = UndefToken
+        self._value         = UndefToken
         self.value_cache    = value_cache
 
-    def get_value(self):
-        if self.value is not UndefToken:
-            return self.value
+    @property
+    def value(self):
+        if self._value is not UndefToken:
+            return self._value
 
         value = self.value_cache.get(self.config_key, self.default)
         if value is UndefToken:
@@ -61,12 +62,19 @@ class ValueProxy(object):
             raise errors.ConfigurationError(msg % self.config_key)
 
         try:
-            self.value = self.validator(value)
+            self._value = self.validator(value)
         except errors.ValidationError, e:
             msg = "Failed to validate %s: %s" % (self.config_key, e)
             raise errors.ConfigurationError(msg)
 
-        return self.value
+        return self._value
+
+    def __getattr__(self, item):
+        return getattr(self.value, item)
+
+    def reset(self):
+        """Clear the cached value so that configuration can be reloaded."""
+        self._value = UndefToken
 
     @classmethod
     def get_class_proxy(cls):
@@ -75,8 +83,6 @@ class ValueProxy(object):
 
         def build_method(name):
             def method(self, *args, **kw):
-                self.get_value()
-
                 if name == '__repr__':
                     return repr(self.value)
 

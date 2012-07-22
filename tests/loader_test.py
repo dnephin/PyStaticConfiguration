@@ -5,14 +5,24 @@ from testify.assertions import assert_raises
 import tempfile
 import textwrap
 
-from staticconf import loader
+from staticconf import loader, errors
 
 class LoaderTestCase(TestCase):
+
+    content = None
 
     @setup
     def mock_config(self):
         self.patcher = mock.patch('staticconf.config')
         self.mock_config = self.patcher.start()
+
+    @setup
+    def write_content_to_file(self):
+        if not self.content:
+            return
+        self.tmpfile = tempfile.NamedTemporaryFile()
+        self.tmpfile.write(self.content)
+        self.tmpfile.flush()
 
     @teardown
     def clear_configuration(self):
@@ -69,29 +79,23 @@ class BuildLoaderTestCase(LoaderTestCase):
 
 class YamlConfigurationTestCase(LoaderTestCase):
 
-    config = textwrap.dedent("""
+    content = textwrap.dedent("""
         somekey:
             token: "smarties"
         another: blind
     """)
 
     def test_loader(self):
-        tmpfile = tempfile.NamedTemporaryFile()
-        tmpfile.write(self.config)
-        tmpfile.flush()
-        config_data = loader.YamlConfiguration(tmpfile.name)
+        config_data = loader.YamlConfiguration(self.tmpfile.name)
         assert_equal(config_data['another'], 'blind')
         assert_equal(config_data['somekey.token'], 'smarties')
 
 class JSONConfigurationTestCase(LoaderTestCase):
 
-    config = '{"somekey": {"token": "smarties"}, "another": "blind"}'
+    content = '{"somekey": {"token": "smarties"}, "another": "blind"}'
 
     def test_loader(self):
-        tmpfile = tempfile.NamedTemporaryFile()
-        tmpfile.write(self.config)
-        tmpfile.flush()
-        config_data = loader.JSONConfiguration(tmpfile.name)
+        config_data = loader.JSONConfiguration(self.tmpfile.name)
         assert_equal(config_data['another'], 'blind')
         assert_equal(config_data['somekey.token'], 'smarties')
 
@@ -123,6 +127,10 @@ class AutoConfigurationTestCase(LoaderTestCase):
             config_data = loader.AutoConfiguration(base_dir=tempfile.gettempdir())
             assert_equal(config_data['key'], 1)
 
+    def test_auto_failed(self):
+        assert_raises(errors.ConfigurationError,
+                loader.AutoConfiguration)
+
 
 class PythonConfigurationTestCase(LoaderTestCase):
 
@@ -136,7 +144,7 @@ class PythonConfigurationTestCase(LoaderTestCase):
 
 class INIConfigurationTestCase(LoaderTestCase):
 
-    contents = textwrap.dedent("""
+    content = textwrap.dedent("""
         [Something]
         mars=planet
         stars=sun
@@ -148,17 +156,14 @@ class INIConfigurationTestCase(LoaderTestCase):
     """)
 
     def test_prop_configuration(self):
-        tmpfile = tempfile.NamedTemporaryFile()
-        tmpfile.write(self.contents)
-        tmpfile.flush()
-        config_data = loader.INIConfiguration(tmpfile.name)
+        config_data = loader.INIConfiguration(self.tmpfile.name)
         assert_equal(config_data['Something.mars'], 'planet')
         assert_equal(config_data['Business.why'], 'not today')
 
 
-class XMLConfigurationTestCase(TestCase):
+class XMLConfigurationTestCase(LoaderTestCase):
 
-    contents = """
+    content = """
         <config>
             <something a="here">
                 <depth>1</depth>
@@ -169,14 +174,46 @@ class XMLConfigurationTestCase(TestCase):
     """
 
     def test_xml_configuration(self):
-        tmpfile = tempfile.NamedTemporaryFile()
-        tmpfile.write(self.contents)
-        tmpfile.flush()
-        config_data = loader.XMLConfiguration(tmpfile.name)
+        config_data = loader.XMLConfiguration(self.tmpfile.name)
         assert_equal(config_data['something.a'], 'here')
         assert_equal(config_data['something.stars.value'], 'ok')
         assert_equal(config_data['something.stars.b'], 'there')
         assert_equal(config_data['another.value'], 'foo')
+
+
+class PropertiesConfigurationTestCase(LoaderTestCase):
+
+    content = textwrap.dedent("""
+        stars = in the sky
+        blank.key =
+
+        first.second=1
+        first.depth.then.more= j=t
+
+        # Ignore the comment
+        key with spaces     = the value
+        more.props      =          the end
+
+        key.with.col  :   a value
+    """)
+
+    def test_properties_configuration(self):
+        config_data = loader.PropertiesConfiguration(self.tmpfile.name)
+        assert_equal(len(config_data), 7)
+        assert_equal(config_data['stars'], 'in the sky')
+        assert_equal(config_data['blank.key'], '')
+        assert_equal(config_data['first.second'], '1')
+        assert_equal(config_data['first.depth.then.more'], 'j=t')
+        assert_equal(config_data['key with spaces'], 'the value')
+        assert_equal(config_data['more.props'], 'the end')
+        assert_equal(config_data['key.with.col'], 'a value')
+
+    def test_invalid_line(self):
+        self.tmpfile.write('justkey\n')
+        self.tmpfile.flush()
+        assert_raises(errors.ConfigurationError,
+                loader.PropertiesConfiguration, self.tmpfile.name)
+
 
 
 if __name__ == "__main__":
