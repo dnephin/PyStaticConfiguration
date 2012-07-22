@@ -55,6 +55,7 @@ can be called at import time before a configuration has been loaded, but
 trying to use the returned value before a configuration is loaded will raise
 `ConfigurationError`.
 
+```python
     staticconf.get(config_key, [default=None])
     staticconf.get_bool(config_key, [default=None])
     staticconf.get_string(config_key, [default=None])
@@ -72,13 +73,14 @@ trying to use the returned value before a configuration is loaded will raise
         be used directly as the proxied object.
 
         raises `ConfigurationError` if the value in the config fails to validate.
-
+```
 
 ### Load the configuration
 
 Load one or more configurations using the following methods. Each configuration
 overrides any duplicate keys in the previous.
 
+```python
     staticconf.AutoConfiguration(base_dir='.', ...)
     staticconf.YamlConfiguration(filename, ...)
     staticconf.JSONConfiguration(filename, ...)
@@ -97,7 +99,7 @@ overrides any duplicate keys in the previous.
 
         returns the loaded configuration dictionary. This dictionary is added
         to the static configuration, and can be accessed using the getters.
-
+```
 
 ### Reload the configuration
 
@@ -111,6 +113,7 @@ A new configuration should be loaded immediately before `reload`.
 `ConfigurationWatcher` will monitor a files modification time and reload the
 configuration from that file.
 
+```python
     staticconf.ConfigurationWatcher(config_loader, filename, max_interval=0, **kwargs)
 
         config_loader:  one of the configuration loaders enumerated above
@@ -121,9 +124,11 @@ configuration from that file.
                         will return immediately.
         kwargs:         keyword arguments passed to the config loader to reload
                         the configuration
+```
 
 `ConfigurationWatcher` has the following method:
 
+```python
     ConfigurationWatcher.reload_if_change(force=False)
 
         If more then `max_interval` seconds have passed since the last check of
@@ -131,7 +136,7 @@ configuration from that file.
         reload the configuration if it has changed.
 
         force: if True, forces the check for modification, ignoring max_interval
-
+```
 
 Notes
 -----
@@ -147,6 +152,7 @@ Examples
 
 Using AutoConfiguration:
 
+```python
     # Look for a config file in a standard location and load it (ex: config.yaml)
     staticconf.AutoConfiguration(base_dir='./config')
     print staticconfig.get('a_value')
@@ -163,33 +169,39 @@ Using AutoConfiguration:
     import os
     staticconf.AutoConfiguration()
     staticconf.DictConfiguration(os.environ)
+```
 
 Using a YaML file, raise an exception if there are any unexpected configuration
 keys in the file.
 
+```python
     # Load a config from a YaML file
     staticconf.YamlConfiguration('my_config.yaml', error_on_unknown=True)
+```
 
 
 A composite configuration:
 
+```python
     # Load config from xml, and override with custom.json, and opts
     staticconf.XMLConfiguration('default_settings.xml')
     staticconf.JSONConfinfiguration('custom.json')
     staticconf.ListConfiguration(opts.config)
-
+```
 
 Use these values in your code:
 
+```python
     class SomethingUseful(object):
 
         max_value = staticconf.get_int('useful.max_value', default=100)
         ratio     = staticconf.get_float('useful.ratio')
         msg       = staticconf.get('useful.msg_string', default="Welcome")
-
+```
 
 Periodically check the configuration file for changes:
 
+```python
     loader = staticconf.YamlConfiguration
     filename = 'config.yaml'
     # Initial load
@@ -200,3 +212,4 @@ Periodically check the configuration file for changes:
     for work in work_to_do:
         ...
         watcher.reload_if_changed()
+```
