@@ -1,63 +1,41 @@
 """
 Singleton configuration object and value proxies.
 """
-from functools import partial
-from staticconf import validation 
+from staticconf import proxy, validation
 
 
-__all__ = [
-    'get', 'get_int', 'get_float', 'get_date', 'get_datetime', 
-    'ConfigurationError']
-
-
-class ConfigurationError(ValueError):
-    pass
-
-
-class UnsetValueToken(object):
-    pass
-
-
-class ValueProxy(object):
-    """Proxy a configuration value so it can be loaded after import time."""
-
-    def __init__(self, validator, name, default=UnsetValueToken):
-        self.validator  = validator
-        self.name       = name
-        self.default    = default
-        self.value      = UnsetValueToken
-        # Register this proxy
-        value_proxies.append(self)
-
-    def __getattr__(self, name):
-        if self.value is not UnsetValueToken:
-            return getattr(self.value, name)
-
-        value = configuration_values.get(name, self.default)
-        if value is UnsetValueToken:
-            msg = "Configuration is missing value for: %s"
-            raise ConfigurationError(msg % self.name)
-
-        try:
-            self.value = self.validator(value)
-        except validation.ValidationError, e:
-            msg = "Failed to validate %s: %s" % (self.name, e)
-            raise ConfigurationError(msg)
-
-        return getattr(self.value, name)
+__all__ = ['get', 'get_int', 'get_float', 'get_date', 'get_datetime']
 
 
 value_proxies = []
 configuration_values = {}
 
 
+def register_proxy(proxy):
+    value_proxy.append(proxy)
+
+
+# TODO: reload config by resetting value on each value_proxy ?
+
+
 def reset():
     """Used for internal testing."""
-    value_proxies.clear()
+    value_proxies[:] = []
     configuration_values.clear()
 
 
-get         = partial(ValueProxy, validation.validate_string)
-get_int     = partial(ValueProxy, validation.validate_int)
-get_float   = partial(ValueProxy, validation.validate_float)
-# TODO: the rest
+def build_getter(validator):
+    def proxy_register(name, default=proxy.UndefToken):
+        args        = validator, configuration_values, name, default
+        value_proxy = proxy.ValueProxy(*args)
+        register_proxy(value_proxy)
+        return value_proxy
+
+    return proxy_register
+
+
+get             = build_getter(validation.validate_string)
+get_int         = build_getter(validation.validate_int)
+get_float       = build_getter(validation.validate_float)
+get_date        = build_getter(validation.validate_date)
+get_datetime    = build_getter(validation.validate_datetime)
