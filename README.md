@@ -55,7 +55,7 @@ can be called at import time before a configuration has been loaded, but
 trying to use the returned value before a configuration is loaded will raise
 `ConfigurationError`.
 
-```python
+```
     staticconf.get(config_key, [default=None])
     staticconf.get_bool(config_key, [default=None])
     staticconf.get_string(config_key, [default=None])
@@ -80,7 +80,7 @@ trying to use the returned value before a configuration is loaded will raise
 Load one or more configurations using the following methods. Each configuration
 overrides any duplicate keys in the previous.
 
-```python
+```
     staticconf.AutoConfiguration(base_dir='.', ...)
     staticconf.YamlConfiguration(filename, ...)
     staticconf.JSONConfiguration(filename, ...)
@@ -113,7 +113,7 @@ A new configuration should be loaded immediately before `reload`.
 `ConfigurationWatcher` will monitor a files modification time and reload the
 configuration from that file.
 
-```python
+```
     staticconf.ConfigurationWatcher(config_loader, filename, max_interval=0, **kwargs)
 
         config_loader:  one of the configuration loaders enumerated above
@@ -128,7 +128,7 @@ configuration from that file.
 
 `ConfigurationWatcher` has the following method:
 
-```python
+```
     ConfigurationWatcher.reload_if_change(force=False)
 
         If more then `max_interval` seconds have passed since the last check of
