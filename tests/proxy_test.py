@@ -5,7 +5,6 @@ from testify.assertions import assert_raises
 from staticconf import proxy, validation, errors
 
 
-
 class ValueProxyTestCase(TestCase):
 
     @setup

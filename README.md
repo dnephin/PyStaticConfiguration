@@ -20,6 +20,8 @@ Supported Formats
 * JSON
 * Config files in a format supported by the `ConfigParser` module
 * Python files
+* Python dictionaries
+* Python lists with 'key=value' entries
 
 
 Examples
@@ -36,21 +38,21 @@ Most trivial example:
     parser = optparser.OptionParser()
     parser.add_option('-C', '--config', action='append')
     opts, args = parser.parse_args()
-    config = staticconf.AutoConfiguration(overrides=opts.config)
+    staticconf.AutoConfiguration()
+    staticconf.ListConfiguration(opts.config)
 
 
 Using a YaML file, raise an exception if there are any unexpected configuration keys set in the file.
 
     # Load a config from a YaML file
-    config = staticconf.YamlConfiguration(file='my_config.yaml', error_on_unknown=True)
+    staticconf.YamlConfiguration('my_config.yaml', error_on_unknown=True)
 
 
 A composite configuration:
 
     # Load config from xml, and override with config in JSON
-    config = staticconf.CompositeConfiguration(
-                staticconf.XMLConfiguration('default_settings.xml'),
-                staticconf.JSONConfinfiguration('custom.json'))
+    staticconf.XMLConfiguration('default_settings.xml')
+    staticconf.JSONConfinfiguration('custom.json')
 
 
 Use these values in your code:

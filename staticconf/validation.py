@@ -1,9 +1,7 @@
 """
 Validate and convert a configuration value to it's expected type.
 """
-
-class ValidationError(ValueError):
-    pass
+from staticconf.errors import ValidationError
 
 
 def validate_string(value):
@@ -18,13 +16,21 @@ def validate_int(value):
 
 
 def validate_float(value):
-    pass
+    try:
+        return float(value)
+    except ValueError:
+        raise ValidationError("Invalid float: %s" % value)
 
 
 def validate_date(value):
+    # TODO:
     pass
 
 
 def validate_datetime(value):
+    # TODO:
     pass
 
+
+def no_validation(value):
+    return value

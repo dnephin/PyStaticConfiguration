@@ -1,5 +1,5 @@
 import operator
-from staticconf import validation, errors
+from staticconf import errors
 
 class UndefToken(object):
     pass
@@ -35,9 +35,9 @@ class ValueProxy(object):
         klass.__init__(instance, *args, **kwargs)
         return instance
 
-    def __init__(self, validator, value_cache, name, default=UndefToken):
+    def __init__(self, validator, value_cache, key, default=UndefToken):
         self.validator      = validator
-        self.name           = name
+        self.config_key     = key
         self.default        = default
         self.value          = UndefToken
         self.value_cache    = value_cache
@@ -46,15 +46,15 @@ class ValueProxy(object):
         if self.value is not UndefToken:
             return self.value
 
-        value = self.value_cache.get(self.name, self.default)
+        value = self.value_cache.get(self.config_key, self.default)
         if value is UndefToken:
             msg = "Configuration is missing value for: %s"
-            raise errors.ConfigurationError(msg % self.name)
+            raise errors.ConfigurationError(msg % self.config_key)
 
         try:
             self.value = self.validator(value)
-        except validation.ValidationError, e:
-            msg = "Failed to validate %s: %s" % (self.name, e)
+        except errors.ValidationError, e:
+            msg = "Failed to validate %s: %s" % (self.config_key, e)
             raise errors.ConfigurationError(msg)
 
         return self.value
