@@ -28,7 +28,7 @@ _special_names = [
     '__repr__', '__reversed__', '__rfloorfiv__', '__rlshift__', '__rmod__',
     '__rmul__', '__ror__', '__rpow__', '__rrshift__', '__rshift__', '__rsub__',
     '__rtruediv__', '__rxor__', '__setitem__', '__setslice__', '__sub__',
-    '__truediv__', '__xor__', 'next', '__nonzero__'
+    '__truediv__', '__xor__', 'next', '__nonzero__', '__str__', '__unicode__',
 ]
 
 
@@ -83,6 +83,10 @@ class ValueProxy(object):
 
         def build_method(name):
             def method(self, *args, **kw):
+                if name == '__unicode__':
+                    return unicode(self.value)
+                if name == '__str__':
+                    return str(self.value)
                 if name == '__repr__':
                     return repr(self.value)
 
