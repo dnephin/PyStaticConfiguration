@@ -34,6 +34,7 @@ _special_names = [
 
 class ValueProxy(object):
     """Proxy a configuration value so it can be loaded after import time."""
+    __slots__ = ['validator', 'config_key', 'default', '_value', 'value_cache']
 
     class_def = None
 

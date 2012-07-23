@@ -1,7 +1,7 @@
 import mock
 import tempfile
 from testify import run, assert_equal, TestCase, setup, teardown
-from testify.assertions import assert_in, assert_raises
+from testify.assertions import assert_raises
 
 from staticconf import config, errors
 import staticconf
