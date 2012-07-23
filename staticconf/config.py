@@ -62,13 +62,13 @@ class ConfigurationWatcher(object):
     when it's modified.  Accepts a max_interval to throttle checks.
     """
 
+    # TODO: list of files and config_loaders
     def __init__(self, config_loader, filename, max_interval=0, **kwargs):
         self.config_loader  = config_loader
         self.filename       = os.path.abspath(filename)
         self.max_interval   = max_interval
         self.loader_kwargs  = kwargs
         self.last_check     = time.time()
-        self.last_modified  = os.path.getmtime(self.filename)
 
     @property
     def should_check(self):
@@ -79,10 +79,9 @@ class ConfigurationWatcher(object):
             return self.reload()
 
     def file_modified(self):
-        self.last_check     = time.time()
-        prev_modified       = self.last_modified
-        self.last_modified  = os.path.getmtime(self.filename)
-        return prev_modified < self.last_modified
+        prev_check, self.last_check = self.last_check, time.time()
+        # TODO: broken test
+        return prev_check < os.path.getmtime(self.filename)
 
     def reload(self):
         config_dict = self.config_loader(self.filename, **self.loader_kwargs)

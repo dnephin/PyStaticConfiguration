@@ -160,6 +160,21 @@ def properties_loader(filename):
         return dict(itertools.ifilter(None, (parse_line(line) for line in fh)))
 
 
+class CompositeConfiguration(object):
+
+    def __init__(self, loaders=None):
+        self.loaders = loaders or []
+
+    def append(self, loader):
+        self.loaders.append(loader)
+
+    def load(self):
+        for loader_with_args in self.loaders:
+            loader_with_args[0](*loader_with_args[1:])
+
+    def __call__(self, *args):
+        self.load()
+
 
 YamlConfiguration       = build_loader(yaml_loader)
 JSONConfiguration       = build_loader(json_loader)
