@@ -14,9 +14,10 @@ class BuildGetterTestCase(TestCase):
         getter = config.build_getter(validator)
         assert callable(getter), "Getter is not callable"
         value_proxy = getter('the_name')
-        assert_in(value_proxy, config.value_proxies)
+        assert value_proxy is config.value_proxies[-1]
         assert_equal(value_proxy.config_key, "the_name")
         assert_equal(value_proxy.value_cache, config.configuration_values)
+        config.reset()
 
 
 class ValidateKeysTestCase(TestCase):
