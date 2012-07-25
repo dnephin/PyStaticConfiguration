@@ -56,7 +56,7 @@ trying to use the returned value before a configuration is loaded will raise
 `ConfigurationError`.
 
 ```
-    staticconf.get(config_key, default=None, help=None])
+    staticconf.get(config_key, default=None, help=None)
     staticconf.get_bool(config_key, default=None, help=None)
     staticconf.get_string(config_key, default=None, help=None)
     staticconf.get_int(config_key, default=None, help=None)
@@ -220,8 +220,8 @@ Periodically check the configuration file for changes:
         watcher.reload_if_changed()
 ```
 
-View a message message about all the keys that are statically configured.
-Includes key names, type, defaults, and any help message sent to the getters.
+View a message about all the keys that are statically configured.
+Includes key names, types, defaults, and any help message sent to the getters.
 
 ```python
     print staticconf.view_help()
