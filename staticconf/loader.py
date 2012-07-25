@@ -29,6 +29,7 @@ __all__ = [
     'INIConfiguration',
     'XMLConfiguration',
     'PropertiesConfiguration',
+    'CompositeConfiguration'
 ]
 
 
@@ -161,6 +162,9 @@ def properties_loader(filename):
 
 
 class CompositeConfiguration(object):
+    """Store a list of configuration loaders and their params, so they can
+    be reloaded in the correct order.
+    """
 
     def __init__(self, loaders=None):
         self.loaders = loaders or []
@@ -169,11 +173,13 @@ class CompositeConfiguration(object):
         self.loaders.append(loader)
 
     def load(self):
+        output = {}
         for loader_with_args in self.loaders:
-            loader_with_args[0](*loader_with_args[1:])
+            output.update(loader_with_args[0](*loader_with_args[1:]))
+        return output
 
     def __call__(self, *args):
-        self.load()
+        return self.load()
 
 
 YamlConfiguration       = build_loader(yaml_loader)

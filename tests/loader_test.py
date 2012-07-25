@@ -215,6 +215,18 @@ class PropertiesConfigurationTestCase(LoaderTestCase):
                 loader.PropertiesConfiguration, self.tmpfile.name)
 
 
+class CompositeConfigurationTestCase(TestCase):
+
+    def test_load(self):
+        loaders = [(mock.Mock(return_value={i: 0}), 1, 2) for i in xrange(3)]
+        composite = loader.CompositeConfiguration(loaders)
+        assert_equal(composite.load(), {0:0, 1:0, 2:0})
+
+        for loader_call, arg_one, arg_two in loaders:
+            loader_call.assert_called_with(arg_one, arg_two)
+
+
+
 
 if __name__ == "__main__":
     run()

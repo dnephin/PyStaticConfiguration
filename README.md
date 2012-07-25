@@ -144,8 +144,11 @@ Notes
 * Properties files only support `=` and `:` key value separators. Keys without
   a separator, and space separators are not supported. Comments (`#`) and blank
   lines are accepted.
-* `ConfigurationWatcher` does not support composite configurations yet. Reloading
-  any configuration overrides the current values.
+* `ConfigurationWatcher` supports composite configurations using the
+  `CompositeConfiguration` class.
+* When using `XMLConfiguration`s note that attributes will be overridden by
+  child tags with the same name, and only the last child element with the same
+  name will be stored. Use `tag_name.value` to access the text in a tag.
 
 Examples
 --------
@@ -207,7 +210,8 @@ Periodically check the configuration file for changes:
     # Initial load
     loader(filename)
 
-    watcher = staticconf.ConfigurationWatcher(loader, filename, max_interval=3)
+    reloader = functools.partial(loader, filename)
+    watcher = staticconf.ConfigurationWatcher(reloader, filename, max_interval=3)
     ...
     for work in work_to_do:
         ...

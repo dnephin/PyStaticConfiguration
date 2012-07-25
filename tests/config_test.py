@@ -76,8 +76,7 @@ class ConfigurationWatcherTestCase(TestCase):
         # Create the file
         file.flush()
         self.filename = file.name
-        self.watcher = config.ConfigurationWatcher(
-                    self.loader, self.filename, some_kw_arg='something')
+        self.watcher = config.ConfigurationWatcher(self.loader, self.filename)
 
     @setup
     def setup_mock_time(self):
@@ -112,17 +111,17 @@ class ConfigurationWatcherTestCase(TestCase):
         assert not self.watcher.file_modified()
         assert_equal(self.watcher.last_check, self.mock_time.time.return_value)
 
-    def test_file_modified_(self):
-        self.watcher.last_modified = 123456
+    def test_file_modified(self):
+        self.watcher.last_check = 123456
         self.mock_time.time.return_value = 123460
-        self.mock_path.getmtime.return_value = self.watcher.last_modified + 200
+        self.mock_path.getmtime.return_value = self.watcher.last_check + 5
 
         assert self.watcher.file_modified()
         assert_equal(self.watcher.last_check, self.mock_time.time.return_value)
 
     def test_reload(self):
         self.watcher.reload()
-        self.loader.assert_called_with(self.filename, some_kw_arg='something')
+        self.loader.assert_called_with()
 
 if __name__ == "__main__":
     run()
