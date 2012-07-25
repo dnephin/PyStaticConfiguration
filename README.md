@@ -56,18 +56,20 @@ trying to use the returned value before a configuration is loaded will raise
 `ConfigurationError`.
 
 ```
-    staticconf.get(config_key, [default=None])
-    staticconf.get_bool(config_key, [default=None])
-    staticconf.get_string(config_key, [default=None])
-    staticconf.get_int(config_key, [default=None])
-    staticconf.get_float(config_key, [default=None])
-    staticconf.get_date(config_key, [default=None])
-    staticconf.get_datetime(config_key, [default=None])
-    staticconf.get_time(config_key, [default=None])
+    staticconf.get(config_key, default=None, help=None])
+    staticconf.get_bool(config_key, default=None, help=None)
+    staticconf.get_string(config_key, default=None, help=None)
+    staticconf.get_int(config_key, default=None, help=None)
+    staticconf.get_float(config_key, default=None, help=None)
+    staticconf.get_date(config_key, default=None, help=None)
+    staticconf.get_datetime(config_key, default=None, help=None)
+    staticconf.get_time(config_key, default=None, help=None)
 
         config_key: string configuration key
         default:    if no `default` is given, the key must be present in the
                     configuration. Raises ConfigurationError on missing key.
+        help:       a help string describing the purpose of the config value.
+                    See `staticconf.view_help()`.
 
         returns a proxy around the future configuration value. This object can
         be used directly as the proxied object.
@@ -216,4 +218,11 @@ Periodically check the configuration file for changes:
     for work in work_to_do:
         ...
         watcher.reload_if_changed()
+```
+
+View a message message about all the keys that are statically configured.
+Includes key names, type, defaults, and any help message sent to the getters.
+
+```python
+    print staticconf.view_help()
 ```

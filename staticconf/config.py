@@ -4,12 +4,17 @@ Singleton configuration object and value proxies.
 import logging
 import os
 import time
+from collections import namedtuple
 from staticconf import proxy, errors
 
 log = logging.getLogger(__name__)
 
 value_proxies = []
 configuration_values = {}
+config_key_descriptions = []
+
+
+KeyDescription = namedtuple('KeyDescription', 'name validator default help')
 
 
 def register_proxy(proxy):
@@ -25,17 +30,41 @@ def set_configuration(config_data):
     configuration_values.update(config_data)
 
 
+def add_config_key_description(name, validator, default, help):
+    desc = KeyDescription(name, validator, default, help)
+    config_key_descriptions.append(desc)
+
+
+def view_help():
+    """Return a help message describing all the statically configured keys.
+    """
+    def format(desc):
+        help        = desc.help or ''
+        default     = '' if desc.default is proxy.UndefToken else desc.default
+        type_name   = desc.validator.__name__
+
+        if type_name.startswith('validate_'):
+            type_name = type_name.replace('validate_', '')
+        elif type_name == '<lambda>':
+            type_name = ''
+
+        return "%-20s %-10s %-20s %s" % (desc.name, type_name, default, help)
+    return '\n'.join(sorted(format(desc) for desc in config_key_descriptions))
+
+
 def reset():
     """Used for internal testing."""
     value_proxies[:] = []
     configuration_values.clear()
+    config_key_descriptions[:] = []
 
 
 def build_getter(validator):
-    def proxy_register(name, default=proxy.UndefToken):
+    def proxy_register(name, default=proxy.UndefToken, help=None):
         args        = validator, configuration_values, name, default
         value_proxy = proxy.ValueProxy(*args)
         register_proxy(value_proxy)
+        add_config_key_description(name, validator, default, help)
         return value_proxy
 
     return proxy_register

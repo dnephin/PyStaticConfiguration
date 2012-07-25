@@ -65,7 +65,23 @@ class ReloadTestCase(TestCase):
         staticconf.reload()
         assert_equal(one, 'ten')
         assert_equal(seven, 'el')
+        config.reset()
 
+
+class ViewHelpTestCase(TestCase):
+
+    expected = "%-52s %s\n%-20s %-10s %-21s\n%-20s %-10s %-20s %s" % (
+        'one', 'the one', 'when', 'time', 'NOW', 'you sure', 'bool',
+        'No', 'Are you?')
+
+    def test_view_help(self):
+        staticconf.get('one', help="the one")
+        staticconf.get_time('when', default='NOW')
+        staticconf.get_bool('you sure', default='No', help='Are you?')
+
+        help_msg = config.view_help()
+        assert_equal(help_msg, self.expected)
+        config.reset()
 
 class ConfigurationWatcherTestCase(TestCase):
 
