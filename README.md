@@ -116,16 +116,16 @@ A new configuration should be loaded immediately before `reload`.
 configuration from that file.
 
 ```
-    staticconf.ConfigurationWatcher(config_loader, filename, max_interval=0, **kwargs)
+    staticconf.ConfigurationWatcher(config_loader, filename, max_interval=0)
 
-        config_loader:  one of the configuration loaders enumerated above
-        filename:       name of the file to monitor
-        max_interval:   the number of seconds to watch before stat'ing the file
+        config_loader:  a callable which is called when the configuration file
+                        has changed. This is usually a partial or lambda
+                        around one of the configuration loaders.
+        filename:       name of the file, or a list of file names, to monitor
+        max_interval:   the number of seconds to wait before stat'ing the file
                         again.  If the file was checked within the last
                         `max_interval` seconds, the call to `reload_if_changed()`
                         will return immediately.
-        kwargs:         keyword arguments passed to the config loader to reload
-                        the configuration
 ```
 
 `ConfigurationWatcher` has the following method:
@@ -135,19 +135,26 @@ configuration from that file.
 
         If more then `max_interval` seconds have passed since the last check of
         the modification time, then check the modification time of the time and
-        reload the configuration if it has changed.
+        call `config_loader` if it has changed.
 
         force: if True, forces the check for modification, ignoring max_interval
 ```
 
 ### Testing
 
+This package provides a convenience class for mocking out the static configuration
+in your unit tests.
+
 ```
-    testing.MockConfiguration(config_data=None)
+    staticconf.testing.MockConfiguration(config_data=None)
 
         Used to mock static configuration values in unit tests. Can be used
         as a context manager.
+```
 
+`MockConfiguration` has the following methods:
+
+```
         MockConfiguration.setup()
 
             Start the mocking. Also called from __enter__
