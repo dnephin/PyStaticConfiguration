@@ -140,6 +140,23 @@ configuration from that file.
         force: if True, forces the check for modification, ignoring max_interval
 ```
 
+### Testing
+
+```
+    testing.MockConfiguration(config_data=None)
+
+        Used to mock static configuration values in unit tests. Can be used
+        as a context manager.
+
+        MockConfiguration.setup()
+
+            Start the mocking. Also called from __enter__
+
+        MockConfiguration.teardown()
+
+            Stop the mocking. Also called from __exit__
+```
+
 Notes
 -----
 

@@ -3,7 +3,7 @@ import tempfile
 from testify import run, assert_equal, TestCase, setup, teardown
 from testify.assertions import assert_raises
 
-from staticconf import config, errors
+from staticconf import config, errors, testing
 import staticconf
 
 

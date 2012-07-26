@@ -1,7 +1,7 @@
-from testify import assert_equal, TestCase, run, teardown
+from testify import assert_equal, TestCase, run, teardown, assert_raises
 
 import staticconf
-from staticconf import config
+from staticconf import config, testing, errors
 
 
 class SomeClass(object):
@@ -38,6 +38,29 @@ class EndToEndTestCase(TestCase):
         assert_equal(staticconf.get('globals'), False)
         assert_equal(staticconf.get('enable'), 'True')
         assert_equal(staticconf.get_bool('enable'), True)
+
+
+class MockConfigurationTestCase(TestCase):
+
+    def test_mock_configuration_context_manager(self):
+        one = staticconf.get('one')
+        three = staticconf.get_int('three', default=3)
+
+        with testing.MockConfiguration(dict(one=7)):
+            assert_equal(one, 7)
+            assert_equal(three, 3)
+        assert_raises(errors.ConfigurationError, staticconf.get('one'))
+
+    def test_mock_configuration(self):
+        two = staticconf.get_string('two')
+        stars = staticconf.get_bool('stars')
+
+        mock_config = testing.MockConfiguration(dict(two=2, stars=False))
+        mock_config.setup()
+        assert_equal(two, '2')
+        assert not stars
+        mock_config.teardown()
+        assert_raises(errors.ConfigurationError, staticconf.get('two'))
 
 
 if __name__ == "__main__":
