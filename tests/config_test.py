@@ -139,5 +139,24 @@ class ConfigurationWatcherTestCase(TestCase):
         self.watcher.reload()
         self.loader.assert_called_with()
 
+
+class ValidateTestCase(TestCase):
+
+    @teardown
+    def teardown_config(self):
+        config.reset()
+
+    def test_validate_passes(self):
+        staticconf.DictConfiguration({})
+        assert config.validate()
+        staticconf.get_string('one.two')
+        staticconf.DictConfiguration({'one.two': 'nice'})
+        assert config.validate()
+
+    def test_validate_fails(self):
+        staticconf.get_int('one.two')
+        assert_raises(errors.ConfigurationError, config.validate)
+
+
 if __name__ == "__main__":
     run()

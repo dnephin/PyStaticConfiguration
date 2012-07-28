@@ -35,6 +35,15 @@ def add_config_key_description(name, validator, default, help):
     config_key_descriptions.append(desc)
 
 
+def validate():
+    """Access values in all registered proxies. Missing values raise 
+    ConfigurationError.
+    """
+    for value_proxy in value_proxies:
+        str(value_proxy)
+    return True
+
+
 def view_help():
     """Return a help message describing all the statically configured keys.
     """
