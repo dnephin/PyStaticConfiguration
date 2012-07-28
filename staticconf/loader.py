@@ -38,7 +38,7 @@ log = logging.getLogger(__name__)
 
 def flatten_dict(config_data):
     for key, value in config_data.iteritems():
-        if isinstance(value, dict):
+        if hasattr(value, 'iteritems'):
             for k, v in flatten_dict(value):
                 yield '%s.%s' % (key, k), v
             continue

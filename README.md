@@ -87,7 +87,7 @@ overrides any duplicate keys in the previous.
     staticconf.YamlConfiguration(filename, ...)
     staticconf.JSONConfiguration(filename, ...)
     staticconf.INIConfiguration(filename, ...)
-    staticconf.XMLConfiguration(filename, ...)
+    staticconf.XMLConfiguration(filename, safe=False, ...)
     staticconf.PropertiesConfiguration(filename, ...)
     staticconf.ListConfiguration(sequence, ...)
     staticconf.DictConfiguration(dict, ...)
