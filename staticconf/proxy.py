@@ -90,6 +90,8 @@ class ValueProxy(object):
                     return str(self.value)
                 if name == '__repr__':
                     return repr(self.value)
+                if name == '__nonzero__':
+                    return bool(self.value)
 
                 if hasattr(operator, name):
                     return getattr(operator, name)(self.value, *args)

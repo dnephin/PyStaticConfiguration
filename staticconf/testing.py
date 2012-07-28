@@ -4,8 +4,8 @@ from staticconf import config, loader
 class MockConfiguration(object):
     """Convenience object for mocking configuration in tests."""
 
-    def __init__(self, config_data=None):
-        self.config_data = config_data or {}
+    def __init__(self, *args, **kwargs):
+        self.config_data = dict(*args, **kwargs)
 
     def setup(self):
         config.reload()

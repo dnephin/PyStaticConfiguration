@@ -46,21 +46,26 @@ def flatten_dict(config_data):
         yield key, value
 
 
+def load_config_data(loader_func, *args, **kwargs):
+    optional = kwargs.pop('optional', False)
+    try:
+        return loader_func(*args, **kwargs)
+    except Exception, e:
+        log.warn("Optional configuration failed: %s" % e)
+        if not optional:
+            raise
+        return {}
+
+
 def build_loader(loader_func):
     def loader(*args, **kwargs):
         error_on_unknown    = kwargs.pop('error_on_unknown', False)
-        optional            = kwargs.pop('optional', False)
+        error_on_duplicate  = kwargs.pop('error_on_duplicate', False)
 
-        try:
-            config_data     = loader_func(*args, **kwargs)
-        except Exception, e:
-            log.warn("Optional configuration failed: %s" % e)
-            if not optional:
-                raise
-            return {}
-
+        config_data = load_config_data(loader_func, *args, **kwargs)
         config_data = dict(flatten_dict(config_data))
         config.validate_keys(config_data.keys(), error_on_unknown)
+        config.has_duplicate_keys(config_data, error_on_duplicate)
         config.set_configuration(config_data)
         return config_data
 

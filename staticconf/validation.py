@@ -77,3 +77,7 @@ def validate_time(value):
         except ValueError:
             pass
     raise ValidationError("Invalid time format: %s" % value)
+
+
+no_op = lambda v: v
+no_op.__name__ = ''

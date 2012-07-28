@@ -1,5 +1,5 @@
 """
-Singleton configuration object and value proxies.
+Static configuration.
 """
 import logging
 import os
@@ -39,9 +39,7 @@ def validate():
     """Access values in all registered proxies. Missing values raise 
     ConfigurationError.
     """
-    for value_proxy in value_proxies:
-        str(value_proxy)
-    return True
+    return all(bool(value_proxy) for value_proxy in value_proxies)
 
 
 def view_help():
@@ -50,12 +48,7 @@ def view_help():
     def format(desc):
         help        = desc.help or ''
         default     = '' if desc.default is proxy.UndefToken else desc.default
-        type_name   = desc.validator.__name__
-
-        if type_name.startswith('validate_'):
-            type_name = type_name.replace('validate_', '')
-        elif type_name == '<lambda>':
-            type_name = ''
+        type_name   = desc.validator.__name__.replace('validate_', '')
 
         return "%-20s %-10s %-20s %s" % (desc.name, type_name, default, help)
     return '\n'.join(sorted(format(desc) for desc in config_key_descriptions))
@@ -93,6 +86,17 @@ def validate_keys(keys, error_on_unknown):
         log.warn(msg)
         return
     raise errors.ConfigurationError(msg)
+
+
+def has_duplicate_keys(config_data, raise_error):
+    duplicate_keys = set(configuration_values) & set(config_data)
+    if not duplicate_keys:
+        return
+    msg = "Duplicate keys in config: %s" % duplicate_keys
+    if raise_error:
+        raise errors.ConfigurationError(msg)
+    log.info(msg)
+    return True
 
 
 class ConfigurationWatcher(object):

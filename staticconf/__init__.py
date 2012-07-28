@@ -2,7 +2,7 @@ from staticconf import config, validation
 from staticconf.loader import *
 
 
-get             = config.build_getter(lambda v: v)
+get             = config.build_getter(validation.no_op)
 get_bool        = config.build_getter(validation.validate_bool)
 get_string      = config.build_getter(validation.validate_string)
 get_int         = config.build_getter(validation.validate_int)
@@ -12,5 +12,6 @@ get_datetime    = config.build_getter(validation.validate_datetime)
 get_time        = config.build_getter(validation.validate_time)
 
 
-reload = config.reload
+reload          = config.reload
+valdidate       = config.validate
 ConfigurationWatcher = config.ConfigurationWatcher

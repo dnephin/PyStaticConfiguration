@@ -26,6 +26,20 @@ class ValueProxyTestCase(TestCase):
         assert_equal(value_proxy + 5, 7)
         assert_equal(repr(value_proxy), "2")
         assert_equal(str(value_proxy), "2")
+        assert_equal(3 % value_proxy, 1)
+        assert_equal(3 ** 2, 9)
+        assert bool(value_proxy)
+
+    def test_proxy_with_string(self):
+        validator = mock.Mock(return_value='one%s')
+        value_proxy = proxy.ValueProxy(validator, self.value_cache, 'something')
+        assert_equal(value_proxy, 'one%s')
+        assert value_proxy < 'two'
+        assert value_proxy > 'ab'
+        assert_equal(value_proxy + '!', 'one%s!')
+        assert_equal(value_proxy % '!', 'one!')
+        assert_equal(repr(value_proxy), "'one%s'")
+        assert_equal(str(value_proxy), "one%s")
         assert bool(value_proxy)
 
     def test_proxy_zero(self):

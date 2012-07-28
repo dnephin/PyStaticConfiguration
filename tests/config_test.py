@@ -158,5 +158,24 @@ class ValidateTestCase(TestCase):
         assert_raises(errors.ConfigurationError, config.validate)
 
 
+class DuplicateKeysTestCase(TestCase):
+
+    def test_has_dupliacte_keys_false(self):
+        config_data = dict(unique_keys=123)
+        assert not config.has_duplicate_keys(config_data, True)
+
+
+    def test_has_duplicate_keys_raises(self):
+        config_data = dict(dupe_key=123)
+        with testing.MockConfiguration(config_data):
+            assert_raises(errors.ConfigurationError, 
+                config.has_duplicate_keys, config_data, True)
+
+    def test_has_duplicate_keys_no_raise(self):
+        config_data = dict(dupe_key=123)
+        with testing.MockConfiguration(config_data):
+            assert config.has_duplicate_keys(config_data, False)
+
+
 if __name__ == "__main__":
     run()
