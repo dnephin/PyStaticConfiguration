@@ -131,14 +131,21 @@ def ini_file_loader(filename):
     return config_dict
 
 
-def xml_loader(filename):
+def xml_loader(filename, safe=False):
     from xml.etree import ElementTree
 
     def build_from_element(element):
         items = dict(element.items())
-        items.update((child.tag, build_from_element(child)) for child in element)
-        # TODO: value overrides, and childs override attributes
+        child_items = dict(
+            (child.tag, build_from_element(child))
+            for child in element)
+
+        config.has_duplicate_keys(child_items, safe, items)
+        items.update(child_items)
         if element.text:
+            if 'value' in items and safe:
+                msg = "%s has tag with child or attribute named value."
+                raise errors.ConfigurationError(msg % filename)
             items['value'] = element.text
         return items
 

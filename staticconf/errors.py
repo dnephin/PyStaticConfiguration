@@ -1,8 +1,8 @@
 
 
-class ValidationError(ValueError):
+class ValidationError(Exception):
     pass
 
 
-class ConfigurationError(ValueError):
+class ConfigurationError(Exception):
     pass

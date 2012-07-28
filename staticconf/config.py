@@ -88,8 +88,8 @@ def validate_keys(keys, error_on_unknown):
     raise errors.ConfigurationError(msg)
 
 
-def has_duplicate_keys(config_data, raise_error):
-    duplicate_keys = set(configuration_values) & set(config_data)
+def has_duplicate_keys(config_data, raise_error, base_conf=configuration_values):
+    duplicate_keys = set(base_conf) & set(config_data)
     if not duplicate_keys:
         return
     msg = "Duplicate keys in config: %s" % duplicate_keys

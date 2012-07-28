@@ -4,6 +4,7 @@ values can be read statically at import time.
 
 
 """
+import functools
 import operator
 from staticconf import errors
 
@@ -32,15 +33,56 @@ _special_names = [
 ]
 
 
+unary_funcs = {
+    '__unicode__':  unicode,
+    '__str__':      str,
+    '__repr__':     repr,
+    '__nonzero__':  bool,
+}
+
+def build_class_def(cls):
+    def build_method(name):
+        def method(self, *args, **kwargs):
+            if name in unary_funcs:
+                return unary_funcs[name](self.value)
+
+            if hasattr(operator, name):
+                return getattr(operator, name)(self.value, *args)
+
+            return getattr(self.value, name)(*args, **kwargs)
+        return method
+
+    namespace = dict((name, build_method(name)) for name in _special_names)
+    return type(cls.__name__, (cls,), namespace)
+
+
+def cache_as_field(cache_name):
+    """Cache a functions return value as the field 'cache_name'."""
+    def cache_wrapper(func):
+        @functools.wraps(func)
+        def inner_wrapper(self, *args, **kwargs):
+            if hasattr(self, cache_name):
+                return getattr(self, cache_name)
+
+            ret = func(self, *args, **kwargs)
+            setattr(self, cache_name, ret)
+            return ret
+        return inner_wrapper
+    return cache_wrapper
+
+
 class ValueProxy(object):
     """Proxy a configuration value so it can be loaded after import time."""
     __slots__ = ['validator', 'config_key', 'default', '_value', 'value_cache']
 
-    class_def = None
+    @classmethod
+    @cache_as_field('_class_def')
+    def get_class_def(cls):
+        return build_class_def(cls)
 
     def __new__(cls, *args, **kwargs):
         """Create instances of this class with proxied special names."""
-        klass = cls.get_class_proxy()
+        klass = cls.get_class_def()
         instance = object.__new__(klass)
         klass.__init__(instance, *args, **kwargs)
         return instance
@@ -49,56 +91,26 @@ class ValueProxy(object):
         self.validator      = validator
         self.config_key     = key
         self.default        = default
-        self._value         = UndefToken
         self.value_cache    = value_cache
 
     @property
+    @cache_as_field('_value')
     def value(self):
-        if self._value is not UndefToken:
-            return self._value
-
         value = self.value_cache.get(self.config_key, self.default)
         if value is UndefToken:
             msg = "Configuration is missing value for: %s"
             raise errors.ConfigurationError(msg % self.config_key)
 
         try:
-            self._value = self.validator(value)
+            return self.validator(value)
         except errors.ValidationError, e:
             msg = "Failed to validate %s: %s" % (self.config_key, e)
             raise errors.ConfigurationError(msg)
-
-        return self._value
 
     def __getattr__(self, item):
         return getattr(self.value, item)
 
     def reset(self):
         """Clear the cached value so that configuration can be reloaded."""
-        self._value = UndefToken
-
-    @classmethod
-    def get_class_proxy(cls):
-        if cls.class_def:
-            return cls.class_def
-
-        def build_method(name):
-            def method(self, *args, **kw):
-                if name == '__unicode__':
-                    return unicode(self.value)
-                if name == '__str__':
-                    return str(self.value)
-                if name == '__repr__':
-                    return repr(self.value)
-                if name == '__nonzero__':
-                    return bool(self.value)
-
-                if hasattr(operator, name):
-                    return getattr(operator, name)(self.value, *args)
-
-                return getattr(self.value, name)(*args, **kw)
-            return method
-
-        namespace = dict((name, build_method(name)) for name in _special_names)
-        cls.class_def = type(cls.__name__, (cls,), namespace)
-        return cls.class_def
+        if hasattr(self, '_value'):
+            del self._value

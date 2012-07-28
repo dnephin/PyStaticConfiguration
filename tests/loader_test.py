@@ -17,11 +17,12 @@ class LoaderTestCase(TestCase):
         self.mock_config = self.patcher.start()
 
     @setup
-    def write_content_to_file(self):
-        if not self.content:
+    def write_content_to_file(self, content=None):
+        content = content or self.content
+        if not content:
             return
         self.tmpfile = tempfile.NamedTemporaryFile()
-        self.tmpfile.write(self.content)
+        self.tmpfile.write(content)
         self.tmpfile.flush()
 
     @teardown
@@ -170,6 +171,7 @@ class XMLConfigurationTestCase(LoaderTestCase):
                 <stars b="there">ok</stars>
             </something>
             <another>foo</another>
+            <empty value="E" />
         </config>
     """
 
@@ -179,6 +181,33 @@ class XMLConfigurationTestCase(LoaderTestCase):
         assert_equal(config_data['something.stars.value'], 'ok')
         assert_equal(config_data['something.stars.b'], 'there')
         assert_equal(config_data['another.value'], 'foo')
+
+    def test_xml_configuration_safe_load(self):
+        config_data = loader.XMLConfiguration(self.tmpfile.name, safe=True)
+        assert_equal(config_data['something.a'], 'here')
+        assert_equal(config_data['empty.value'], 'E')
+
+    def test_xml_configuration_safe_override(self):
+        content = """
+            <config>
+                <sometag foo="bar">
+                    <foo>E</foo>
+                </sometag>
+            </config>
+        """
+        self.write_content_to_file(content)
+        assert_raises(errors.ConfigurationError,
+                loader.XMLConfiguration, self.tmpfile.name, safe=True)
+
+    def test_xml_configuration_safe_value_tag(self):
+        content = """
+            <config>
+                <sometag value="snazz">E</sometag>
+            </config>
+        """
+        self.write_content_to_file(content)
+        assert_raises(errors.ConfigurationError,
+            loader.XMLConfiguration, self.tmpfile.name, safe=True)
 
 
 class PropertiesConfigurationTestCase(LoaderTestCase):

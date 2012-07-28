@@ -42,6 +42,19 @@ class ValueProxyTestCase(TestCase):
         assert_equal(str(value_proxy), "one%s")
         assert bool(value_proxy)
 
+    def test_proxy_with_datetime(self):
+        the_date = datetime.datetime(2012, 12, 1, 5, 5, 5)
+        validator = mock.Mock(return_value=the_date)
+        value_proxy = proxy.ValueProxy(validator, self.value_cache, 'something')
+        assert_equal(value_proxy, the_date)
+        assert value_proxy < datetime.datetime(2012, 12, 3)
+        assert value_proxy > datetime.datetime(2012, 1, 4)
+        four_days_ahead = datetime.datetime(2012, 12, 4 ,5, 5, 5)
+        assert_equal(value_proxy + datetime.timedelta(days=3), four_days_ahead)
+        assert_equal(repr(value_proxy), repr(the_date))
+        assert_equal(str(value_proxy), str(the_date))
+        assert bool(value_proxy)
+
     def test_proxy_zero(self):
         validator = mock.Mock(return_value=0)
         self.value_proxy = proxy.ValueProxy(validator, self.value_cache, 'zero')
