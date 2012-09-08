@@ -15,10 +15,10 @@ class ConfigurationNamespaceTestCase(TestCase):
         self.namespace = config.ConfigNamespace(self.name)
         self.keys = ['one', 'two', 'three']
 
-    def test_add_get_value_proxies(self):
+    def test_register_get_value_proxies(self):
         proxies = [mock.Mock(), mock.Mock()]
         for proxy in proxies:
-            self.namespace.add_value_proxy(proxy)
+            self.namespace.register_proxy(proxy)
         assert_equal(self.namespace.get_value_proxies(), proxies)
 
     def test_update_values(self):
@@ -79,12 +79,32 @@ class ReloadTestCase(TestCase):
         assert_equal(seven, 'el')
 
     def test_reload_all(self):
-        namespace = config.get_namespace('another_one')
-        # TODO:
+        name = 'another_one'
+        staticconf.DictConfiguration(dict(one='three'))
+        staticconf.DictConfiguration(dict(two='three'), namespace=name)
+        one, two = staticconf.get('one'), staticconf.get('two', namespace=name)
+        # access the values to set the value_proxy cache
+        _ = bool(one), bool(two)
+
+        staticconf.DictConfiguration(dict(one='four'))
+        staticconf.DictConfiguration(dict(two='five'), namespace=name)
+        staticconf.reload(all_names=True)
+        assert_equal(one, 'four')
+        assert_equal(two, 'five')
 
     def test_reload_single(self):
-        pass
-        # TODO:
+        name = 'another_one'
+        staticconf.DictConfiguration(dict(one='three'))
+        staticconf.DictConfiguration(dict(two='three'), namespace=name)
+        one, two = staticconf.get('one'), staticconf.get('two', namespace=name)
+        # access the values to set the value_proxy cache
+        _ = bool(one), bool(two)
+
+        staticconf.DictConfiguration(dict(one='four'))
+        staticconf.DictConfiguration(dict(two='five'), namespace=name)
+        staticconf.reload()
+        assert_equal(one, 'four')
+        assert_equal(two, 'three')
 
 
 class ValidateTestCase(TestCase):
@@ -93,20 +113,33 @@ class ValidateTestCase(TestCase):
     def teardown_config(self):
         config._reset()
 
-    def test_validate_passes(self):
+    def test_validate_single_passes(self):
         staticconf.DictConfiguration({})
         config.validate()
         staticconf.get_string('one.two')
         staticconf.DictConfiguration({'one.two': 'nice'})
         config.validate()
 
-    def test_validate_fails(self):
+    def test_validate_single_fails(self):
         staticconf.get_int('one.two')
         assert_raises(errors.ConfigurationError, config.validate)
 
-    def test_validate_all(self):
-        # TODO:
-        pass
+    def test_validate_all_passes(self):
+        name = 'yan'
+        staticconf.DictConfiguration({}, namespace=name)
+        staticconf.DictConfiguration({})
+        config.validate(all_names=True)
+        staticconf.get_string('one.two')
+        staticconf.get_string('foo', namespace=name)
+
+        staticconf.DictConfiguration({'one.two': 'nice'})
+        staticconf.DictConfiguration({'foo': 'nice'}, namespace=name)
+        config.validate(all_names=True)
+
+    def test_validate_all_fails(self):
+        name = 'yan'
+        staticconf.get_string('foo', namespace=name)
+        assert_raises(errors.ConfigurationError, config.validate, all_names=True)
 
 
 class ViewHelpTestCase(TestCase):

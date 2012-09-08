@@ -14,6 +14,7 @@ log = logging.getLogger(__name__)
 # Name for the default namespace
 DEFAULT = 'default'
 
+
 class ConfigNamespace(object):
     """A configuration namespace, which contains the list of value proxies
     and configuration values.
@@ -27,7 +28,8 @@ class ConfigNamespace(object):
     def get_value_proxies(self):
         return self.value_proxies
 
-    def add_value_proxy(self, proxy):
+    def register_proxy(self, proxy):
+        """Register a new value proxy in this namespace."""
         self.value_proxies.append(proxy)
 
     def update_values(self, *args, **kwargs):
@@ -73,7 +75,6 @@ config_key_descriptions = []
 configuration_namespaces = {DEFAULT: ConfigNamespace(DEFAULT)}
 
 
-# TODO: add namespace to descsription
 KeyDescription = namedtuple('KeyDescription',
         'name validator default namespace help')
 
@@ -85,11 +86,6 @@ def get_namespace(name):
     if name not in configuration_namespaces:
         configuration_namespaces[name] = ConfigNamespace(name)
     return configuration_namespaces[name]
-
-def register_proxy(proxy, name=DEFAULT):
-    """Register a new value proxy in a namespace."""
-    namespace = get_namespace(name)
-    namespace.add_value_proxy(proxy)
 
 
 def reload(name=DEFAULT, all_names=False):
@@ -148,7 +144,7 @@ def build_getter(validator, getter_namespace=None):
         namespace   = get_namespace(name)
         args        = validator, namespace.get_config_values(), key_name, default
         value_proxy = proxy.ValueProxy(*args)
-        register_proxy(value_proxy, name=name)
+        namespace.register_proxy(value_proxy)
         add_config_key_description(key_name, validator, default, name, help)
         return value_proxy
 
