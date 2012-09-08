@@ -158,32 +158,6 @@ class ViewHelpTestCase(TestCase):
         config._reset()
 
 
-class BuildGetterTestCase(TestCase):
-
-    def test_build_getter(self):
-        validator = mock.Mock()
-        getter = config.build_getter(validator)
-        assert callable(getter), "Getter is not callable"
-        value_proxy = getter('the_name')
-        namespace = config.get_namespace(config.DEFAULT)
-        assert value_proxy is namespace.get_value_proxies()[-1]
-        assert_equal(value_proxy.config_key, "the_name")
-        assert_equal(value_proxy.value_cache, namespace.configuration_values)
-        config._reset()
-
-    def test_build_getter_with_getter_namespace(self):
-        validator = mock.Mock()
-        name = 'the stars'
-        getter = config.build_getter(validator, getter_namespace=name)
-        assert callable(getter), "Getter is not callable"
-        value_proxy = getter('the_name')
-        namespace = config.get_namespace(name)
-        assert value_proxy is namespace.get_value_proxies()[-1]
-        assert_equal(value_proxy.config_key, "the_name")
-        assert_equal(value_proxy.value_cache, namespace.configuration_values)
-        config._reset()
-
-
 class HasDuplicateKeysTestCase(TestCase):
 
     @setup

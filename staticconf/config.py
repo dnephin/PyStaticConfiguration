@@ -135,22 +135,6 @@ def _reset():
     config_key_descriptions[:] = []
 
 
-def build_getter(validator, getter_namespace=None):
-    """Create a getter function for retrieving values from the config cache.
-    Getters will default to the DEFAULT namespace.
-    """
-    def proxy_register(key_name, default=UndefToken, help=None, namespace=None):
-        name        = namespace or getter_namespace or DEFAULT
-        namespace   = get_namespace(name)
-        args        = validator, namespace.get_config_values(), key_name, default
-        value_proxy = proxy.ValueProxy(*args)
-        namespace.register_proxy(value_proxy)
-        add_config_key_description(key_name, validator, default, name, help)
-        return value_proxy
-
-    return proxy_register
-
-
 def has_duplicate_keys(config_data, base_conf, raise_error):
     """Compare two dictionaries for duplicate keys. if raise_error is True
     then raise on exception, otherwise log return True."""
