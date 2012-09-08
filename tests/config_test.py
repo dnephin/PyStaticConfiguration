@@ -3,61 +3,73 @@ import tempfile
 from testify import run, assert_equal, TestCase, setup, teardown
 from testify.assertions import assert_raises
 
-from staticconf import config, errors, testing
+from staticconf import config, errors
 import staticconf
 
 
-class BuildGetterTestCase(TestCase):
-
-    def test_build_getter(self):
-        validator = mock.Mock()
-        getter = config.build_getter(validator)
-        assert callable(getter), "Getter is not callable"
-        value_proxy = getter('the_name')
-        assert value_proxy is config.value_proxies[-1]
-        assert_equal(value_proxy.config_key, "the_name")
-        assert_equal(value_proxy.value_cache, config.configuration_values)
-        config.reset()
-
-
-class ValidateKeysTestCase(TestCase):
+class ConfigurationNamespaceTestCase(TestCase):
 
     @setup
-    def setup_value_proxies(self):
-        self.patcher = mock.patch('staticconf.config.value_proxies')
-        self.log_patcher = mock.patch('staticconf.config.log')
-        self.mock_proxies = self.patcher.start()
-        self.mock_log = self.log_patcher.start()
+    def setup_namespace(self):
+        self.name = 'the_name'
+        self.namespace = config.ConfigNamespace(self.name)
         self.keys = ['one', 'two', 'three']
 
-    @teardown
-    def teardown_value_proxies(self):
-        self.patcher.stop()
-        self.log_patcher.stop()
+    def test_add_get_value_proxies(self):
+        proxies = [mock.Mock(), mock.Mock()]
+        for proxy in proxies:
+            self.namespace.add_value_proxy(proxy)
+        assert_equal(self.namespace.get_value_proxies(), proxies)
 
-    def test_no_unknown_keys(self):
+    def test_update_values(self):
+        values = dict(one=1, two=2)
+        self.namespace.update_values(values)
+        assert 'one' in self.namespace
+        assert 'two' in self.namespace
+
+    def test_get_config_values(self):
+        self.namespace['stars'] = 'foo'
+        values = self.namespace.get_config_values()
+        assert_equal(values, {'stars': 'foo'})
+
+    def test_validate_keys_no_unknown_keys(self):
         proxies = [mock.Mock(config_key=i) for i in self.keys]
-        self.mock_proxies.__iter__.return_value = proxies
-        config.validate_keys(self.keys, True)
-        config.validate_keys(self.keys, False)
-        self.mock_log.warn.assert_not_called()
+        self.namespace.value_proxies = proxies
+        with mock.patch('staticconf.config.log') as mock_log:
+            self.namespace.validate_keys(self.keys, True)
+            self.namespace.validate_keys(self.keys, False)
+            assert not mock_log.warn.mock_calls
 
-    def test_unknown_warn(self):
-        proxies = []
-        self.mock_proxies.__iter__.return_value = proxies
-        config.validate_keys(self.keys, False)
-        calls = self.mock_log.warn.mock_calls
-        assert_equal(len(calls), 1)
+    def test_validate_keys_unknown_warn(self):
+        with mock.patch('staticconf.config.log') as mock_log:
+            self.namespace.validate_keys(self.keys, False)
+            assert_equal(len(mock_log.warn.mock_calls), 1)
 
-    def test_unknown_raise(self):
-        proxies = []
-        self.mock_proxies.__iter__.return_value = proxies
-        assert_raises(errors.ConfigurationError, config.validate_keys, self.keys, True)
+    def test_validate_keys_unknown_raise(self):
+        assert_raises(errors.ConfigurationError,
+                self.namespace.validate_keys, self.keys, True)
+
+class GetNamespaceTestCase(TestCase):
+
+    def test_get_namespace_new(self):
+        name = 'some_unlikely_name'
+        assert name not in config.configuration_namespaces
+        config.get_namespace(name)
+        assert name in config.configuration_namespaces
+
+    def test_get_namespace_existing(self):
+        name = 'the_common_name'
+        namespace = config.get_namespace(name)
+        assert_equal(namespace, config.get_namespace(name))
 
 
 class ReloadTestCase(TestCase):
 
-    def test_reload(self):
+    @teardown
+    def teardown_config(self):
+        config._reset()
+
+    def test_reload_default(self):
         staticconf.DictConfiguration(dict(one='three', seven='nine'))
         one, seven = staticconf.get('one'), staticconf.get('seven')
 
@@ -65,12 +77,41 @@ class ReloadTestCase(TestCase):
         staticconf.reload()
         assert_equal(one, 'ten')
         assert_equal(seven, 'el')
-        config.reset()
+
+    def test_reload_all(self):
+        namespace = config.get_namespace('another_one')
+        # TODO:
+
+    def test_reload_single(self):
+        pass
+        # TODO:
+
+
+class ValidateTestCase(TestCase):
+
+    @teardown
+    def teardown_config(self):
+        config._reset()
+
+    def test_validate_passes(self):
+        staticconf.DictConfiguration({})
+        config.validate()
+        staticconf.get_string('one.two')
+        staticconf.DictConfiguration({'one.two': 'nice'})
+        config.validate()
+
+    def test_validate_fails(self):
+        staticconf.get_int('one.two')
+        assert_raises(errors.ConfigurationError, config.validate)
+
+    def test_validate_all(self):
+        # TODO:
+        pass
 
 
 class ViewHelpTestCase(TestCase):
 
-    expected = "%-52s %s\n%-20s %-10s %-21s\n%-20s %-10s %-20s %s" % (
+    expected = "%-63s %s\n%-31s %-10s %-21s\n%-31s %-10s %-20s %s" % (
         'one', 'the one', 'when', 'time', 'NOW', 'you sure', 'bool',
         'No', 'Are you?')
 
@@ -81,7 +122,55 @@ class ViewHelpTestCase(TestCase):
 
         help_msg = config.view_help()
         assert_equal(help_msg, self.expected)
-        config.reset()
+        config._reset()
+
+
+class BuildGetterTestCase(TestCase):
+
+    def test_build_getter(self):
+        validator = mock.Mock()
+        getter = config.build_getter(validator)
+        assert callable(getter), "Getter is not callable"
+        value_proxy = getter('the_name')
+        namespace = config.get_namespace(config.DEFAULT)
+        assert value_proxy is namespace.get_value_proxies()[-1]
+        assert_equal(value_proxy.config_key, "the_name")
+        assert_equal(value_proxy.value_cache, namespace.configuration_values)
+        config._reset()
+
+    def test_build_getter_with_getter_namespace(self):
+        validator = mock.Mock()
+        name = 'the stars'
+        getter = config.build_getter(validator, getter_namespace=name)
+        assert callable(getter), "Getter is not callable"
+        value_proxy = getter('the_name')
+        namespace = config.get_namespace(name)
+        assert value_proxy is namespace.get_value_proxies()[-1]
+        assert_equal(value_proxy.config_key, "the_name")
+        assert_equal(value_proxy.value_cache, namespace.configuration_values)
+        config._reset()
+
+
+class HasDuplicateKeysTestCase(TestCase):
+
+    @setup
+    def setup_base_conf(self):
+        self.base_conf = {'fear': 'is_the', 'mind': 'killer'}
+
+    def test_has_dupliacte_keys_false(self):
+        config_data = dict(unique_keys=123)
+        assert not config.has_duplicate_keys(config_data, self.base_conf, True)
+        assert not config.has_duplicate_keys(config_data, self.base_conf, False)
+
+    def test_has_duplicate_keys_raises(self):
+        config_data = dict(fear=123)
+        assert_raises(errors.ConfigurationError,
+            config.has_duplicate_keys, config_data, self.base_conf, True)
+
+    def test_has_duplicate_keys_no_raise(self):
+        config_data = dict(mind=123)
+        assert config.has_duplicate_keys(config_data, self.base_conf, False)
+
 
 class ConfigurationWatcherTestCase(TestCase):
 
@@ -138,43 +227,6 @@ class ConfigurationWatcherTestCase(TestCase):
     def test_reload(self):
         self.watcher.reload()
         self.loader.assert_called_with()
-
-
-class ValidateTestCase(TestCase):
-
-    @teardown
-    def teardown_config(self):
-        config.reset()
-
-    def test_validate_passes(self):
-        staticconf.DictConfiguration({})
-        assert config.validate()
-        staticconf.get_string('one.two')
-        staticconf.DictConfiguration({'one.two': 'nice'})
-        assert config.validate()
-
-    def test_validate_fails(self):
-        staticconf.get_int('one.two')
-        assert_raises(errors.ConfigurationError, config.validate)
-
-
-class DuplicateKeysTestCase(TestCase):
-
-    def test_has_dupliacte_keys_false(self):
-        config_data = dict(unique_keys=123)
-        assert not config.has_duplicate_keys(config_data, True)
-
-
-    def test_has_duplicate_keys_raises(self):
-        config_data = dict(dupe_key=123)
-        with testing.MockConfiguration(config_data):
-            assert_raises(errors.ConfigurationError, 
-                config.has_duplicate_keys, config_data, True)
-
-    def test_has_duplicate_keys_no_raise(self):
-        config_data = dict(dupe_key=123)
-        with testing.MockConfiguration(config_data):
-            assert config.has_duplicate_keys(config_data, False)
 
 
 if __name__ == "__main__":

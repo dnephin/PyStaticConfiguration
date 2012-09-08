@@ -61,12 +61,14 @@ def build_loader(loader_func):
     def loader(*args, **kwargs):
         error_on_unknown    = kwargs.pop('error_on_unknown', False)
         error_on_duplicate  = kwargs.pop('error_on_duplicate', False)
+        name                = kwargs.pop('namespace', config.DEFAULT)
 
         config_data = load_config_data(loader_func, *args, **kwargs)
         config_data = dict(flatten_dict(config_data))
-        config.validate_keys(config_data.keys(), error_on_unknown)
-        config.has_duplicate_keys(config_data, error_on_duplicate)
-        config.set_configuration(config_data)
+        namespace   = config.get_namespace(name)
+        namespace.validate_keys(config_data.keys(), error_on_unknown)
+        namespace.has_duplicate_keys(config_data, error_on_duplicate)
+        namespace.update_values(config_data)
         return config_data
 
     return loader
@@ -140,7 +142,7 @@ def xml_loader(filename, safe=False):
             (child.tag, build_from_element(child))
             for child in element)
 
-        config.has_duplicate_keys(child_items, safe, items)
+        config.has_duplicate_keys(child_items, items, safe)
         items.update(child_items)
         if element.text:
             if 'value' in items and safe:

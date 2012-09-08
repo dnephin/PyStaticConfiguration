@@ -11,6 +11,9 @@ class SomeClass(object):
     ratio = staticconf.get_float('SomeClass.ratio')
     alt_ratio = staticconf.get_float('SomeClass.alt_ratio', 6.0)
 
+    real_max = staticconf.get_int('SomeClass.max', namespace='real')
+    real_min = staticconf.get_int('SomeClass.min', namespace='real')
+
 
 class EndToEndTestCase(TestCase):
 
@@ -26,7 +29,7 @@ class EndToEndTestCase(TestCase):
 
     @teardown
     def teardown_configs(self):
-        config.reset()
+        config._reset()
 
     def test_load_and_validate(self):
         staticconf.DictConfiguration(self.config)
@@ -38,6 +41,16 @@ class EndToEndTestCase(TestCase):
         assert_equal(staticconf.get('globals'), False)
         assert_equal(staticconf.get('enable'), 'True')
         assert_equal(staticconf.get_bool('enable'), True)
+
+    def test_load_and_validate_namespace(self):
+        real_config = {'SomeClass.min': 20, 'SomeClass.max': 25}
+        staticconf.DictConfiguration(self.config)
+        staticconf.DictConfiguration(real_config, namespace='real')
+        some_class = SomeClass()
+        assert_equal(some_class.max, 100)
+        assert_equal(some_class.min, 0)
+        assert_equal(some_class.real_min, 20)
+        assert_equal(some_class.real_max, 25)
 
 
 class MockConfigurationTestCase(TestCase):
