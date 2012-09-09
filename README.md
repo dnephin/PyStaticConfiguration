@@ -56,20 +56,21 @@ trying to use the returned value before a configuration is loaded will raise
 `ConfigurationError`.
 
 ```
-    staticconf.get(config_key, default=None, help=None)
-    staticconf.get_bool(config_key, default=None, help=None)
-    staticconf.get_string(config_key, default=None, help=None)
-    staticconf.get_int(config_key, default=None, help=None)
-    staticconf.get_float(config_key, default=None, help=None)
-    staticconf.get_date(config_key, default=None, help=None)
-    staticconf.get_datetime(config_key, default=None, help=None)
-    staticconf.get_time(config_key, default=None, help=None)
+    staticconf.get(config_key, default=None, help=None, namespace=None)
+    staticconf.get_bool(config_key, default=None, help=None, namespace=None)
+    staticconf.get_string(config_key, default=None, help=None, namespace=None)
+    staticconf.get_int(config_key, default=None, help=None, namespace=None)
+    staticconf.get_float(config_key, default=None, help=None, namespace=None)
+    staticconf.get_date(config_key, default=None, help=None, namespace=None)
+    staticconf.get_datetime(config_key, default=None, help=None, namespace=None)
+    staticconf.get_time(config_key, default=None, help=None, namespace=None)
 
         config_key: string configuration key
         default:    if no `default` is given, the key must be present in the
                     configuration. Raises ConfigurationError on missing key.
         help:       a help string describing the purpose of the config value.
                     See `staticconf.view_help()`.
+        namespace:  get the value from this namespace instead of DEFAULT.
 
         returns a proxy around the future configuration value. This object can
         be used directly as the proxied object.
@@ -98,6 +99,8 @@ overrides any duplicate keys in the previous.
         error_on_unknown:   raises an error if there are keys in the config that
                             have not been retrieved (using get_*).
         optional:           if True only warns on failure to load configuration
+        namespace:          load the configuration values into a namespace.
+                            Defaults to the DEFAULT namespace.
 
         returns the loaded configuration dictionary. This dictionary is added
         to the static configuration, and can be accessed using the getters.
@@ -109,6 +112,7 @@ A new configuration should be loaded immediately before `reload`.
 
     staticconf.YamlConfiguration(...)
     staticconf.reload()
+
 
 ### Watch a file for modifications
 
@@ -226,6 +230,14 @@ Use these values in your code:
         max_value = staticconf.get_int('useful.max_value', default=100)
         ratio     = staticconf.get_float('useful.ratio')
         msg       = staticconf.get('useful.msg_string', default="Welcome")
+```
+
+Using a NamespaceGetters object.
+
+```python
+    conf_namespace = staticconf.NamespaceGetters('my_namespace')
+    max_value      = conf_namespace.get_int('useful.max_value')
+    ratio          = conf_namespace.get_float('useful.ratio')
 ```
 
 Periodically check the configuration file for changes:

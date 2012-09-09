@@ -12,7 +12,7 @@ log = logging.getLogger(__name__)
 
 
 # Name for the default namespace
-DEFAULT = 'default'
+DEFAULT = 'DEFAULT'
 
 
 class ConfigNamespace(object):
