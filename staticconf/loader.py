@@ -112,6 +112,7 @@ def auto_loader(base_dir='.', auto_configurations=None):
 
 def python_loader(module_name):
     module = __import__(module_name, fromlist=['*'])
+    reload(module)
     config_dict = {}
     for name in dir(module):
         if name.startswith('__'):

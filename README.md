@@ -1,8 +1,11 @@
 PyStaticConfiguration
 =====================
 
-A python library for loading static configuration modeled after
-Java Apache Commons Configuration.
+A python library for loading configuration. Configuration keys are defined
+statically, and configuration can be reloaded at any time.  This allows
+you to discover missing configuration values immediately, and reload 
+configuration changes without needing a reference to the configuration 
+in every object.
 
 This library provides the following:
 
@@ -11,6 +14,7 @@ This library provides the following:
 * override config values from the command line (see examples)
 * composite configurations from multiple sources
 * configuration can be reloaded
+* configuration namespaces
 
 
 ### Why use PyStaticConfiguration?

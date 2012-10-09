@@ -6,7 +6,7 @@ except ImportError:
 
 setup(
     name="PyStaticConfiguration",
-    version="0.3",
+    version="0.3.1",
     provides=["staticconf"],
     author="Daniel Nephin",
     author_email="dnephin@gmail.com",
