@@ -61,8 +61,9 @@ def cache_as_field(cache_name):
     def cache_wrapper(func):
         @functools.wraps(func)
         def inner_wrapper(self, *args, **kwargs):
-            if hasattr(self, cache_name):
-                return getattr(self, cache_name)
+            value = getattr(self, cache_name, UndefToken)
+            if value != UndefToken:
+                return value
 
             ret = func(self, *args, **kwargs)
             setattr(self, cache_name, ret)
@@ -92,6 +93,7 @@ class ValueProxy(object):
         self.config_key     = key
         self.default        = default
         self.value_cache    = value_cache
+        self._value         = UndefToken
 
     @property
     @cache_as_field('_value')
@@ -112,5 +114,4 @@ class ValueProxy(object):
 
     def reset(self):
         """Clear the cached value so that configuration can be reloaded."""
-        if hasattr(self, '_value'):
-            del self._value
+        self._value = UndefToken
