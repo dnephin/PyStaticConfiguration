@@ -4,6 +4,7 @@ from testify import assert_equal, TestCase, run, teardown, setup
 from testify.assertions import assert_raises
 import tempfile
 import textwrap
+import time
 
 from staticconf import loader, errors
 
@@ -135,12 +136,45 @@ class AutoConfigurationTestCase(LoaderTestCase):
 
 class PythonConfigurationTestCase(LoaderTestCase):
 
-    module = 'tests.data.example'
+    module          = 'example_mod'
+    module_file     = 'example_mod.py'
+    module_content  = textwrap.dedent("""
+        some_value = "test"
+
+        more_values = {
+            "depth": "%s"
+        }
+    """)
+
+    @teardown
+    def remove_module(self):
+        if os.path.exists(self.module_file):
+            os.remove(self.module_file)
+
+    @setup
+    def setup_module(self):
+        self.create_module('one')
+
+    def create_module(self, value):
+        # It appears that reload() checks mtime, and does not reload the module
+        # if it has not changed. This is a problem because the mtime does not
+        # change when we re-create the file in the same second.
+        # Sleeping sucks. Is there a better solution?
+        time.sleep(1)
+        with open(self.module_file, 'w') as fh:
+            fh.write(self.module_content % value)
 
     def test_python_configuration(self):
         config_data = loader.PythonConfiguration(self.module)
         assert_equal(config_data['some_value'], 'test')
         assert_equal(config_data['more_values.depth'], 'one')
+
+    def test_python_configuration_reload(self):
+        config_data = loader.PythonConfiguration(self.module)
+        assert_equal(config_data['more_values.depth'], 'one')
+        self.create_module('two')
+        config_data = loader.PythonConfiguration(self.module)
+        assert_equal(config_data['more_values.depth'], 'two')
 
 
 class INIConfigurationTestCase(LoaderTestCase):
