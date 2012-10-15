@@ -68,6 +68,9 @@ trying to use the returned value before a configuration is loaded will raise
     staticconf.get_date(config_key, default=None, help=None, namespace=None)
     staticconf.get_datetime(config_key, default=None, help=None, namespace=None)
     staticconf.get_time(config_key, default=None, help=None, namespace=None)
+    staticconf.get_list(config_kye, default=None, help=None, namespace=None)
+    staticconf.get_set(config_kye, default=None, help=None, namespace=None)
+    staticconf.get_tuple(config_kye, default=None, help=None, namespace=None)
 
         config_key: string configuration key
         default:    if no `default` is given, the key must be present in the
@@ -97,6 +100,7 @@ overrides any duplicate keys in the previous.
     staticconf.ListConfiguration(sequence, ...)
     staticconf.DictConfiguration(dict, ...)
     staticconf.PythonConfiguration(module_name, ...)
+    staticconf.ObjectConfiguration(object, ...)
 
         These keyword params are supported by all configuration loaders:
 

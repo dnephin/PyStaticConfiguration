@@ -39,6 +39,9 @@ get_float       = build_getter(validation.validate_float)
 get_date        = build_getter(validation.validate_date)
 get_datetime    = build_getter(validation.validate_datetime)
 get_time        = build_getter(validation.validate_time)
+get_list        = build_getter(validation.validate_list)
+get_set         = build_getter(validation.validate_set)
+get_tuple       = build_getter(validation.validate_tuple)
 
 
 class NamespaceGetters(object):
@@ -54,3 +57,6 @@ class NamespaceGetters(object):
         self.get_date       = build_getter(validation.validate_date, name)
         self.get_datetime   = build_getter(validation.validate_datetime, name)
         self.get_time       = build_getter(validation.validate_time, name)
+        self.get_list       = build_getter(validation.validate_list)
+        self.get_set        = build_getter(validation.validate_set)
+        self.get_tuple      = build_getter(validation.validate_tuple)

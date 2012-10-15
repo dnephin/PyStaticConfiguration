@@ -79,5 +79,31 @@ def validate_time(value):
     raise ValidationError("Invalid time format: %s" % value)
 
 
+def validate_iterable(iterable_type, value):
+    """Convert the iterable to iterable_type, or raise a Configuration
+    exception.
+    """
+    if isinstance(value, basestring):
+        msg = "Invalid iterable of type(%s): %s"
+        raise ValidationError(msg % (typle(value), value))
+
+    try:
+        return iterable_type(value)
+    except TypeError:
+        raise ValidationError("Invalid iterable: %s" % (value))
+
+
+def validate_list(value):
+    return validate_iterable(list, value)
+
+
+def validate_set(value):
+    return validate_iterable(set, value)
+
+
+def validate_tuple(value):
+    return validate_iterable(tuple, value)
+
+
 no_op = lambda v: v
 no_op.__name__ = ''

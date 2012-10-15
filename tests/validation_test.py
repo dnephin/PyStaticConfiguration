@@ -46,5 +46,17 @@ class DateTimeValidationTestCase(TestCase):
         assert_equal(actual, expected)
 
 
+class IterableValidationTestCase(TestCase):
+
+    def test_validate_list(self):
+        expected = range(3)
+        actual = validation.validate_list((0, 1, 2))
+        assert_equal(expected, actual)
+
+    def test_validate_set(self):
+        expected = set([3, 2, 1])
+        actual = validation.validate_set([1,3,2,2,1,3,2])
+        assert_equal(expected, actual)
+
 if __name__ == "__main__":
     run()
