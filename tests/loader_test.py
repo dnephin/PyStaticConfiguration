@@ -1,4 +1,5 @@
 import os
+import datetime
 import mock
 from testify import assert_equal, TestCase, run, teardown, setup
 from testify.assertions import assert_raises
@@ -255,6 +256,14 @@ class CompositeConfigurationTestCase(TestCase):
             loader_call.assert_called_with(arg_one, arg_two)
 
 
+class ObjectConfigurationTestCase(LoaderTestCase):
+
+    def test_load(self):
+        content = datetime.datetime(2012, 3, 14, 15, 9, 26)
+        config_data = loader.ObjectConfiguration(content)
+        assert_equal(config_data['year'], 2012)
+        assert_equal(config_data['month'], 3)
+        assert_equal(config_data['hour'], 15)
 
 
 if __name__ == "__main__":

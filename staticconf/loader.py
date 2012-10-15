@@ -113,12 +113,13 @@ def auto_loader(base_dir='.', auto_configurations=None):
 def python_loader(module_name):
     module = __import__(module_name, fromlist=['*'])
     reload(module)
-    config_dict = {}
-    for name in dir(module):
-        if name.startswith('__'):
-            continue
-        config_dict[name] = getattr(module, name)
-    return config_dict
+    return object_loader(module)
+
+
+def object_loader(obj):
+    return dict(
+        (name, getattr(obj, name))
+        for name in dir(obj) if not name.startswith('__'))
 
 
 def ini_file_loader(filename):
@@ -201,6 +202,7 @@ YamlConfiguration       = build_loader(yaml_loader)
 JSONConfiguration       = build_loader(json_loader)
 ListConfiguration       = build_loader(list_loader)
 DictConfiguration       = build_loader(lambda d: d)
+ObjectConfiguration     = build_loader(object_loader)
 AutoConfiguration       = build_loader(auto_loader)
 PythonConfiguration     = build_loader(python_loader)
 INIConfiguration        = build_loader(ini_file_loader)
