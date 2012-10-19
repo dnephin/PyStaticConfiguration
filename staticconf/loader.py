@@ -29,7 +29,8 @@ __all__ = [
     'INIConfiguration',
     'XMLConfiguration',
     'PropertiesConfiguration',
-    'CompositeConfiguration'
+    'CompositeConfiguration',
+    'ObjectConfiguration',
 ]
 
 
