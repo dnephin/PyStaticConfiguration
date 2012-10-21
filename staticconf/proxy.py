@@ -12,7 +12,10 @@ class UndefToken(object):
     """A token to represent an undefined value, so that None can be used
     as a default value.
     """
-    pass
+    def __str__(self):
+        return "Undefined"
+
+UndefToken = UndefToken()
 
 
 _special_names = [

@@ -2,6 +2,7 @@ import mock
 import tempfile
 from testify import run, assert_equal, TestCase, setup, teardown
 from testify.assertions import assert_raises
+from testify import class_setup, class_teardown
 
 from staticconf import config, errors
 import staticconf
@@ -144,18 +145,41 @@ class ValidateTestCase(TestCase):
 
 class ViewHelpTestCase(TestCase):
 
-    expected = "%-63s %s\n%-31s %-10s %-21s\n%-31s %-10s %-20s %s" % (
-        'one', 'the one', 'when', 'time', 'NOW', 'you sure', 'bool',
-        'No', 'Are you?')
-
-    def test_view_help(self):
+    @class_setup
+    def setup_descriptions(self):
         staticconf.get('one', help="the one")
-        staticconf.get_time('when', default='NOW')
+        staticconf.get_time('when', default='NOW', help="The time")
         staticconf.get_bool('you sure', default='No', help='Are you?')
+        staticconf.get('one', help="the one", namespace='Beta')
+        staticconf.get('one', help="the one", namespace='Alpha')
+        staticconf.get('two', help="the two", namespace='Alpha')
 
-        help_msg = config.view_help()
-        assert_equal(help_msg, self.expected)
+    @class_teardown
+    def teardown_descriptions(self):
         config._reset()
+
+    @setup
+    def setup_lines(self):
+        self.lines = config.view_help().split('\n')
+
+        print config.view_help()
+
+    def test_view_help_format(self):
+        line, help = self.lines[4:6]
+        assert_equal(help, 'The time')
+        assert_equal(line, 'when (Type: time, Default: NOW)')
+
+    def test_view_help_format_namespace(self):
+        namespace, one, _, two, _, blank = self.lines[9:15]
+        assert_equal(namespace, 'Namespace: Alpha')
+        assert one.startswith('one')
+        assert two.startswith('two')
+        assert_equal(blank, '')
+
+    def test_view_help_namespace_sort(self):
+        lines = filter(lambda l: l.startswith('Namespace'), self.lines)
+        expected = ['Namespace: DEFAULT', 'Namespace: Alpha', 'Namespace: Beta']
+        assert_equal(lines, expected)
 
 
 class HasDuplicateKeysTestCase(TestCase):

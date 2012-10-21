@@ -31,7 +31,7 @@ def build_getter(validator, getter_namespace=None):
     return proxy_register
 
 
-get             = build_getter(validation.no_op)
+get             = build_getter(validation.validate_any)
 get_bool        = build_getter(validation.validate_bool)
 get_string      = build_getter(validation.validate_string)
 get_int         = build_getter(validation.validate_int)
@@ -49,7 +49,7 @@ class NamespaceGetters(object):
 
     def __init__(self, name):
         self.namespace      = name
-        self.get            = build_getter(validation.no_op, name)
+        self.get            = build_getter(validation.validate_any, name)
         self.get_bool       = build_getter(validation.validate_bool, name)
         self.get_string     = build_getter(validation.validate_string, name)
         self.get_int        = build_getter(validation.validate_int, name)

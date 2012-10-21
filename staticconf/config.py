@@ -71,12 +71,11 @@ class ConfigNamespace(object):
         self.value_proxies[:] = []
 
 
-config_key_descriptions = []
+config_key_descriptions = {}
 configuration_namespaces = {DEFAULT: ConfigNamespace(DEFAULT)}
 
 
-KeyDescription = namedtuple('KeyDescription',
-        'name validator default namespace help')
+KeyDescription = namedtuple('KeyDescription', 'name validator default help')
 
 
 def get_namespace(name):
@@ -100,8 +99,8 @@ def reload(name=DEFAULT, all_names=False):
 
 
 def add_config_key_description(name, validator, default, namespace, help):
-    desc = KeyDescription(name, validator, default, namespace, help)
-    config_key_descriptions.append(desc)
+    desc = KeyDescription(name, validator, default, help)
+    config_key_descriptions.setdefault(namespace, []).append(desc)
 
 
 def validate(name=DEFAULT, all_names=False):
@@ -120,19 +119,31 @@ def view_help():
     """
     def format(desc):
         help        = desc.help or ''
-        default     = '' if desc.default is proxy.UndefToken else desc.default
         type_name   = desc.validator.__name__.replace('validate_', '')
-        namespace   = '' if desc.namespace == DEFAULT else desc.namespace
-        fmt         = "%-20s %-10s %-10s %-20s %s"
-        return fmt % (desc.name, namespace, type_name, default, help)
-    return '\n'.join(sorted(format(desc) for desc in config_key_descriptions))
+        fmt         = "%s (Type: %s, Default: %s)\n%s"
+        return fmt % (desc.name, type_name, desc.default, help)
+
+    def format_namespace(key, desc_list):
+        fmt = "\nNamespace: %s\n%s"
+        seq = sorted(format(desc) for  desc in desc_list)
+        return fmt % (key, '\n'.join(seq))
+
+    def namespace_sort(lhs, rhs):
+        if lhs == DEFAULT:
+            return -1
+        if rhs == DEFAULT:
+            return 1
+        return lhs < rhs
+
+    seq = sorted(config_key_descriptions.iteritems(), cmp=namespace_sort)
+    return '\n'.join(format_namespace(*desc) for desc in seq)
 
 
 def _reset():
     """Used for internal testing."""
     for namespace in configuration_namespaces.values():
         namespace._reset()
-    config_key_descriptions[:] = []
+    config_key_descriptions.clear()
 
 
 def has_duplicate_keys(config_data, base_conf, raise_error):

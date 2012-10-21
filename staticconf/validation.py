@@ -105,5 +105,5 @@ def validate_tuple(value):
     return validate_iterable(tuple, value)
 
 
-no_op = lambda v: v
-no_op.__name__ = ''
+def validate_any(value):
+    return value
