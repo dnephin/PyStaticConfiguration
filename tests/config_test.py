@@ -234,7 +234,7 @@ class ConfigurationWatcherTestCase(TestCase):
         assert self.watcher.should_check
 
         # With max interval
-        self.watcher.max_interval = 3
+        self.watcher.min_interval = 3
         assert not self.watcher.should_check
 
         # Time has passed

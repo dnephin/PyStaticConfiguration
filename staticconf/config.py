@@ -161,13 +161,13 @@ def has_duplicate_keys(config_data, base_conf, raise_error):
 
 class ConfigurationWatcher(object):
     """Watches a file for modification and reloads the configuration
-    when it's modified.  Accepts a max_interval to throttle checks.
+    when it's modified.  Accepts a min_interval to throttle checks.
     """
 
-    def __init__(self, config_loader, filenames, max_interval=0):
+    def __init__(self, config_loader, filenames, min_interval=0):
         self.config_loader  = config_loader
         self.filenames      = self.get_filename_list(filenames)
-        self.max_interval   = max_interval
+        self.min_interval   = min_interval
         self.last_check     = time.time()
 
     def get_filename_list(self, filenames):
@@ -177,7 +177,7 @@ class ConfigurationWatcher(object):
 
     @property
     def should_check(self):
-        return self.last_check + self.max_interval <= time.time()
+        return self.last_check + self.min_interval <= time.time()
 
     @property
     def most_recent_changed(self):
@@ -193,5 +193,5 @@ class ConfigurationWatcher(object):
 
     def reload(self):
         config_dict = self.config_loader()
-        reload()
+        reload(all_names=True)
         return config_dict
