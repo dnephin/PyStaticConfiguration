@@ -4,9 +4,11 @@ try:
 except ImportError:
     from distutils.core import setup
 
+import staticconf
+
 setup(
     name="PyStaticConfiguration",
-    version="0.4",
+    version=staticconf.version,
     provides=["staticconf"],
     author="Daniel Nephin",
     author_email="dnephin@gmail.com",
