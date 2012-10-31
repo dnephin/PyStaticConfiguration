@@ -167,6 +167,7 @@ class ConfigurationWatcher(object):
     def __init__(self, config_loader, filenames, min_interval=0):
         self.config_loader  = config_loader
         self.filenames      = self.get_filename_list(filenames)
+        self.inodes         = self._get_inodes()
         self.min_interval   = min_interval
         self.last_check     = time.time()
 
@@ -183,13 +184,25 @@ class ConfigurationWatcher(object):
     def most_recent_changed(self):
         return max(os.path.getmtime(name) for name in self.filenames)
 
+    def _get_inodes(self):
+        values = []
+        for filename in sorted(self.filenames):
+            stbuf = os.stat(filename)
+            values.append((stbuf.st_dev, stbuf.st_ino))
+        return values
+
     def reload_if_changed(self, force=False):
         if (force or self.should_check) and self.file_modified():
             return self.reload()
 
     def file_modified(self):
         prev_check, self.last_check = self.last_check, time.time()
-        return prev_check < self.most_recent_changed
+        last_inodes = self.inodes
+        self.inodes = self._get_inodes()
+        if last_inodes != self.inodes:
+            return True
+        else:
+            return prev_check < self.most_recent_changed
 
     def reload(self):
         config_dict = self.config_loader()

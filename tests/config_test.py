@@ -1,6 +1,6 @@
 import mock
 import tempfile
-from testify import run, assert_equal, TestCase, setup, teardown
+from testify import run, assert_equal, TestCase, setup, teardown, setup_teardown
 from testify.assertions import assert_raises
 from testify import class_setup, class_teardown
 
@@ -205,26 +205,25 @@ class HasDuplicateKeysTestCase(TestCase):
 
 class ConfigurationWatcherTestCase(TestCase):
 
-    @setup
-    def setup_config_watcher(self):
-        self.loader = mock.Mock()
-        file = tempfile.NamedTemporaryFile()
-        # Create the file
-        file.flush()
-        self.filename = file.name
-        self.watcher = config.ConfigurationWatcher(self.loader, self.filename)
-
-    @setup
-    def setup_mock_time(self):
+    @setup_teardown
+    def setup_mocks_and_config_watcher(self):
         self.patcher = mock.patch('staticconf.config.time')
         self.mock_time = self.patcher.start()
         self.file_patcher = mock.patch('staticconf.config.os.path')
-        self.mock_path = self.file_patcher.start()
-
-    @teardown
-    def teardown_mock_time(self):
-        self.patcher.stop()
-        self.file_patcher.stop()
+        self.mock_stat = mock.Mock()
+        self.mock_stat.st_ino = 1
+        self.mock_stat.st_dev = 2
+        self.stat_patcher = mock.patch('staticconf.config.os.stat', return_value=self.mock_stat)
+        self.loader = mock.Mock()
+        with tempfile.NamedTemporaryFile() as f:
+            # Create the file
+            f.flush()
+            with self.file_patcher as mock_path:
+                self.mock_path = mock_path
+                with self.stat_patcher:
+                    self.filename = f.name
+                    self.watcher = config.ConfigurationWatcher(self.loader, self.filename)
+                    yield
 
     def test_should_check(self):
         self.watcher.last_check = 123456789
@@ -254,6 +253,13 @@ class ConfigurationWatcherTestCase(TestCase):
 
         assert self.watcher.file_modified()
         assert_equal(self.watcher.last_check, self.mock_time.time.return_value)
+
+    def test_file_modified_moved(self):
+        self.watcher.last_modified = self.mock_path.getmtime.return_value = 123456
+        self.mock_time.time.return_value = 123455
+        assert not self.watcher.file_modified()
+        self.mock_stat.st_ino = 3
+        assert self.watcher.file_modified()
 
     def test_reload(self):
         self.watcher.reload()
