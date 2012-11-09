@@ -1,10 +1,12 @@
 """
 Static configuration.
 """
+from functools import partial
 import logging
 import os
 import time
 from collections import namedtuple
+
 from staticconf import proxy, errors
 from staticconf.proxy import UndefToken
 
@@ -164,17 +166,18 @@ class ConfigurationWatcher(object):
     when it's modified.  Accepts a min_interval to throttle checks.
     """
 
-    def __init__(self, config_loader, filenames, min_interval=0):
+    def __init__(self, config_loader, filenames, min_interval=0, reloader=None):
         self.config_loader  = config_loader
         self.filenames      = self.get_filename_list(filenames)
         self.inodes         = self._get_inodes()
         self.min_interval   = min_interval
         self.last_check     = time.time()
+        self.reloader       = reloader or partial(reload, all_names=True)
 
     def get_filename_list(self, filenames):
         if isinstance(filenames, basestring):
             filenames = [filenames]
-        return [os.path.abspath(name) for name in filenames]
+        return sorted(os.path.abspath(name) for name in filenames)
 
     @property
     def should_check(self):
@@ -186,7 +189,7 @@ class ConfigurationWatcher(object):
 
     def _get_inodes(self):
         values = []
-        for filename in sorted(self.filenames):
+        for filename in self.filenames:
             stbuf = os.stat(filename)
             values.append((stbuf.st_dev, stbuf.st_ino))
         return values
@@ -197,14 +200,11 @@ class ConfigurationWatcher(object):
 
     def file_modified(self):
         prev_check, self.last_check = self.last_check, time.time()
-        last_inodes = self.inodes
-        self.inodes = self._get_inodes()
-        if last_inodes != self.inodes:
-            return True
-        else:
-            return prev_check < self.most_recent_changed
+        last_inodes, self.inodes    = self.inodes, self._get_inodes()
+        return (last_inodes != self.inodes or
+                prev_check < self.most_recent_changed)
 
     def reload(self):
         config_dict = self.config_loader()
-        reload(all_names=True)
+        self.reloader()
         return config_dict
