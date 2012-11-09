@@ -1,3 +1,4 @@
+import contextlib
 import mock
 import tempfile
 from testify import run, assert_equal, TestCase, setup, teardown, setup_teardown
@@ -207,29 +208,38 @@ class ConfigurationWatcherTestCase(TestCase):
 
     @setup_teardown
     def setup_mocks_and_config_watcher(self):
-        self.patcher = mock.patch('staticconf.config.time')
-        self.mock_time = self.patcher.start()
-        self.file_patcher = mock.patch('staticconf.config.os.path')
-        self.mock_stat = mock.Mock()
-        self.mock_stat.st_ino = 1
-        self.mock_stat.st_dev = 2
-        self.stat_patcher = mock.patch('staticconf.config.os.stat', return_value=self.mock_stat)
         self.loader = mock.Mock()
-        with tempfile.NamedTemporaryFile() as f:
+        with contextlib.nested(
+            mock.patch('staticconf.config.time'),
+            mock.patch('staticconf.config.os.path'),
+            mock.patch('staticconf.config.os.stat'),
+            tempfile.NamedTemporaryFile()
+        ) as (self.mock_time, self.mock_path, self.mock_stat, file):
             # Create the file
-            f.flush()
-            with self.file_patcher as mock_path:
-                self.mock_path = mock_path
-                with self.stat_patcher:
-                    self.filename = f.name
-                    self.watcher = config.ConfigurationWatcher(self.loader, self.filename)
-                    yield
+            file.flush()
+            self.mock_stat.st_ino=1
+            self.mock_stat.st_dev=2
+            self.filename = file.name
+            self.watcher = config.ConfigurationWatcher(self.loader, self.filename)
+            yield
+
+    def test_get_filename_list_from_string(self):
+        self.mock_path.abspath.side_effect = lambda p: p
+        filename = 'thefilename.yaml'
+        filenames = self.watcher.get_filename_list(filename)
+        assert_equal(filenames, [filename])
+
+    def test_get_filename_list_from_list(self):
+        self.mock_path.abspath.side_effect = lambda p: p
+        filenames = ['b', 'g', 'z', 'a']
+        expected = ['a', 'b', 'g', 'z']
+        assert_equal(self.watcher.get_filename_list(filenames), expected)
 
     def test_should_check(self):
         self.watcher.last_check = 123456789
 
         self.mock_time.time.return_value = 123456789
-        # Still current, but no max_interval
+        # Still current, but no min_interval
         assert self.watcher.should_check
 
         # With max interval
@@ -261,10 +271,16 @@ class ConfigurationWatcherTestCase(TestCase):
         self.mock_stat.st_ino = 3
         assert self.watcher.file_modified()
 
-    def test_reload(self):
+    def test_reload_default(self):
         self.watcher.reload()
         self.loader.assert_called_with()
 
+    def test_reload_custom(self):
+        reloader = mock.Mock()
+        watcher = config.ConfigurationWatcher(
+                self.loader, self.filename, reloader=reloader)
+        watcher.reload()
+        reloader.assert_called_with()
 
 if __name__ == "__main__":
     run()
