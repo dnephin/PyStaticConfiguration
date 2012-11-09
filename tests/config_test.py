@@ -223,6 +223,18 @@ class ConfigurationWatcherTestCase(TestCase):
             self.watcher = config.ConfigurationWatcher(self.loader, self.filename)
             yield
 
+    def test_get_filename_list_from_string(self):
+        self.mock_path.abspath.side_effect = lambda p: p
+        filename = 'thefilename.yaml'
+        filenames = self.watcher.get_filename_list(filename)
+        assert_equal(filenames, [filename])
+
+    def test_get_filename_list_from_list(self):
+        self.mock_path.abspath.side_effect = lambda p: p
+        filenames = ['b', 'g', 'z', 'a']
+        expected = ['a', 'b', 'g', 'z']
+        assert_equal(self.watcher.get_filename_list(filenames), expected)
+
     def test_should_check(self):
         self.watcher.last_check = 123456789
 
