@@ -227,7 +227,7 @@ class ConfigurationWatcherTestCase(TestCase):
         self.watcher.last_check = 123456789
 
         self.mock_time.time.return_value = 123456789
-        # Still current, but no max_interval
+        # Still current, but no min_interval
         assert self.watcher.should_check
 
         # With max interval
