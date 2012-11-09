@@ -118,8 +118,11 @@ overrides any duplicate keys in the previous.
 
 A new configuration should be loaded immediately before `reload`.
 
-    staticconf.YamlConfiguration(...)
-    staticconf.reload()
+    # staticconf.YamlConfiguration(...)
+    staticconf.reload(name=DEFAULT, all_names=False)
+
+        name:       the configuration namespace to reload
+        all_names:  if True, name is ignored, and all namespaces are reloaded.
 
 
 ### Watch a file for modifications
