@@ -7,11 +7,11 @@ from staticconf.errors import ValidationError
 
 
 def validate_string(value):
-    return unicode(value)
+    return None if value is None else unicode(value)
 
 
 def validate_bool(value):
-    return bool(value)
+    return None if value is None else bool(value)
 
 
 def validate_numeric(type_func, value):

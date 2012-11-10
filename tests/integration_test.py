@@ -10,6 +10,7 @@ class SomeClass(object):
     min = staticconf.get_int('SomeClass.min')
     ratio = staticconf.get_float('SomeClass.ratio')
     alt_ratio = staticconf.get_float('SomeClass.alt_ratio', 6.0)
+    msg = staticconf.get_string('SomeClass.msg', None)
 
     real_max = staticconf.get_int('SomeClass.max', namespace='real')
     real_min = staticconf.get_int('SomeClass.min', namespace='real')
@@ -41,6 +42,7 @@ class EndToEndTestCase(TestCase):
         assert_equal(staticconf.get('globals'), False)
         assert_equal(staticconf.get('enable'), 'True')
         assert_equal(staticconf.get_bool('enable'), True)
+        assert_equal(some_class.msg, None)
 
     def test_load_and_validate_namespace(self):
         real_config = {'SomeClass.min': 20, 'SomeClass.max': 25}

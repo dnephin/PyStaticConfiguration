@@ -3,6 +3,14 @@ from testify import assert_equal, run, TestCase
 from staticconf import validation
 
 
+class ValidationTestCase(TestCase):
+
+    def test_validate_string(self):
+        assert_equal(None, validation.validate_string(None))
+        assert_equal('asd', validation.validate_string('asd'))
+        assert_equal('123', validation.validate_string(123))
+
+
 class DateTimeValidationTestCase(TestCase):
 
     def test_validate_datetime(self):
