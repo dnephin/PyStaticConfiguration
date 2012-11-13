@@ -17,6 +17,27 @@ log = logging.getLogger(__name__)
 DEFAULT = 'DEFAULT'
 
 
+def filter_by_keys(dictionary, keys):
+    """Filter a dict by keys, and return a sequence of key/value pairs."""
+    keys = set(keys)
+    return filter(lambda (k, v): k in keys, dictionary.iteritems())
+
+
+class ConfigMap(object):
+    """A ConfigMap can be used to wrap a dictionary in your configuration.
+    It will allow you to retain your mapping structure (and prevent it
+    from being flattened).
+    """
+    def __init__(self, *args, **kwargs):
+        self.data = dict(*args, **kwargs)
+
+    def __getitem__(self, item):
+        return self.data[item]
+
+    def get(self, item, default=None):
+        return self.data.get(item, default)
+
+
 class ConfigNamespace(object):
     """A configuration namespace, which contains the list of value proxies
     and configuration values.
@@ -40,18 +61,19 @@ class ConfigNamespace(object):
     def get_config_values(self):
         return self.configuration_values
 
-    def validate_keys(self, keys, error_on_unknown):
+    def validate_keys(self, config_data, error_on_unknown):
         """Raise an exception if error_on_unknown is true, and keys contains
         a key which is not defined in a registeredValueProxy.
         """
         known_keys = set(vproxy.config_key for vproxy in self.value_proxies)
-        unknown_keys = set(keys) - known_keys
+        unknown_keys = set(config_data.iterkeys()) - known_keys
         if not unknown_keys:
             return
 
-        msg = "Unexpected keys in configuration: %s" % ', '.join(unknown_keys)
+        msg = "Unexpected key/value in %s configuration: %s"
         if not error_on_unknown:
-            log.warn(msg)
+            unknown = filter_by_keys(config_data, unknown_keys)
+            log.info(msg % (self.name, unknown))
             return
         raise errors.ConfigurationError(msg)
 

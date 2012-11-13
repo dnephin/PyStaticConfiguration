@@ -52,7 +52,7 @@ def load_config_data(loader_func, *args, **kwargs):
     try:
         return loader_func(*args, **kwargs)
     except Exception, e:
-        log.warn("Optional configuration failed: %s" % e)
+        log.info("Optional configuration failed: %s" % e)
         if not optional:
             raise
         return {}
@@ -67,7 +67,7 @@ def build_loader(loader_func):
         config_data = load_config_data(loader_func, *args, **kwargs)
         config_data = dict(flatten_dict(config_data))
         namespace   = config.get_namespace(name)
-        namespace.validate_keys(config_data.keys(), error_on_unknown)
+        namespace.validate_keys(config_data, error_on_unknown)
         namespace.has_duplicate_keys(config_data, error_on_duplicate)
         namespace.update_values(config_data)
         return config_data
