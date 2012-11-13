@@ -23,6 +23,21 @@ def filter_by_keys(dictionary, keys):
     return filter(lambda (k, v): k in keys, dictionary.iteritems())
 
 
+class ConfigMap(object):
+    """A ConfigMap can be used to wrap a dictionary in your configuration.
+    It will allow you to retain your mapping structure (and prevent it
+    from being flattened).
+    """
+    def __init__(self, *args, **kwargs):
+        self.data = dict(*args, **kwargs)
+
+    def __getitem__(self, item):
+        return self.data[item]
+
+    def get(self, item, default=None):
+        return self.data.get(item, default)
+
+
 class ConfigNamespace(object):
     """A configuration namespace, which contains the list of value proxies
     and configuration values.

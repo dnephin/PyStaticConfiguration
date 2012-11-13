@@ -27,6 +27,24 @@ class TestFilterByKeys(TestCase):
         assert_equal(expected, config.filter_by_keys(map, keys))
 
 
+class ConfigMapTestCase(TestCase):
+
+    @setup
+    def setup_config_map(self):
+        self.config_map = config.ConfigMap(one=1, three=3, seven=7)
+
+    def test_no_iteritems(self):
+        assert not hasattr(self.config_map, 'iteritems')
+
+    def test_getitem(self):
+        assert_equal(self.config_map['one'], 1)
+        assert_equal(self.config_map['seven'], 7)
+
+    def test_get(self):
+        assert_equal(self.config_map.get('three'), 3)
+        assert_equal(self.config_map.get('four', 0), 0)
+
+
 class ConfigurationNamespaceTestCase(TestCase):
 
     @setup
