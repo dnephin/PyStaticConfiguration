@@ -44,6 +44,12 @@ class ConfigMapTestCase(TestCase):
         assert_equal(self.config_map.get('three'), 3)
         assert_equal(self.config_map.get('four', 0), 0)
 
+    def test_contains(self):
+        assert 'one' in self.config_map
+        assert 'two' not in self.config_map
+
+    def test_len(self):
+        assert_equal(len(self.config_map), 3)
 
 class ConfigurationNamespaceTestCase(TestCase):
 

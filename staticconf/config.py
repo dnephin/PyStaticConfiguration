@@ -37,6 +37,11 @@ class ConfigMap(object):
     def get(self, item, default=None):
         return self.data.get(item, default)
 
+    def __contains__(self, item):
+        return item in self.data
+
+    def __len__(self):
+        return len(self.data)
 
 class ConfigNamespace(object):
     """A configuration namespace, which contains the list of value proxies
