@@ -9,13 +9,31 @@ from staticconf import config, errors
 import staticconf
 
 
+class TestFilterByKeys(TestCase):
+
+    def test_empty_dict(self):
+        keys = range(3)
+        assert_equal([], config.filter_by_keys({}, keys))
+
+    def test_no_keys(self):
+        keys = []
+        map = dict(enumerate(range(3)))
+        assert_equal([], config.filter_by_keys(map, keys))
+
+    def test_overlap(self):
+        keys = [1, 3, 5 ,7]
+        map = dict(enumerate(range(8)))
+        expected = [(1, 1), (3, 3), (5, 5), (7, 7)]
+        assert_equal(expected, config.filter_by_keys(map, keys))
+
+
 class ConfigurationNamespaceTestCase(TestCase):
 
     @setup
     def setup_namespace(self):
         self.name = 'the_name'
         self.namespace = config.ConfigNamespace(self.name)
-        self.keys = ['one', 'two', 'three']
+        self.config_data = dict(enumerate(['one', 'two', 'three'], 1))
 
     def test_register_get_value_proxies(self):
         proxies = [mock.Mock(), mock.Mock()]
@@ -35,21 +53,21 @@ class ConfigurationNamespaceTestCase(TestCase):
         assert_equal(values, {'stars': 'foo'})
 
     def test_validate_keys_no_unknown_keys(self):
-        proxies = [mock.Mock(config_key=i) for i in self.keys]
+        proxies = [mock.Mock(config_key=i) for i in self.config_data]
         self.namespace.value_proxies = proxies
         with mock.patch('staticconf.config.log') as mock_log:
-            self.namespace.validate_keys(self.keys, True)
-            self.namespace.validate_keys(self.keys, False)
+            self.namespace.validate_keys(self.config_data, True)
+            self.namespace.validate_keys(self.config_data, False)
             assert not mock_log.warn.mock_calls
 
-    def test_validate_keys_unknown_warn(self):
+    def test_validate_keys_unknown_log(self):
         with mock.patch('staticconf.config.log') as mock_log:
-            self.namespace.validate_keys(self.keys, False)
-            assert_equal(len(mock_log.warn.mock_calls), 1)
+            self.namespace.validate_keys(self.config_data, False)
+            assert_equal(len(mock_log.info.mock_calls), 1)
 
     def test_validate_keys_unknown_raise(self):
         assert_raises(errors.ConfigurationError,
-                self.namespace.validate_keys, self.keys, True)
+                self.namespace.validate_keys, self.config_data, True)
 
 class GetNamespaceTestCase(TestCase):
 
