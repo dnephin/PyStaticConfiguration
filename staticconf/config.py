@@ -75,10 +75,12 @@ class ConfigNamespace(object):
         if not unknown_keys:
             return
 
-        msg = "Unexpected key/value in %s configuration: %s"
+        unknown = filter_by_keys(config_data, unknown_keys)
+        msg = "Unexpected key/value in %s configuration: %s" % (self.name,
+            unknown)
+
         if not error_on_unknown:
-            unknown = filter_by_keys(config_data, unknown_keys)
-            log.info(msg % (self.name, unknown))
+            log.info(msg)
             return
         raise errors.ConfigurationError(msg)
 
