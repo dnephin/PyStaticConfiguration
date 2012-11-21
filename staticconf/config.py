@@ -1,7 +1,6 @@
 """
 Static configuration.
 """
-from functools import partial
 import logging
 import os
 import time
@@ -201,7 +200,7 @@ class ConfigurationWatcher(object):
         self.inodes         = self._get_inodes()
         self.min_interval   = min_interval
         self.last_check     = time.time()
-        self.reloader       = reloader or partial(reload, all_names=True)
+        self.reloader       = reloader or ReloadCallbackChain(all_names=True)
 
     def get_filename_list(self, filenames):
         if isinstance(filenames, basestring):
@@ -247,7 +246,7 @@ class ReloadCallbackChain(object):
     def __init__(self, namespace=DEFAULT, all_names=False, callbacks=None):
         self.namespace = namespace
         self.all_names = all_names
-        self.callbacks = dict(callbacks) if callbacks else {}
+        self.callbacks = dict(callbacks or ())
 
     def add(self, identifier, callback):
         self.callbacks[identifier] = callback
