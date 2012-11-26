@@ -324,5 +324,32 @@ class ConfigurationWatcherTestCase(TestCase):
         watcher.reload()
         reloader.assert_called_with()
 
+
+class ReloadCallbackChainTestCase(TestCase):
+
+    @setup
+    def setup_callback_chain(self):
+        self.callbacks = list(enumerate([mock.Mock(), mock.Mock()]))
+        self.callback_chain = config.ReloadCallbackChain(callbacks=self.callbacks)
+
+    def test_init_with_callbacks(self):
+        assert_equal(self.callback_chain.callbacks, dict(self.callbacks))
+
+    def test_add_remove(self):
+        callback = mock.Mock()
+        self.callback_chain.add('one', callback)
+        assert_equal(self.callback_chain.callbacks['one'], callback)
+        self.callback_chain.remove('one')
+        assert 'one' not in self.callback_chain.callbacks
+
+    def test_call(self):
+        self.callback_chain.namespace = namespace = 'the_namespace'
+        with mock.patch('staticconf.config.reload') as mock_reload:
+            self.callback_chain()
+            for _, callback in self.callbacks:
+                callback.assert_called_with()
+                mock_reload.assert_called_with(name='the_namespace', all_names=False)
+
+
 if __name__ == "__main__":
     run()

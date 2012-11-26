@@ -155,6 +155,37 @@ configuration from that file.
         force: if True, forces the check for modification, ignoring min_interval
 ```
 
+Callbacks can be added to the watcher using `ReloadCallbackChain`. This is a callable
+object which calls each of the callbacks that were added.
+
+```
+    staticconf.config.ReloadCallbackChain(namespace=DEFAULT, all_names=False, callbacks=None)
+
+        namespace:      namespace to reload when called
+        all_names:      passed to reload to reload all namespaces
+        callbacks:      a mapping of identifier to callback
+
+
+    ReloadCallbackChain.add(identifier, callback)
+    ReloadCallbackChain.remove(identifier)
+
+        Add and remove callbacks by using an identifier.
+        
+
+```
+
+### Putting it all together
+
+An example of a configuration with a single yaml file in a namespace.
+
+```
+def build_configuration(filename, namespace):
+    config_loader = partial(YamlConfiguration, filename, namespace=namespace)
+    reloader = ReloadCallbackChain(namespace)
+    return ConfigurationWatcher(config_loader, filename, min_interval=2, reloader=reloader)
+
+```
+
 ### Testing
 
 This package provides a convenience class for mocking out the static configuration
