@@ -9,8 +9,11 @@ __all__ = [
     'get_datetime',
     'get_float',
     'get_int',
+    'get_list',
+    'get_set',
     'get_string',
     'get_time',
+    'get_tuple',
     'NamespaceGetters'
 ]
 
@@ -33,14 +36,14 @@ def build_getter(validator, getter_namespace=None):
 
 get             = build_getter(validation.validate_any)
 get_bool        = build_getter(validation.validate_bool)
-get_string      = build_getter(validation.validate_string)
-get_int         = build_getter(validation.validate_int)
-get_float       = build_getter(validation.validate_float)
 get_date        = build_getter(validation.validate_date)
 get_datetime    = build_getter(validation.validate_datetime)
-get_time        = build_getter(validation.validate_time)
+get_float       = build_getter(validation.validate_float)
+get_int         = build_getter(validation.validate_int)
 get_list        = build_getter(validation.validate_list)
 get_set         = build_getter(validation.validate_set)
+get_string      = build_getter(validation.validate_string)
+get_time        = build_getter(validation.validate_time)
 get_tuple       = build_getter(validation.validate_tuple)
 
 
