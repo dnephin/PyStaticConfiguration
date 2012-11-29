@@ -2,7 +2,7 @@ from staticconf import validation, config, proxy
 from staticconf.proxy import UndefToken
 
 
-__all__ = [
+getter_names = [
     'get',
     'get_bool',
     'get_date',
@@ -14,8 +14,10 @@ __all__ = [
     'get_string',
     'get_time',
     'get_tuple',
-    'NamespaceGetters'
 ]
+
+
+__all__ = getter_names + ['NamespaceGetters']
 
 
 def build_getter(validator, getter_namespace=None):
@@ -34,19 +36,6 @@ def build_getter(validator, getter_namespace=None):
     return proxy_register
 
 
-get             = build_getter(validation.validate_any)
-get_bool        = build_getter(validation.validate_bool)
-get_date        = build_getter(validation.validate_date)
-get_datetime    = build_getter(validation.validate_datetime)
-get_float       = build_getter(validation.validate_float)
-get_int         = build_getter(validation.validate_int)
-get_list        = build_getter(validation.validate_list)
-get_set         = build_getter(validation.validate_set)
-get_string      = build_getter(validation.validate_string)
-get_time        = build_getter(validation.validate_time)
-get_tuple       = build_getter(validation.validate_tuple)
-
-
 class NamespaceGetters(object):
     """An object with getters, which have their namespace already defined."""
 
@@ -63,3 +52,8 @@ class NamespaceGetters(object):
         self.get_list       = build_getter(validation.validate_list, name)
         self.get_set        = build_getter(validation.validate_set, name)
         self.get_tuple      = build_getter(validation.validate_tuple, name)
+
+
+default_getters = NamespaceGetters(config.DEFAULT)
+for name in getter_names:
+    globals()[name] = getattr(default_getters, name)
