@@ -9,22 +9,22 @@ from staticconf import config, errors
 import staticconf
 
 
-class TestFilterByKeys(TestCase):
+class TestRemoveByKeys(TestCase):
 
     def test_empty_dict(self):
         keys = range(3)
-        assert_equal([], config.filter_by_keys({}, keys))
+        assert_equal([], config.remove_by_keys({}, keys))
 
     def test_no_keys(self):
         keys = []
         map = dict(enumerate(range(3)))
-        assert_equal([], config.filter_by_keys(map, keys))
+        assert_equal(map.items(), config.remove_by_keys(map, keys))
 
     def test_overlap(self):
         keys = [1, 3, 5 ,7]
         map = dict(enumerate(range(8)))
-        expected = [(1, 1), (3, 3), (5, 5), (7, 7)]
-        assert_equal(expected, config.filter_by_keys(map, keys))
+        expected = [(0,0), (2, 2), (4, 4), (6, 6)]
+        assert_equal(expected, config.remove_by_keys(map, keys))
 
 
 class ConfigMapTestCase(TestCase):
@@ -293,7 +293,7 @@ class ConfigurationWatcherTestCase(TestCase):
         assert self.watcher.should_check
 
     def test_file_modified_not_modified(self):
-        self.watcher.last_modified = self.mock_path.getmtime.return_value = 222
+        self.watcher.last_check = self.mock_path.getmtime.return_value = 222
         self.mock_time.time.return_value = 123456
         assert not self.watcher.file_modified()
         assert_equal(self.watcher.last_check, self.mock_time.time.return_value)
@@ -307,7 +307,7 @@ class ConfigurationWatcherTestCase(TestCase):
         assert_equal(self.watcher.last_check, self.mock_time.time.return_value)
 
     def test_file_modified_moved(self):
-        self.watcher.last_modified = self.mock_path.getmtime.return_value = 123456
+        self.watcher.last_check = self.mock_path.getmtime.return_value = 123456
         self.mock_time.time.return_value = 123455
         assert not self.watcher.file_modified()
         self.mock_stat.st_ino = 3

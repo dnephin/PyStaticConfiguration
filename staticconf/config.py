@@ -16,10 +16,10 @@ log = logging.getLogger(__name__)
 DEFAULT = 'DEFAULT'
 
 
-def filter_by_keys(dictionary, keys):
-    """Filter a dict by keys, and return a sequence of key/value pairs."""
+def remove_by_keys(dictionary, keys):
+    """Remove keys from dict, and return a sequence of key/value pairs."""
     keys = set(keys)
-    return filter(lambda (k, v): k in keys, dictionary.iteritems())
+    return filter(lambda (k, v): k not in keys, dictionary.iteritems())
 
 
 class ConfigMap(object):
@@ -59,6 +59,12 @@ class ConfigNamespace(object):
         """Register a new value proxy in this namespace."""
         self.value_proxies.append(proxy)
 
+    def apply_config_data(self, config_data, error_on_unknown, error_on_dupe):
+        """Validate, check for duplicates, and update the config."""
+        self.validate_keys(config_data, error_on_unknown)
+        self.has_duplicate_keys(config_data, error_on_dupe)
+        self.update_values(config_data)
+
     def update_values(self, *args, **kwargs):
         self.configuration_values.update(*args, **kwargs)
 
@@ -70,18 +76,14 @@ class ConfigNamespace(object):
         a key which is not defined in a registeredValueProxy.
         """
         known_keys = set(vproxy.config_key for vproxy in self.value_proxies)
-        unknown_keys = set(config_data.iterkeys()) - known_keys
-        if not unknown_keys:
+        unknown = remove_by_keys(config_data, known_keys)
+        if not unknown:
             return
 
-        unknown = filter_by_keys(config_data, unknown_keys)
-        msg = "Unexpected key/value in %s configuration: %s" % (self.name,
-            unknown)
-
-        if not error_on_unknown:
-            log.info(msg)
-            return
-        raise errors.ConfigurationError(msg)
+        msg = "Unexpected value in %s configuration: %s" % (self.name, unknown)
+        if error_on_unknown:
+            raise errors.ConfigurationError(msg)
+        log.info(msg)
 
     def has_duplicate_keys(self, config_data, error_on_duplicate):
         args = config_data, self.configuration_values, error_on_duplicate
@@ -107,6 +109,12 @@ configuration_namespaces = {DEFAULT: ConfigNamespace(DEFAULT)}
 
 KeyDescription = namedtuple('KeyDescription', 'name validator default help')
 
+def get_namespaces_from_names(name, all_names):
+    """Return a generator which yields namespace objects."""
+    names = configuration_namespaces.keys() if all_names else [name]
+    for name in names:
+        yield get_namespace(name)
+
 
 def get_namespace(name):
     """Retrieve a ConfigurationNamespace by name, creating the namespace if it
@@ -121,9 +129,7 @@ def reload(name=DEFAULT, all_names=False):
     """Reload one or more namespaces. Defaults to just the DEFAULT namespace.
     if all_names is True, reload all namespaces.
     """
-    names = configuration_namespaces.keys() if all_names else [name]
-    for name in names:
-        namespace = get_namespace(name)
+    for namespace in get_namespaces_from_names(name, all_names):
         for value_proxy in namespace.get_value_proxies():
             value_proxy.reset()
 
@@ -138,9 +144,7 @@ def validate(name=DEFAULT, all_names=False):
     raise ConfigurationError. Defaults to the DEFAULT namespace. If all_names
      is True, validate all namespaces.
     """
-    names = configuration_namespaces.keys() if all_names else [name]
-    for name in names:
-        namespace = get_namespace(name)
+    for namespace in get_namespaces_from_names(name, all_names):
         all(bool(value_proxy) for value_proxy in namespace.get_value_proxies())
 
 

@@ -60,16 +60,14 @@ def load_config_data(loader_func, *args, **kwargs):
 
 def build_loader(loader_func):
     def loader(*args, **kwargs):
-        error_on_unknown    = kwargs.pop('error_on_unknown', False)
-        error_on_duplicate  = kwargs.pop('error_on_duplicate', False)
+        err_on_unknown      = kwargs.pop('error_on_unknown', False)
+        err_on_dupe         = kwargs.pop('error_on_duplicate', False)
         name                = kwargs.pop('namespace', config.DEFAULT)
 
         config_data = load_config_data(loader_func, *args, **kwargs)
         config_data = dict(flatten_dict(config_data))
         namespace   = config.get_namespace(name)
-        namespace.validate_keys(config_data, error_on_unknown)
-        namespace.has_duplicate_keys(config_data, error_on_duplicate)
-        namespace.update_values(config_data)
+        namespace.apply_config_data(config_data, err_on_unknown, err_on_dupe)
         return config_data
 
     return loader
