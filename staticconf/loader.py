@@ -78,7 +78,7 @@ def build_loader(loader_func):
 def yaml_loader(filename):
     import yaml
     with open(filename) as fh:
-        return yaml.load(fh)
+        return yaml.load(fh) or {}
 
 def json_loader(filename):
     try:
