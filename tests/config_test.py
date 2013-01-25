@@ -93,6 +93,12 @@ class ConfigurationNamespaceTestCase(TestCase):
         assert_raises(errors.ConfigurationError,
                 self.namespace.validate_keys, self.config_data, True)
 
+    def test_clear(self):
+        self.namespace.apply_config_data(self.config_data, False, False)
+        assert self.namespace.get_config_values()
+        self.namespace.clear()
+        assert_equal(self.namespace.get_config_values(), {})
+
 class GetNamespaceTestCase(TestCase):
 
     def test_get_namespace_new(self):

@@ -2,15 +2,22 @@
 Load configuration data from different file formats and python structures.
 Nested dictionaries are flattened using dotted notation.
 
-Create your own loader:
+.. code-block:: python
+
+    staticconf.YamlConfiguration('config.yaml')
+
+
+You can create your own loaders for other formats by using
+``loader.build_loader()``.
+
+.. code-block:: python
 
     from staticconf import loader
     def custom_loader(*args):
         ...
         return config_dict
-    CustomConfiguration = loader.build_loader(custom_loader)
-    CustomConfiguration()
 
+    CustomConfiguration = loader.build_loader(custom_loader)
 
 ."""
 import logging

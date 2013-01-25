@@ -12,8 +12,8 @@ class UndefToken(object):
     """A token to represent an undefined value, so that None can be used
     as a default value.
     """
-    def __str__(self):
-        return "Undefined"
+    def __repr__(self):
+        return "<Undefined>"
 
 UndefToken = UndefToken()
 
