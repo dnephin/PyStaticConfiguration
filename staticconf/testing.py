@@ -1,3 +1,6 @@
+"""
+Facilitate testing of code which uses staticconf.
+"""
 from staticconf import config
 
 

@@ -1,3 +1,24 @@
+"""
+Functions used to retrieve values from a ConfigNamespace. To retrieve values
+from the default namespace use the module level getters.
+
+.. code-block:: python
+
+    max_size = staticconf.get_int('max_size', default=10)
+    threshold = staticconf.get_float('threshold')
+
+
+To retrieve values from a namespace, you can create a ``NamespaceGetters``
+object.
+
+.. code-block:: python
+
+    my_package_conf = staticconf.NamespaceGetters('my_package_namespace')
+    max_size = my_package_conf.get_int('max_size')
+    error_msg = my_package_conf.get_string('error_msg')
+
+"""
+
 from staticconf import validation, config, proxy
 from staticconf.proxy import UndefToken
 
