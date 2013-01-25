@@ -98,8 +98,11 @@ class ConfigNamespace(object):
     def __contains__(self, item):
         return item in self.configuration_values
 
-    def _reset(self):
+    def clear(self):
         self.configuration_values.clear()
+
+    def _reset(self):
+        self.clear()
         self.value_proxies[:] = []
 
 
