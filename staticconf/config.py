@@ -1,13 +1,13 @@
 """
-Static configuration.
+Classes for storing configuration by namespace, and reloading configuration
+while files change.
 """
 import logging
 import os
 import time
 from collections import namedtuple
 
-from staticconf import proxy, errors
-from staticconf.proxy import UndefToken
+from staticconf import errors
 
 log = logging.getLogger(__name__)
 
@@ -98,8 +98,11 @@ class ConfigNamespace(object):
     def __contains__(self, item):
         return item in self.configuration_values
 
-    def _reset(self):
+    def clear(self):
         self.configuration_values.clear()
+
+    def _reset(self):
+        self.clear()
         self.value_proxies[:] = []
 
 
