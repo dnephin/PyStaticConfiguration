@@ -71,12 +71,14 @@ class ConfigNamespace(object):
     def get_config_values(self):
         return self.configuration_values
 
+    def get_known_keys(self):
+        return set(vproxy.config_key for vproxy in self.value_proxies)
+
     def validate_keys(self, config_data, error_on_unknown):
         """Raise an exception if error_on_unknown is true, and keys contains
         a key which is not defined in a registeredValueProxy.
         """
-        known_keys = set(vproxy.config_key for vproxy in self.value_proxies)
-        unknown = remove_by_keys(config_data, known_keys)
+        unknown = remove_by_keys(config_data, self.get_known_keys())
         if not unknown:
             return
 

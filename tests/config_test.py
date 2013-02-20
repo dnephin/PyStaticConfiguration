@@ -76,6 +76,13 @@ class ConfigurationNamespaceTestCase(TestCase):
         values = self.namespace.get_config_values()
         assert_equal(values, {'stars': 'foo'})
 
+    def test_get_known_keys(self):
+        proxies = [mock.Mock(), mock.Mock()]
+        for proxy in proxies:
+            self.namespace.register_proxy(proxy)
+        expected = set([proxy.config_key for proxy in proxies])
+        assert_equal(self.namespace.get_known_keys(), expected)
+
     def test_validate_keys_no_unknown_keys(self):
         proxies = [mock.Mock(config_key=i) for i in self.config_data]
         self.namespace.value_proxies = proxies
