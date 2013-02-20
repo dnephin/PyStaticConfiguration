@@ -3,7 +3,7 @@ from staticconf.loader import *
 from staticconf.getters import *
 
 
-version         = "0.4.8"
+version         = "0.4.9"
 
 view_help       = config.view_help
 reload          = config.reload
