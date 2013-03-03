@@ -23,19 +23,13 @@ from staticconf import validation, config, proxy
 from staticconf.proxy import UndefToken
 
 
-getter_names = [
-    'get',
-    'get_bool',
-    'get_date',
-    'get_datetime',
-    'get_float',
-    'get_int',
-    'get_list',
-    'get_set',
-    'get_string',
-    'get_time',
-    'get_tuple',
-]
+def getter_name(validator_name):
+    if not validator_name:
+        return 'get'
+    return 'get_%s' % validator_name
+
+
+getter_names = [getter_name(name) for name in validation.validators]
 
 
 __all__ = getter_names + ['NamespaceGetters']
@@ -68,17 +62,9 @@ class NamespaceGetters(object):
 
     def __init__(self, name):
         self.namespace      = name
-        self.get            = build_getter(validation.validate_any, name)
-        self.get_bool       = build_getter(validation.validate_bool, name)
-        self.get_string     = build_getter(validation.validate_string, name)
-        self.get_int        = build_getter(validation.validate_int, name)
-        self.get_float      = build_getter(validation.validate_float, name)
-        self.get_date       = build_getter(validation.validate_date, name)
-        self.get_datetime   = build_getter(validation.validate_datetime, name)
-        self.get_time       = build_getter(validation.validate_time, name)
-        self.get_list       = build_getter(validation.validate_list, name)
-        self.get_set        = build_getter(validation.validate_set, name)
-        self.get_tuple      = build_getter(validation.validate_tuple, name)
+        for validator_name, validator in validation.validators.iteritems():
+            getter = build_getter(validator, name)
+            setattr(self, getter_name(validator_name), getter)
 
 
 default_getters = NamespaceGetters(config.DEFAULT)

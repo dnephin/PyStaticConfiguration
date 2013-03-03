@@ -107,3 +107,18 @@ def validate_tuple(value):
 
 def validate_any(value):
     return value
+
+
+validators = {
+    '':         validate_any,
+    'bool':     validate_bool,
+    'date':     validate_date,
+    'datetime': validate_datetime,
+    'float':    validate_float,
+    'int':      validate_int,
+    'list':     validate_list,
+    'set':      validate_set,
+    'string':   validate_string,
+    'time':     validate_time,
+    'tuple':    validate_tuple,
+}
