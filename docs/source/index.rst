@@ -77,7 +77,31 @@ Loading a configuration
 Retrieving configuration values
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+With a schema
+
 .. code-block:: python
+
+    from staticconf import schema
+
+    class SomethingUsefulSchema(object):
+        __metaclass__ = schema.SchemaMeta
+
+        config_path = 'useful'
+
+        max_value = schema.int(default=100)
+        ratio     = schema.float()
+        msg       = schema.any(config_key='msg_string', default="Welcome")
+
+
+    class SomethingUseful(object):
+        config = SomethingUsefulSchema()
+
+
+With getters
+
+.. code-block:: python
+
+    import staticconf
 
     class SomethingUseful(object):
 
@@ -94,10 +118,12 @@ An example of a configuration with a single yaml file in a namespace.
 
 .. code-block:: python
 
+    from staticconf import YamlConfiguration, config
+
     def build_configuration(filename, namespace):
         config_loader = partial(YamlConfiguration, filename, namespace=namespace)
-        reloader = ReloadCallbackChain(namespace)
-        return ConfigurationWatcher(
+        reloader = config.ReloadCallbackChain(namespace)
+        return config.ConfigurationWatcher(
             config_loader, filename, min_interval=2, reloader=reloader)
 
     config_watcher = build_configuration('config.yaml', 'my_namespace')
