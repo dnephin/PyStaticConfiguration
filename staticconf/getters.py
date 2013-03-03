@@ -41,6 +41,14 @@ getter_names = [
 __all__ = getter_names + ['NamespaceGetters']
 
 
+def register_value_proxy(namespace, value_proxy, help_text):
+    """Register a value proxy with the namespace, and add the help_text."""
+    namespace.register_proxy(value_proxy)
+    config.add_config_key_description(
+        value_proxy.config_key, value_proxy.validator, value_proxy.default,
+        namespace.get_name(), help_text)
+
+
 def build_getter(validator, getter_namespace=None):
     """Create a getter function for retrieving values from the config cache.
     Getters will default to the DEFAULT namespace.
@@ -48,10 +56,8 @@ def build_getter(validator, getter_namespace=None):
     def proxy_register(key_name, default=UndefToken, help=None, namespace=None):
         name        = namespace or getter_namespace or config.DEFAULT
         namespace   = config.get_namespace(name)
-        args        = validator, namespace.get_config_values(), key_name, default
-        value_proxy = proxy.ValueProxy(*args)
-        namespace.register_proxy(value_proxy)
-        config.add_config_key_description(key_name, validator, default, name, help)
+        value_proxy = proxy.ValueProxy(validator, namespace, key_name, default)
+        register_value_proxy(namespace, value_proxy, help)
         return value_proxy
 
     return proxy_register
