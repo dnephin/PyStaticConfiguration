@@ -23,6 +23,8 @@ class TestingSchema(object):
 
     namespace = 'my_testing_namespace'
 
+    config_path = 'my.thing'
+
     one = schema.int(default=5)
     two = schema.string(help='the value for two')
     some_value = schema.any(config_key='three.four')
@@ -80,9 +82,9 @@ class SchemaAcceptanceTestCase(TestCase):
     @setup_teardown
     def setup_config(self):
         conf = {
-            'one': '1',
-            'two': 'another',
-            'three.four': 'deeper'
+            'my.thing.one': '1',
+            'my.thing.two': 'another',
+            'my.thing.three.four': 'deeper'
         }
         with testing.MockConfiguration(conf, namespace=TestingSchema.namespace):
             yield

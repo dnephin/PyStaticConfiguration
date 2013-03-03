@@ -28,8 +28,7 @@ class ValueToken(object):
         self._value         = proxy.UndefToken
 
     @classmethod
-    def from_definition(cls, value_def, namespace, config_key):
-        key = value_def.config_key or config_key
+    def from_definition(cls, value_def, namespace, key):
         return cls(value_def.validator, namespace, key, value_def.default)
 
     @proxy.cache_as_field('_value')
@@ -69,9 +68,16 @@ class SchemaMeta(type):
         """Return an attributes dictionary with ValueTokens replaced by a
         property which returns the config value.
         """
+        config_path = attributes.get('config_path')
         tokens = {}
+        def build_config_key(value_def, config_key):
+            key = value_def.config_key or config_key
+            return '%s.%s' % (config_path, key) if config_path else key
+
         def build_token(name, value_def):
-            value_token = ValueToken.from_definition(value_def, namespace, name)
+            config_key = build_config_key(value_def, name)
+            value_token = ValueToken.from_definition(
+                                            value_def, namespace, config_key)
             getters.register_value_proxy(namespace, value_token, value_def.help)
             tokens[name] = value_token
             return name, build_property(value_token)
