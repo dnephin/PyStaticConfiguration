@@ -1,7 +1,50 @@
 """
-Configuration schemas
+Configuration schemas can be used instead of getters to group your
+configuration definitions together.
 
-Create your own value types using create_value_type(validator).
+
+.. code-block:: python
+
+
+    class MyClassSchema(object):
+        __metaclass__ = schema.SchemaMeta
+
+        # Namespace to retrieve configuration values from
+        namespace = 'my_package'
+
+        # (optional) Config path to prepend to all config keys in this schema
+        config_path = 'my_class.foo'
+
+        # Attributes accept the same values as a getter (default, help, etc)
+        ratio = schema.float(default=0.2) # configured at my_class.foo.ratio
+
+        # You can optionally specify a different name from the attribute name
+        max_threshold = schema.int(config_key='max') # configued at my_class.foo.max
+
+
+Access the values from a schema by instantiating the schema class.
+
+.. code-block:: python
+
+    config = MyClassSchema()
+    print config.ratio
+
+
+You can also create your own custom types:
+
+.. code-block:: python
+
+    validator = ...
+    custom_type = create_value_type(validator)
+
+
+    class MySchema(object):
+        __metaclass__ = schema.SchemaMeta
+
+        something = custom_type(default=...)
+
+
+
 """
 import functools
 from staticconf import validation, proxy, config, errors, getters
