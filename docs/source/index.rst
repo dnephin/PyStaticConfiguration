@@ -83,8 +83,7 @@ With a schema
 
     from staticconf import schema
 
-    class SomethingUsefulSchema(object):
-        __metaclass__ = schema.SchemaMeta
+    class SomethingUsefulSchema(schema.Schema):
 
         config_path = 'useful'
 

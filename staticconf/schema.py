@@ -22,6 +22,14 @@ configuration definitions together.
         max_threshold = schema.int(config_key='max') # configued at my_class.foo.max
 
 
+You can also create your schema objects by subclassing Schema
+
+.. code-block:: python
+
+    class MyClassSchema(schema.Schema):
+        ...
+
+
 Access the values from a schema by instantiating the schema class.
 
 .. code-block:: python
@@ -133,6 +141,12 @@ class SchemaMeta(type):
         attributes = dict(build_attr(*item) for item in attributes.iteritems())
         attributes['_tokens'] = tokens
         return attributes
+
+
+class Schema(object):
+    __metaclass__ = SchemaMeta
+
+    namespace = None
 
 
 def create_value_type(validator):
