@@ -42,6 +42,7 @@ class ConfigMap(object):
     def __len__(self):
         return len(self.data)
 
+
 class ConfigNamespace(object):
     """A configuration namespace, which contains the list of value proxies
     and configuration values.
@@ -51,6 +52,9 @@ class ConfigNamespace(object):
         self.name = name
         self.configuration_values = {}
         self.value_proxies = []
+
+    def get_name(self):
+        return self.name
 
     def get_value_proxies(self):
         return self.value_proxies
@@ -90,6 +94,9 @@ class ConfigNamespace(object):
     def has_duplicate_keys(self, config_data, error_on_duplicate):
         args = config_data, self.configuration_values, error_on_duplicate
         return has_duplicate_keys(*args)
+
+    def get(self, item, default=None):
+        return self.configuration_values.get(item, default)
 
     def __getitem__(self, item):
         return self.configuration_values[item]

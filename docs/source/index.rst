@@ -25,10 +25,21 @@ Configuration is loaded using one of the configuration loaders in
 to prevent name collisions. If a configuration is loaded into a namespace the
 code which reads it will need to retrieve it from that namespace.
 
-See :ref:`staticconf-loader`
+See :mod:`staticconf.loader`
 
 Retrieving configuration
 ~~~~~~~~~~~~~~~~~~~~~~~~
+
+There are two options for retrieving configuration values.
+
+Configuration schemas can be created to group configuration values
+for classes together.  Configuration schemas are created using the
+:mod:`staticconf.schema` module. These schemas can be instantiated at import
+time, and values can be retrieved from them by accessing the attributes
+of the schema object.
+
+
+See :mod:`staticconf.schema`
 
 Configuration is retrieved using a getter from :mod:`staticconf.getters`.
 Getters will default to the ``DEFAULT`` namespace. Getters return a proxy
@@ -38,7 +49,7 @@ work if the value is passed to a c module or checked by isinstance). The
 raw underlying value can always be retrieved with the ``.value`` attribute
 of the proxy.
 
-See :ref:`staticconf-getters`
+See :mod:`staticconf.getters`.
 
 Reloading configuration
 ~~~~~~~~~~~~~~~~~~~~~~~
@@ -48,7 +59,7 @@ Configurations can be dynamically reloaded while your application is running.
 configuration when they change, and add callbacks to reinitialize afterward.
 
 
-See :ref:`staticconf-config`
+See :mod:`staticconf.config`
 
 Examples
 --------
@@ -66,7 +77,30 @@ Loading a configuration
 Retrieving configuration values
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+With a schema
+
 .. code-block:: python
+
+    from staticconf import schema
+
+    class SomethingUsefulSchema(schema.Schema):
+
+        config_path = 'useful'
+
+        max_value = schema.int(default=100)
+        ratio     = schema.float()
+        msg       = schema.any(config_key='msg_string', default="Welcome")
+
+
+    class SomethingUseful(object):
+        config = SomethingUsefulSchema()
+
+
+With getters
+
+.. code-block:: python
+
+    import staticconf
 
     class SomethingUseful(object):
 
@@ -83,10 +117,12 @@ An example of a configuration with a single yaml file in a namespace.
 
 .. code-block:: python
 
+    from staticconf import YamlConfiguration, config
+
     def build_configuration(filename, namespace):
         config_loader = partial(YamlConfiguration, filename, namespace=namespace)
-        reloader = ReloadCallbackChain(namespace)
-        return ConfigurationWatcher(
+        reloader = config.ReloadCallbackChain(namespace)
+        return config.ConfigurationWatcher(
             config_loader, filename, min_interval=2, reloader=reloader)
 
     config_watcher = build_configuration('config.yaml', 'my_namespace')

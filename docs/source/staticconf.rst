@@ -9,8 +9,6 @@ staticconf Package
     :undoc-members:
     :show-inheritance:
 
-.. _staticconf-config:
-
 :mod:`config` Module
 --------------------
 
@@ -27,8 +25,6 @@ staticconf Package
     :undoc-members:
     :show-inheritance:
 
-.. _staticconf-getters:
-
 :mod:`getters` Module
 ---------------------
 
@@ -36,8 +32,6 @@ staticconf Package
     :members:
     :undoc-members:
     :show-inheritance:
-
-.. _staticconf-loader:
 
 :mod:`loader` Module
 --------------------
@@ -51,6 +45,14 @@ staticconf Package
 -------------------
 
 .. automodule:: staticconf.proxy
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`schema` Module
+--------------------
+
+.. automodule:: staticconf.schema
     :members:
     :undoc-members:
     :show-inheritance:

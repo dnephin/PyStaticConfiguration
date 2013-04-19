@@ -51,6 +51,7 @@ Install
 Documentation
 -------------
 
+See http://pythonhosted.org/PyStaticConfiguration/
 
 ### Use the configuration
 

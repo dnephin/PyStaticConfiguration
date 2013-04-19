@@ -16,7 +16,7 @@ class BuildGetterTestCase(TestCase):
         namespace = config.get_namespace(config.DEFAULT)
         assert value_proxy is namespace.get_value_proxies()[-1]
         assert_equal(value_proxy.config_key, "the_name")
-        assert_equal(value_proxy.value_cache, namespace.configuration_values)
+        assert_equal(value_proxy.namespace, namespace)
 
     def test_build_getter_with_getter_namespace(self):
         validator = mock.Mock()
@@ -27,7 +27,7 @@ class BuildGetterTestCase(TestCase):
         namespace = config.get_namespace(name)
         assert value_proxy is namespace.get_value_proxies()[-1]
         assert_equal(value_proxy.config_key, "the_name")
-        assert_equal(value_proxy.value_cache, namespace.configuration_values)
+        assert_equal(value_proxy.namespace, namespace)
 
 
 class NamespaceGettersTestCase(TestCase):
