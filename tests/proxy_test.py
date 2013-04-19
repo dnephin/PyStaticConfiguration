@@ -1,9 +1,34 @@
 import datetime
 import mock
 from testify import run, assert_equal, TestCase, setup
-from testify.assertions import assert_raises, assert_in
+from testify.assertions import assert_raises_and_contains, assert_in
 
-from staticconf import proxy, validation, errors
+from staticconf import proxy, validation, errors, config
+
+
+class ExtractValueTestCase(TestCase):
+
+    @setup
+    def setup_configuration_values(self):
+        validator = mock.Mock(return_value=2)
+        self.name = 'test_namespace'
+        self.namespace = config.get_namespace(self.name)
+        self.config_key = 'something'
+        self.value_proxy = proxy.ValueProxy(
+            validator, self.namespace, self.config_key)
+
+    def test_extract_value_unset(self):
+        expected = [self.name, self.config_key]
+        assert_raises_and_contains(errors.ConfigurationError,
+            expected, lambda: self.value_proxy.value)
+
+    def test_get_value_fails_validation(self):
+        expected = [self.name, self.config_key]
+        validator = mock.Mock(side_effect = validation.ValidationError)
+        value_proxy = proxy.ValueProxy(
+            validator, self.namespace, 'something.broken')
+        assert_raises_and_contains(errors.ConfigurationError,
+            expected, lambda: self.value_proxy.value)
 
 
 class ValueProxyTestCase(TestCase):
@@ -87,19 +112,6 @@ class ValueProxyTestCase(TestCase):
         value_proxy._value =  expected
         assert_equal(value_proxy.value, expected)
         validator.assert_not_called()
-
-    def test_get_value_unset(self):
-        validator = mock.Mock()
-        value_proxy = proxy.ValueProxy(
-            validator, self.value_cache, 'something.missing')
-        assert_raises(errors.ConfigurationError, lambda: value_proxy + 1)
-
-    def test_get_value_fails_validation(self):
-        validator = mock.Mock()
-        validator.side_effect = validation.ValidationError()
-        value_proxy = proxy.ValueProxy(
-            validator, self.value_cache, 'something.broken')
-        assert_raises(errors.ConfigurationError, lambda: value_proxy + 1)
 
     def test_proxied_attributes(self):
         validator = mock.Mock(return_value=self.value_cache['the_date'])

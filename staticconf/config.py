@@ -114,6 +114,9 @@ class ConfigNamespace(object):
         self.clear()
         self.value_proxies[:] = []
 
+    def __str__(self):
+        return "%s(%s)" % (type(self).__name__, self.name)
+
 
 config_key_descriptions = {}
 configuration_namespaces = {DEFAULT: ConfigNamespace(DEFAULT)}

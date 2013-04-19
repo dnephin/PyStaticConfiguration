@@ -82,14 +82,14 @@ def extract_value(proxy):
     """
     value = proxy.namespace.get(proxy.config_key, proxy.default)
     if value is UndefToken:
-        msg = "Configuration is missing value for: %s"
-        raise errors.ConfigurationError(msg % proxy.config_key)
+        raise errors.ConfigurationError("%s is missing value for: %s" %
+            (proxy.namespace, proxy.config_key))
 
     try:
         return proxy.validator(value)
     except errors.ValidationError, e:
-        msg = "Failed to validate %s: %s" % (proxy.config_key, e)
-        raise errors.ConfigurationError(msg)
+        raise errors.ConfigurationError("%s failed to validate %s: %s" %
+            (proxy.namespace, proxy.config_key, e))
 
 
 class ValueProxy(object):
