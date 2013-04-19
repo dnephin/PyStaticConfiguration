@@ -12,7 +12,10 @@ class UndefToken(object):
     """A token to represent an undefined value, so that None can be used
     as a default value.
     """
-    pass
+    def __repr__(self):
+        return "<Undefined>"
+
+UndefToken = UndefToken()
 
 
 _special_names = [
@@ -38,6 +41,7 @@ unary_funcs = {
     '__str__':      str,
     '__repr__':     repr,
     '__nonzero__':  bool,
+    '__hash__':     hash,
 }
 
 def build_class_def(cls):
@@ -72,9 +76,25 @@ def cache_as_field(cache_name):
     return cache_wrapper
 
 
+def extract_value(proxy):
+    """Given a value proxy type, Retrieve a value from a namespace, raising
+    exception if no value is found, or the value does not validate.
+    """
+    value = proxy.namespace.get(proxy.config_key, proxy.default)
+    if value is UndefToken:
+        raise errors.ConfigurationError("%s is missing value for: %s" %
+            (proxy.namespace, proxy.config_key))
+
+    try:
+        return proxy.validator(value)
+    except errors.ValidationError, e:
+        raise errors.ConfigurationError("%s failed to validate %s: %s" %
+            (proxy.namespace, proxy.config_key, e))
+
+
 class ValueProxy(object):
     """Proxy a configuration value so it can be loaded after import time."""
-    __slots__ = ['validator', 'config_key', 'default', '_value', 'value_cache']
+    __slots__ = ['validator', 'config_key', 'default', '_value', 'namespace']
 
     @classmethod
     @cache_as_field('_class_def')
@@ -88,26 +108,17 @@ class ValueProxy(object):
         klass.__init__(instance, *args, **kwargs)
         return instance
 
-    def __init__(self, validator, value_cache, key, default=UndefToken):
+    def __init__(self, validator, namespace, key, default=UndefToken):
         self.validator      = validator
         self.config_key     = key
         self.default        = default
-        self.value_cache    = value_cache
+        self.namespace      = namespace
         self._value         = UndefToken
 
     @property
     @cache_as_field('_value')
     def value(self):
-        value = self.value_cache.get(self.config_key, self.default)
-        if value is UndefToken:
-            msg = "Configuration is missing value for: %s"
-            raise errors.ConfigurationError(msg % self.config_key)
-
-        try:
-            return self.validator(value)
-        except errors.ValidationError, e:
-            msg = "Failed to validate %s: %s" % (self.config_key, e)
-            raise errors.ConfigurationError(msg)
+        return extract_value(self)
 
     def __getattr__(self, item):
         return getattr(self.value, item)

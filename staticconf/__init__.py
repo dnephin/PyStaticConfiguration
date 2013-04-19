@@ -3,7 +3,9 @@ from staticconf.loader import *
 from staticconf.getters import *
 
 
+version         = "0.5.0"
+
 view_help       = config.view_help
 reload          = config.reload
-valdidate       = config.validate
+validate        = config.validate
 ConfigurationWatcher = config.ConfigurationWatcher

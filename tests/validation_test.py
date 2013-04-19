@@ -3,6 +3,14 @@ from testify import assert_equal, run, TestCase
 from staticconf import validation
 
 
+class ValidationTestCase(TestCase):
+
+    def test_validate_string(self):
+        assert_equal(None, validation.validate_string(None))
+        assert_equal('asd', validation.validate_string('asd'))
+        assert_equal('123', validation.validate_string(123))
+
+
 class DateTimeValidationTestCase(TestCase):
 
     def test_validate_datetime(self):
@@ -45,6 +53,18 @@ class DateTimeValidationTestCase(TestCase):
         actual = validation.validate_time(expected)
         assert_equal(actual, expected)
 
+
+class IterableValidationTestCase(TestCase):
+
+    def test_validate_list(self):
+        expected = range(3)
+        actual = validation.validate_list((0, 1, 2))
+        assert_equal(expected, actual)
+
+    def test_validate_set(self):
+        expected = set([3, 2, 1])
+        actual = validation.validate_set([1,3,2,2,1,3,2])
+        assert_equal(expected, actual)
 
 if __name__ == "__main__":
     run()

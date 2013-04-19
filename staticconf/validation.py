@@ -7,11 +7,11 @@ from staticconf.errors import ValidationError
 
 
 def validate_string(value):
-    return unicode(value)
+    return None if value is None else unicode(value)
 
 
 def validate_bool(value):
-    return bool(value)
+    return None if value is None else bool(value)
 
 
 def validate_numeric(type_func, value):
@@ -79,5 +79,46 @@ def validate_time(value):
     raise ValidationError("Invalid time format: %s" % value)
 
 
-no_op = lambda v: v
-no_op.__name__ = ''
+def validate_iterable(iterable_type, value):
+    """Convert the iterable to iterable_type, or raise a Configuration
+    exception.
+    """
+    if isinstance(value, basestring):
+        msg = "Invalid iterable of type(%s): %s"
+        raise ValidationError(msg % (tuple(value), value))
+
+    try:
+        return iterable_type(value)
+    except TypeError:
+        raise ValidationError("Invalid iterable: %s" % (value))
+
+
+def validate_list(value):
+    return validate_iterable(list, value)
+
+
+def validate_set(value):
+    return validate_iterable(set, value)
+
+
+def validate_tuple(value):
+    return validate_iterable(tuple, value)
+
+
+def validate_any(value):
+    return value
+
+
+validators = {
+    '':         validate_any,
+    'bool':     validate_bool,
+    'date':     validate_date,
+    'datetime': validate_datetime,
+    'float':    validate_float,
+    'int':      validate_int,
+    'list':     validate_list,
+    'set':      validate_set,
+    'string':   validate_string,
+    'time':     validate_time,
+    'tuple':    validate_tuple,
+}

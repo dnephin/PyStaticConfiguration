@@ -2,15 +2,22 @@
 Load configuration data from different file formats and python structures.
 Nested dictionaries are flattened using dotted notation.
 
-Create your own loader:
+.. code-block:: python
+
+    staticconf.YamlConfiguration('config.yaml')
+
+
+You can create your own loaders for other formats by using
+``loader.build_loader()``.
+
+.. code-block:: python
 
     from staticconf import loader
     def custom_loader(*args):
         ...
         return config_dict
-    CustomConfiguration = loader.build_loader(custom_loader)
-    CustomConfiguration()
 
+    CustomConfiguration = loader.build_loader(custom_loader)
 
 ."""
 import logging
@@ -29,7 +36,8 @@ __all__ = [
     'INIConfiguration',
     'XMLConfiguration',
     'PropertiesConfiguration',
-    'CompositeConfiguration'
+    'CompositeConfiguration',
+    'ObjectConfiguration',
 ]
 
 
@@ -51,7 +59,7 @@ def load_config_data(loader_func, *args, **kwargs):
     try:
         return loader_func(*args, **kwargs)
     except Exception, e:
-        log.warn("Optional configuration failed: %s" % e)
+        log.info("Optional configuration failed: %s" % e)
         if not optional:
             raise
         return {}
@@ -59,16 +67,14 @@ def load_config_data(loader_func, *args, **kwargs):
 
 def build_loader(loader_func):
     def loader(*args, **kwargs):
-        error_on_unknown    = kwargs.pop('error_on_unknown', False)
-        error_on_duplicate  = kwargs.pop('error_on_duplicate', False)
+        err_on_unknown      = kwargs.pop('error_on_unknown', False)
+        err_on_dupe         = kwargs.pop('error_on_duplicate', False)
         name                = kwargs.pop('namespace', config.DEFAULT)
 
         config_data = load_config_data(loader_func, *args, **kwargs)
         config_data = dict(flatten_dict(config_data))
         namespace   = config.get_namespace(name)
-        namespace.validate_keys(config_data.keys(), error_on_unknown)
-        namespace.has_duplicate_keys(config_data, error_on_duplicate)
-        namespace.update_values(config_data)
+        namespace.apply_config_data(config_data, err_on_unknown, err_on_dupe)
         return config_data
 
     return loader
@@ -77,7 +83,7 @@ def build_loader(loader_func):
 def yaml_loader(filename):
     import yaml
     with open(filename) as fh:
-        return yaml.load(fh)
+        return yaml.load(fh) or {}
 
 def json_loader(filename):
     try:
@@ -113,12 +119,13 @@ def auto_loader(base_dir='.', auto_configurations=None):
 def python_loader(module_name):
     module = __import__(module_name, fromlist=['*'])
     reload(module)
-    config_dict = {}
-    for name in dir(module):
-        if name.startswith('__'):
-            continue
-        config_dict[name] = getattr(module, name)
-    return config_dict
+    return object_loader(module)
+
+
+def object_loader(obj):
+    return dict(
+        (name, getattr(obj, name))
+        for name in dir(obj) if not name.startswith('__'))
 
 
 def ini_file_loader(filename):
@@ -201,6 +208,7 @@ YamlConfiguration       = build_loader(yaml_loader)
 JSONConfiguration       = build_loader(json_loader)
 ListConfiguration       = build_loader(list_loader)
 DictConfiguration       = build_loader(lambda d: d)
+ObjectConfiguration     = build_loader(object_loader)
 AutoConfiguration       = build_loader(auto_loader)
 PythonConfiguration     = build_loader(python_loader)
 INIConfiguration        = build_loader(ini_file_loader)

@@ -1,4 +1,7 @@
-from staticconf import config
+"""
+Facilitate testing of code which uses staticconf.
+"""
+from staticconf import config, loader
 
 
 class MockConfiguration(object):
@@ -7,7 +10,7 @@ class MockConfiguration(object):
     def __init__(self, *args, **kwargs):
         name                = kwargs.pop('namespace', config.DEFAULT)
         self.namespace      = config.get_namespace(name)
-        self.config_data    = dict(*args, **kwargs)
+        self.config_data    = dict(loader.flatten_dict(dict(*args, **kwargs)))
         self.old_values     = None
 
     def setup(self):

@@ -1,11 +1,55 @@
+import contextlib
 import mock
 import tempfile
-from testify import run, assert_equal, TestCase, setup, teardown
+from testify import run, assert_equal, TestCase, setup, teardown, setup_teardown
 from testify.assertions import assert_raises
+from testify import class_setup, class_teardown
 
 from staticconf import config, errors
 import staticconf
 
+
+class TestRemoveByKeys(TestCase):
+
+    def test_empty_dict(self):
+        keys = range(3)
+        assert_equal([], config.remove_by_keys({}, keys))
+
+    def test_no_keys(self):
+        keys = []
+        map = dict(enumerate(range(3)))
+        assert_equal(map.items(), config.remove_by_keys(map, keys))
+
+    def test_overlap(self):
+        keys = [1, 3, 5 ,7]
+        map = dict(enumerate(range(8)))
+        expected = [(0,0), (2, 2), (4, 4), (6, 6)]
+        assert_equal(expected, config.remove_by_keys(map, keys))
+
+
+class ConfigMapTestCase(TestCase):
+
+    @setup
+    def setup_config_map(self):
+        self.config_map = config.ConfigMap(one=1, three=3, seven=7)
+
+    def test_no_iteritems(self):
+        assert not hasattr(self.config_map, 'iteritems')
+
+    def test_getitem(self):
+        assert_equal(self.config_map['one'], 1)
+        assert_equal(self.config_map['seven'], 7)
+
+    def test_get(self):
+        assert_equal(self.config_map.get('three'), 3)
+        assert_equal(self.config_map.get('four', 0), 0)
+
+    def test_contains(self):
+        assert 'one' in self.config_map
+        assert 'two' not in self.config_map
+
+    def test_len(self):
+        assert_equal(len(self.config_map), 3)
 
 class ConfigurationNamespaceTestCase(TestCase):
 
@@ -13,7 +57,7 @@ class ConfigurationNamespaceTestCase(TestCase):
     def setup_namespace(self):
         self.name = 'the_name'
         self.namespace = config.ConfigNamespace(self.name)
-        self.keys = ['one', 'two', 'three']
+        self.config_data = dict(enumerate(['one', 'two', 'three'], 1))
 
     def test_register_get_value_proxies(self):
         proxies = [mock.Mock(), mock.Mock()]
@@ -32,22 +76,35 @@ class ConfigurationNamespaceTestCase(TestCase):
         values = self.namespace.get_config_values()
         assert_equal(values, {'stars': 'foo'})
 
+    def test_get_known_keys(self):
+        proxies = [mock.Mock(), mock.Mock()]
+        for proxy in proxies:
+            self.namespace.register_proxy(proxy)
+        expected = set([proxy.config_key for proxy in proxies])
+        assert_equal(self.namespace.get_known_keys(), expected)
+
     def test_validate_keys_no_unknown_keys(self):
-        proxies = [mock.Mock(config_key=i) for i in self.keys]
+        proxies = [mock.Mock(config_key=i) for i in self.config_data]
         self.namespace.value_proxies = proxies
         with mock.patch('staticconf.config.log') as mock_log:
-            self.namespace.validate_keys(self.keys, True)
-            self.namespace.validate_keys(self.keys, False)
+            self.namespace.validate_keys(self.config_data, True)
+            self.namespace.validate_keys(self.config_data, False)
             assert not mock_log.warn.mock_calls
 
-    def test_validate_keys_unknown_warn(self):
+    def test_validate_keys_unknown_log(self):
         with mock.patch('staticconf.config.log') as mock_log:
-            self.namespace.validate_keys(self.keys, False)
-            assert_equal(len(mock_log.warn.mock_calls), 1)
+            self.namespace.validate_keys(self.config_data, False)
+            assert_equal(len(mock_log.info.mock_calls), 1)
 
     def test_validate_keys_unknown_raise(self):
         assert_raises(errors.ConfigurationError,
-                self.namespace.validate_keys, self.keys, True)
+                self.namespace.validate_keys, self.config_data, True)
+
+    def test_clear(self):
+        self.namespace.apply_config_data(self.config_data, False, False)
+        assert self.namespace.get_config_values()
+        self.namespace.clear()
+        assert_equal(self.namespace.get_config_values(), {})
 
 class GetNamespaceTestCase(TestCase):
 
@@ -144,18 +201,41 @@ class ValidateTestCase(TestCase):
 
 class ViewHelpTestCase(TestCase):
 
-    expected = "%-63s %s\n%-31s %-10s %-21s\n%-31s %-10s %-20s %s" % (
-        'one', 'the one', 'when', 'time', 'NOW', 'you sure', 'bool',
-        'No', 'Are you?')
-
-    def test_view_help(self):
+    @class_setup
+    def setup_descriptions(self):
         staticconf.get('one', help="the one")
-        staticconf.get_time('when', default='NOW')
+        staticconf.get_time('when', default='NOW', help="The time")
         staticconf.get_bool('you sure', default='No', help='Are you?')
+        staticconf.get('one', help="the one", namespace='Beta')
+        staticconf.get('one', help="the one", namespace='Alpha')
+        staticconf.get('two', help="the two", namespace='Alpha')
 
-        help_msg = config.view_help()
-        assert_equal(help_msg, self.expected)
+    @class_teardown
+    def teardown_descriptions(self):
         config._reset()
+
+    @setup
+    def setup_lines(self):
+        self.lines = config.view_help().split('\n')
+
+        print config.view_help()
+
+    def test_view_help_format(self):
+        line, help = self.lines[4:6]
+        assert_equal(help, 'The time')
+        assert_equal(line, 'when (Type: time, Default: NOW)')
+
+    def test_view_help_format_namespace(self):
+        namespace, one, _, two, _, blank = self.lines[9:15]
+        assert_equal(namespace, 'Namespace: Alpha')
+        assert one.startswith('one')
+        assert two.startswith('two')
+        assert_equal(blank, '')
+
+    def test_view_help_namespace_sort(self):
+        lines = filter(lambda l: l.startswith('Namespace'), self.lines)
+        expected = ['Namespace: DEFAULT', 'Namespace: Alpha', 'Namespace: Beta']
+        assert_equal(lines, expected)
 
 
 class HasDuplicateKeysTestCase(TestCase):
@@ -181,36 +261,44 @@ class HasDuplicateKeysTestCase(TestCase):
 
 class ConfigurationWatcherTestCase(TestCase):
 
-    @setup
-    def setup_config_watcher(self):
+    @setup_teardown
+    def setup_mocks_and_config_watcher(self):
         self.loader = mock.Mock()
-        file = tempfile.NamedTemporaryFile()
-        # Create the file
-        file.flush()
-        self.filename = file.name
-        self.watcher = config.ConfigurationWatcher(self.loader, self.filename)
+        with contextlib.nested(
+            mock.patch('staticconf.config.time'),
+            mock.patch('staticconf.config.os.path'),
+            mock.patch('staticconf.config.os.stat'),
+            tempfile.NamedTemporaryFile()
+        ) as (self.mock_time, self.mock_path, self.mock_stat, file):
+            # Create the file
+            file.flush()
+            self.mock_stat.st_ino=1
+            self.mock_stat.st_dev=2
+            self.filename = file.name
+            self.watcher = config.ConfigurationWatcher(self.loader, self.filename)
+            yield
 
-    @setup
-    def setup_mock_time(self):
-        self.patcher = mock.patch('staticconf.config.time')
-        self.mock_time = self.patcher.start()
-        self.file_patcher = mock.patch('staticconf.config.os.path')
-        self.mock_path = self.file_patcher.start()
+    def test_get_filename_list_from_string(self):
+        self.mock_path.abspath.side_effect = lambda p: p
+        filename = 'thefilename.yaml'
+        filenames = self.watcher.get_filename_list(filename)
+        assert_equal(filenames, [filename])
 
-    @teardown
-    def teardown_mock_time(self):
-        self.patcher.stop()
-        self.file_patcher.stop()
+    def test_get_filename_list_from_list(self):
+        self.mock_path.abspath.side_effect = lambda p: p
+        filenames = ['b', 'g', 'z', 'a']
+        expected = ['a', 'b', 'g', 'z']
+        assert_equal(self.watcher.get_filename_list(filenames), expected)
 
     def test_should_check(self):
         self.watcher.last_check = 123456789
 
         self.mock_time.time.return_value = 123456789
-        # Still current, but no max_interval
+        # Still current, but no min_interval
         assert self.watcher.should_check
 
         # With max interval
-        self.watcher.max_interval = 3
+        self.watcher.min_interval = 3
         assert not self.watcher.should_check
 
         # Time has passed
@@ -218,7 +306,7 @@ class ConfigurationWatcherTestCase(TestCase):
         assert self.watcher.should_check
 
     def test_file_modified_not_modified(self):
-        self.watcher.last_modified = self.mock_path.getmtime.return_value = 222
+        self.watcher.last_check = self.mock_path.getmtime.return_value = 222
         self.mock_time.time.return_value = 123456
         assert not self.watcher.file_modified()
         assert_equal(self.watcher.last_check, self.mock_time.time.return_value)
@@ -231,9 +319,49 @@ class ConfigurationWatcherTestCase(TestCase):
         assert self.watcher.file_modified()
         assert_equal(self.watcher.last_check, self.mock_time.time.return_value)
 
-    def test_reload(self):
+    def test_file_modified_moved(self):
+        self.watcher.last_check = self.mock_path.getmtime.return_value = 123456
+        self.mock_time.time.return_value = 123455
+        assert not self.watcher.file_modified()
+        self.mock_stat.st_ino = 3
+        assert self.watcher.file_modified()
+
+    def test_reload_default(self):
         self.watcher.reload()
         self.loader.assert_called_with()
+
+    def test_reload_custom(self):
+        reloader = mock.Mock()
+        watcher = config.ConfigurationWatcher(
+                self.loader, self.filename, reloader=reloader)
+        watcher.reload()
+        reloader.assert_called_with()
+
+
+class ReloadCallbackChainTestCase(TestCase):
+
+    @setup
+    def setup_callback_chain(self):
+        self.callbacks = list(enumerate([mock.Mock(), mock.Mock()]))
+        self.callback_chain = config.ReloadCallbackChain(callbacks=self.callbacks)
+
+    def test_init_with_callbacks(self):
+        assert_equal(self.callback_chain.callbacks, dict(self.callbacks))
+
+    def test_add_remove(self):
+        callback = mock.Mock()
+        self.callback_chain.add('one', callback)
+        assert_equal(self.callback_chain.callbacks['one'], callback)
+        self.callback_chain.remove('one')
+        assert 'one' not in self.callback_chain.callbacks
+
+    def test_call(self):
+        self.callback_chain.namespace = namespace = 'the_namespace'
+        with mock.patch('staticconf.config.reload') as mock_reload:
+            self.callback_chain()
+            for _, callback in self.callbacks:
+                callback.assert_called_with()
+                mock_reload.assert_called_with(name='the_namespace', all_names=False)
 
 
 if __name__ == "__main__":

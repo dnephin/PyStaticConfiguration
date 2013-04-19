@@ -51,6 +51,7 @@ Install
 Documentation
 -------------
 
+See http://pythonhosted.org/PyStaticConfiguration/
 
 ### Use the configuration
 
@@ -68,6 +69,9 @@ trying to use the returned value before a configuration is loaded will raise
     staticconf.get_date(config_key, default=None, help=None, namespace=None)
     staticconf.get_datetime(config_key, default=None, help=None, namespace=None)
     staticconf.get_time(config_key, default=None, help=None, namespace=None)
+    staticconf.get_list(config_key, default=None, help=None, namespace=None)
+    staticconf.get_set(config_key, default=None, help=None, namespace=None)
+    staticconf.get_tuple(config_key, default=None, help=None, namespace=None)
 
         config_key: string configuration key
         default:    if no `default` is given, the key must be present in the
@@ -97,6 +101,7 @@ overrides any duplicate keys in the previous.
     staticconf.ListConfiguration(sequence, ...)
     staticconf.DictConfiguration(dict, ...)
     staticconf.PythonConfiguration(module_name, ...)
+    staticconf.ObjectConfiguration(object, ...)
 
         These keyword params are supported by all configuration loaders:
 
@@ -114,8 +119,11 @@ overrides any duplicate keys in the previous.
 
 A new configuration should be loaded immediately before `reload`.
 
-    staticconf.YamlConfiguration(...)
-    staticconf.reload()
+    # staticconf.YamlConfiguration(...)
+    staticconf.reload(name=DEFAULT, all_names=False)
+
+        name:       the configuration namespace to reload
+        all_names:  if True, name is ignored, and all namespaces are reloaded.
 
 
 ### Watch a file for modifications
@@ -124,15 +132,15 @@ A new configuration should be loaded immediately before `reload`.
 configuration from that file.
 
 ```
-    staticconf.ConfigurationWatcher(config_loader, filename, max_interval=0)
+    staticconf.ConfigurationWatcher(config_loader, filename, min_interval=0)
 
         config_loader:  a callable which is called when the configuration file
                         has changed. This is usually a partial or lambda
                         around one of the configuration loaders.
         filename:       name of the file, or a list of file names, to monitor
-        max_interval:   the number of seconds to wait before stat'ing the file
+        min_interval:   the number of seconds to wait before stat'ing the file
                         again.  If the file was checked within the last
-                        `max_interval` seconds, the call to `reload_if_changed()`
+                        `min_interval` seconds, the call to `reload_if_changed()`
                         will return immediately.
 ```
 
@@ -141,11 +149,42 @@ configuration from that file.
 ```
     ConfigurationWatcher.reload_if_change(force=False)
 
-        If more then `max_interval` seconds have passed since the last check of
+        If more then `min_interval` seconds have passed since the last check of
         the modification time, then check the modification time of the time and
         call `config_loader` if it has changed.
 
-        force: if True, forces the check for modification, ignoring max_interval
+        force: if True, forces the check for modification, ignoring min_interval
+```
+
+Callbacks can be added to the watcher using `ReloadCallbackChain`. This is a callable
+object which calls each of the callbacks that were added.
+
+```
+    staticconf.config.ReloadCallbackChain(namespace=DEFAULT, all_names=False, callbacks=None)
+
+        namespace:      namespace to reload when called
+        all_names:      passed to reload to reload all namespaces
+        callbacks:      a mapping of identifier to callback
+
+
+    ReloadCallbackChain.add(identifier, callback)
+    ReloadCallbackChain.remove(identifier)
+
+        Add and remove callbacks by using an identifier.
+        
+
+```
+
+### Putting it all together
+
+An example of a configuration with a single yaml file in a namespace.
+
+```
+def build_configuration(filename, namespace):
+    config_loader = partial(YamlConfiguration, filename, namespace=namespace)
+    reloader = ReloadCallbackChain(namespace)
+    return ConfigurationWatcher(config_loader, filename, min_interval=2, reloader=reloader)
+
 ```
 
 ### Testing
@@ -253,7 +292,7 @@ Periodically check the configuration file for changes:
     loader(filename)
 
     reloader = functools.partial(loader, filename)
-    watcher = staticconf.ConfigurationWatcher(reloader, filename, max_interval=3)
+    watcher = staticconf.ConfigurationWatcher(reloader, filename, min_interval=3)
     ...
     for work in work_to_do:
         ...
