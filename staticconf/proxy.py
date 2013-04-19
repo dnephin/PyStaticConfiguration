@@ -41,6 +41,7 @@ unary_funcs = {
     '__str__':      str,
     '__repr__':     repr,
     '__nonzero__':  bool,
+    '__hash__':     hash,
 }
 
 def build_class_def(cls):
