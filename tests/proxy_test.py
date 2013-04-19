@@ -1,7 +1,7 @@
 import datetime
 import mock
 from testify import run, assert_equal, TestCase, setup
-from testify.assertions import assert_raises
+from testify.assertions import assert_raises, assert_in
 
 from staticconf import proxy, validation, errors
 
@@ -14,7 +14,8 @@ class ValueProxyTestCase(TestCase):
             'something': 2,
             'something.string': 'the stars',
             'zero': 0,
-            'the_date': datetime.datetime(2012, 3, 14, 4, 4, 4)
+            'the_date': datetime.datetime(2012, 3, 14, 4, 4, 4),
+            'the_list': range(3),
         }
 
     def test_proxy(self):
@@ -27,7 +28,11 @@ class ValueProxyTestCase(TestCase):
         assert_equal(repr(value_proxy), "2")
         assert_equal(str(value_proxy), "2")
         assert_equal(3 % value_proxy, 1)
-        assert_equal(3 ** 2, 9)
+        assert_equal(3 ** value_proxy, 9)
+        assert_equal(value_proxy ** 3, 8)
+        assert_equal(hash(value_proxy), 2)
+        assert_equal(abs(value_proxy), 2)
+        assert_equal(hex(value_proxy), "0x2")
         assert bool(value_proxy)
 
     def test_proxy_with_string(self):
@@ -40,6 +45,7 @@ class ValueProxyTestCase(TestCase):
         assert_equal(value_proxy % '!', 'one!')
         assert_equal(repr(value_proxy), "'one%s'")
         assert_equal(str(value_proxy), "one%s")
+        assert_equal(hash(value_proxy), hash("one%s"))
         assert bool(value_proxy)
 
     def test_proxy_with_datetime(self):
@@ -53,37 +59,46 @@ class ValueProxyTestCase(TestCase):
         assert_equal(value_proxy + datetime.timedelta(days=3), four_days_ahead)
         assert_equal(repr(value_proxy), repr(the_date))
         assert_equal(str(value_proxy), str(the_date))
+        assert_equal(hash(value_proxy), hash(the_date))
         assert bool(value_proxy)
 
     def test_proxy_zero(self):
         validator = mock.Mock(return_value=0)
         self.value_proxy = proxy.ValueProxy(validator, self.value_cache, 'zero')
         assert_equal(self.value_proxy, 0)
-        assert not bool(self.value_proxy)
+        assert not self.value_proxy
+        assert not self.value_proxy and True
+        assert not self.value_proxy or False
+        assert not self.value_proxy ^ 0
+        assert ~ self.value_proxy
 
     def test_get_value(self):
         expected = "the stars"
         validator = mock.Mock(return_value=expected)
-        value_proxy = proxy.ValueProxy(validator, self.value_cache, 'something.string')
+        value_proxy = proxy.ValueProxy(
+            validator, self.value_cache, 'something.string')
         assert_equal(value_proxy, expected)
 
     def test_get_value_cached(self):
         expected = "the other stars"
         validator = mock.Mock()
-        value_proxy = proxy.ValueProxy(validator, self.value_cache, 'something.string')
+        value_proxy = proxy.ValueProxy(
+            validator, self.value_cache, 'something.string')
         value_proxy._value =  expected
         assert_equal(value_proxy.value, expected)
         validator.assert_not_called()
 
     def test_get_value_unset(self):
         validator = mock.Mock()
-        value_proxy = proxy.ValueProxy(validator, self.value_cache, 'something.missing')
+        value_proxy = proxy.ValueProxy(
+            validator, self.value_cache, 'something.missing')
         assert_raises(errors.ConfigurationError, lambda: value_proxy + 1)
 
     def test_get_value_fails_validation(self):
         validator = mock.Mock()
         validator.side_effect = validation.ValidationError()
-        value_proxy = proxy.ValueProxy(validator, self.value_cache, 'something.broken')
+        value_proxy = proxy.ValueProxy(
+            validator, self.value_cache, 'something.broken')
         assert_raises(errors.ConfigurationError, lambda: value_proxy + 1)
 
     def test_proxied_attributes(self):
@@ -91,6 +106,16 @@ class ValueProxyTestCase(TestCase):
         value_proxy = proxy.ValueProxy(validator, self.value_cache, 'the_date')
         assert_equal(value_proxy.date(), datetime.date(2012, 3, 14))
         assert_equal(value_proxy.hour, 4)
+
+    def test_proxy_list(self):
+        the_list = range(3)
+        validator = mock.Mock(return_value=the_list)
+        value_proxy = proxy.ValueProxy(validator, self.value_cache, 'the_list')
+        assert_equal(value_proxy, the_list)
+        assert_in(2, value_proxy)
+        assert_equal(value_proxy[:1], [0])
+        assert_equal(len(value_proxy), 3)
+
 
 if __name__ == "__main__":
     run()
