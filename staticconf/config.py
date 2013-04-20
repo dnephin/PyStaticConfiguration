@@ -283,7 +283,6 @@ class ReloadCallbackChain(object):
             callback()
 
 
-# TODO: test load
 class ConfigFacade(object):
     """A facade around a ConfigurationWatcher and a ReloadCallbackChain.
     """
@@ -293,10 +292,11 @@ class ConfigFacade(object):
         self.callback_chain = watcher.get_reloader()
 
     @classmethod
-    def load(cls, filename, namespace, loader_func):
-        loader = loader_func(filename, namespace=namespace)
+    def load(cls, filename, namespace, loader_func, min_interval=0):
+        loader = functools.partial(loader_func, filename, namespace=namespace)
         reloader = ReloadCallbackChain(namespace=namespace)
-        watcher = ConfigurationWatcher(loader, filename, reloader)
+        watcher = ConfigurationWatcher(
+            loader, filename, min_interval=min_interval, reloader=reloader)
         loader()
         return cls(watcher)
 
