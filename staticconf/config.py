@@ -2,6 +2,7 @@
 Classes for storing configuration by namespace, and reloading configuration
 while files change.
 """
+import functools
 import logging
 import os
 import time
@@ -256,6 +257,9 @@ class ConfigurationWatcher(object):
         self.reloader()
         return config_dict
 
+    def get_reloader(self):
+        return self.reloader
+
 
 class ReloadCallbackChain(object):
     """This object can be used as a convenient way of adding and removing
@@ -277,3 +281,27 @@ class ReloadCallbackChain(object):
         reload(name=self.namespace, all_names=self.all_names)
         for callback in self.callbacks.itervalues():
             callback()
+
+
+class ConfigFacade(object):
+    """A facade around a ConfigurationWatcher and a ReloadCallbackChain.
+    """
+
+    def __init__(self, watcher):
+        self.watcher = watcher
+        self.callback_chain = watcher.get_reloader()
+
+    @classmethod
+    def load(cls, filename, namespace, loader_func, min_interval=0):
+        loader = functools.partial(loader_func, filename, namespace=namespace)
+        reloader = ReloadCallbackChain(namespace=namespace)
+        watcher = ConfigurationWatcher(
+            loader, filename, min_interval=min_interval, reloader=reloader)
+        loader()
+        return cls(watcher)
+
+    def add_callback(self, identifier, callback):
+        self.callback_chain.add(identifier, callback)
+
+    def reload_if_changed(self, force=False):
+        self.watcher.reload_if_changed(force=force)
