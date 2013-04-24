@@ -1,4 +1,5 @@
 import contextlib
+import gc
 import mock
 import tempfile
 import time
@@ -6,7 +7,7 @@ from testify import run, assert_equal, TestCase, setup, teardown, setup_teardown
 from testify.assertions import assert_raises
 from testify import class_setup, class_teardown
 
-from staticconf import config, errors, testing
+from staticconf import config, errors, testing, proxy
 import staticconf
 
 
@@ -62,9 +63,20 @@ class ConfigurationNamespaceTestCase(TestCase):
 
     def test_register_get_value_proxies(self):
         proxies = [mock.Mock(), mock.Mock()]
-        for proxy in proxies:
-            self.namespace.register_proxy(proxy)
+        for mock_proxy in proxies:
+            self.namespace.register_proxy(mock_proxy)
         assert_equal(self.namespace.get_value_proxies(), proxies)
+
+    def test_get_value_proxies_does_not_contain_out_of_scope_proxies(self):
+        assert not self.namespace.get_value_proxies()
+        def a_scope():
+            mock_proxy = mock.create_autospec(proxy.ValueProxy)
+            self.namespace.register_proxy(mock_proxy)
+
+        a_scope()
+        a_scope()
+        gc.collect()
+        assert_equal(len(self.namespace.get_value_proxies()), 0)
 
     def test_update_values(self):
         values = dict(one=1, two=2)
@@ -79,14 +91,15 @@ class ConfigurationNamespaceTestCase(TestCase):
 
     def test_get_known_keys(self):
         proxies = [mock.Mock(), mock.Mock()]
-        for proxy in proxies:
-            self.namespace.register_proxy(proxy)
-        expected = set([proxy.config_key for proxy in proxies])
+        for mock_proxy in proxies:
+            self.namespace.register_proxy(mock_proxy)
+        expected = set([mock_proxy.config_key for mock_proxy in proxies])
         assert_equal(self.namespace.get_known_keys(), expected)
 
     def test_validate_keys_no_unknown_keys(self):
         proxies = [mock.Mock(config_key=i) for i in self.config_data]
-        self.namespace.value_proxies = proxies
+        for mock_proxy in proxies:
+            self.namespace.register_proxy(mock_proxy)
         with mock.patch('staticconf.config.log') as mock_log:
             self.namespace.validate_keys(self.config_data, True)
             self.namespace.validate_keys(self.config_data, False)
@@ -106,6 +119,7 @@ class ConfigurationNamespaceTestCase(TestCase):
         assert self.namespace.get_config_values()
         self.namespace.clear()
         assert_equal(self.namespace.get_config_values(), {})
+
 
 class GetNamespaceTestCase(TestCase):
 
@@ -179,7 +193,7 @@ class ValidateTestCase(TestCase):
         config.validate()
 
     def test_validate_single_fails(self):
-        staticconf.get_int('one.two')
+        _ = staticconf.get_int('one.two')
         assert_raises(errors.ConfigurationError, config.validate)
 
     def test_validate_all_passes(self):
@@ -196,7 +210,7 @@ class ValidateTestCase(TestCase):
 
     def test_validate_all_fails(self):
         name = 'yan'
-        staticconf.get_string('foo', namespace=name)
+        _ = staticconf.get_string('foo', namespace=name)
         assert_raises(errors.ConfigurationError, config.validate, all_names=True)
 
 
