@@ -19,24 +19,8 @@ object.
 
 """
 
-from staticconf import validation, config, proxy
+from staticconf import validation, config, proxy, readers
 from staticconf.proxy import UndefToken
-
-
-def getter_name(validator_name):
-    if not validator_name:
-        return 'get'
-    return 'get_%s' % validator_name
-
-
-def list_of_getter_name(validator_name):
-    return 'get_list_of_%s' % validator_name
-
-getter_names = ([getter_name(name) for name in validation.validators] +
-                [list_of_getter_name(name) for name in validation.validators])
-
-
-__all__ = getter_names + ['NamespaceGetters']
 
 
 def register_value_proxy(namespace, value_proxy, help_text):
@@ -61,25 +45,21 @@ def build_getter(validator, getter_namespace=None):
     return proxy_register
 
 
-class NamespaceGetters(object):
-    """An object with getters, which have their namespace already defined.
-    Calling a getter method on this object will return a ValueProxy which is
-    attached to the namespace.
-    """
+class GetterNameFactory(object):
 
-    def __init__(self, name):
-        self.namespace = name
-        [self._add_getter(*item) for item in validation.validators.iteritems()]
+    @staticmethod
+    def get_name(validator_name):
+        return 'get_%s' % validator_name if validator_name else 'get'
 
-    def _add_getter(self, name, validator):
-        self._set_getter(getter_name(name), validator)
-        self._set_getter(list_of_getter_name(name),
-            validation.build_list_type_validator(validator))
+    @staticmethod
+    def get_list_of_name(validator_name):
+        return 'get_list_of_%s' % validator_name
 
-    def _set_getter(self, name, validator):
-        setattr(self, name, build_getter(validator, self.namespace))
+
+NamespaceGetters = readers.build_accessor_type(GetterNameFactory, build_getter)
 
 
 default_getters = NamespaceGetters(config.DEFAULT)
-for name in getter_names:
-    globals()[name] = getattr(default_getters, name)
+globals().update(default_getters.get_methods())
+
+__all__ = ['NamespaceGetters'] + list(default_getters.get_methods())

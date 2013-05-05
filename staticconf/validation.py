@@ -140,3 +140,7 @@ validators = {
     'tuple':    validate_tuple,
     'regex':    validate_regex,
 }
+
+def get_validators():
+    """Return an iterator of (validator_name, validator) pairs."""
+    return validators.iteritems()

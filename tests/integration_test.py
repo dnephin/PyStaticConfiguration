@@ -59,6 +59,12 @@ class EndToEndTestCase(TestCase):
         assert_equal(some_class.real_min, 20)
         assert_equal(some_class.real_max, 25)
 
+    def test_readers(self):
+        staticconf.DictConfiguration(self.config)
+        assert_equal(staticconf.read_float('SomeClass.ratio'), 7.7)
+        assert_equal(staticconf.read_bool('globals'), False)
+        assert_equal(staticconf.read_list_of_int('options'), [1, 7, 3, 9])
+
 
 class MockConfigurationTestCase(TestCase):
 

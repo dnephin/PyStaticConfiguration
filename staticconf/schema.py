@@ -165,7 +165,7 @@ def create_value_type(validator):
     return functools.partial(ValueTypeDefinition, validator)
 
 
-for name, validator in validation.validators.iteritems():
+for name, validator in validation.get_validators():
     name = name or 'any'
     globals()[name] = create_value_type(validator)
     list_of_validator = validation.build_list_type_validator(validator)
