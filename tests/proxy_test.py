@@ -25,8 +25,7 @@ class ExtractValueTestCase(TestCase):
     def test_get_value_fails_validation(self):
         expected = [self.name, self.config_key]
         validator = mock.Mock(side_effect = validation.ValidationError)
-        value_proxy = proxy.ValueProxy(
-            validator, self.namespace, 'something.broken')
+        _ = proxy.ValueProxy(validator, self.namespace, 'something.broken')
         assert_raises_and_contains(errors.ConfigurationError,
             expected, lambda: self.value_proxy.value)
 

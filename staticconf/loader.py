@@ -123,9 +123,8 @@ def python_loader(module_name):
 
 
 def object_loader(obj):
-    return dict(
-        (name, getattr(obj, name))
-        for name in dir(obj) if not name.startswith('__'))
+    return dict((name, getattr(obj, name))
+                for name in dir(obj) if not name.startswith('_'))
 
 
 def ini_file_loader(filename):
