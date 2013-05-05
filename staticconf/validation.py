@@ -2,6 +2,7 @@
 Validate and convert a configuration value to it's expected type.
 """
 import datetime
+import re
 import time
 from staticconf.errors import ValidationError
 
@@ -105,6 +106,13 @@ def validate_tuple(value):
     return validate_iterable(tuple, value)
 
 
+def validate_regex(value):
+    try:
+        return re.compile(value)
+    except (re.error, TypeError), e:
+        raise ValidationError("Invalid regex: %s, %s" % (e, value))
+
+
 def validate_any(value):
     return value
 
@@ -121,4 +129,5 @@ validators = {
     'string':   validate_string,
     'time':     validate_time,
     'tuple':    validate_tuple,
+    'regex':    validate_regex,
 }

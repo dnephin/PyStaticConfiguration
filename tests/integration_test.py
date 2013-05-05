@@ -25,7 +25,8 @@ class EndToEndTestCase(TestCase):
             'ratio': '7.7'
         },
         'globals': False,
-        'enable': 'True'
+        'enable': 'True',
+        'matcher': '\d+',
     }
 
     @teardown
@@ -43,6 +44,8 @@ class EndToEndTestCase(TestCase):
         assert_equal(staticconf.get('enable'), 'True')
         assert_equal(staticconf.get_bool('enable'), True)
         assert_equal(some_class.msg, None)
+        assert staticconf.get_regex('matcher').match('12345')
+        assert not staticconf.get_regex('matcher').match('a')
 
     def test_load_and_validate_namespace(self):
         real_config = {'SomeClass.min': 20, 'SomeClass.max': 25}
