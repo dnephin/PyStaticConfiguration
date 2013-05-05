@@ -139,6 +139,8 @@ class PythonConfigurationTestCase(LoaderTestCase):
 
     module          = 'example_mod'
     module_file     = 'example_mod.py'
+    compiled_file   = 'example_mod.pyc'
+
     module_content  = textwrap.dedent("""
         some_value = "test"
 
@@ -149,19 +151,15 @@ class PythonConfigurationTestCase(LoaderTestCase):
 
     @teardown
     def remove_module(self):
-        if os.path.exists(self.module_file):
-            os.remove(self.module_file)
+        for filename in [self.module_file, self.compiled_file]:
+            os.remove(filename) if os.path.exists(filename) else None
 
     @setup
     def setup_module(self):
         self.create_module('one')
 
     def create_module(self, value):
-        # It appears that reload() checks mtime, and does not reload the module
-        # if it has not changed. This is a problem because the mtime does not
-        # change when we re-create the file in the same second.
-        # Sleeping sucks. Is there a better solution?
-        time.sleep(1)
+        self.remove_module()
         with open(self.module_file, 'w') as fh:
             fh.write(self.module_content % value)
 
