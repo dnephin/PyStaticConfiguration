@@ -5,6 +5,7 @@ from testify import assert_equal, TestCase, run, teardown, setup
 from testify.assertions import assert_raises
 import tempfile
 import textwrap
+import time
 
 from staticconf import loader, errors
 
@@ -136,12 +137,43 @@ class AutoConfigurationTestCase(LoaderTestCase):
 
 class PythonConfigurationTestCase(LoaderTestCase):
 
-    module = 'tests.data.example'
+    module          = 'example_mod'
+    module_file     = 'example_mod.py'
+    compiled_file   = 'example_mod.pyc'
+
+    module_content  = textwrap.dedent("""
+        some_value = "test"
+
+        more_values = {
+            "depth": "%s"
+        }
+    """)
+
+    @teardown
+    def remove_module(self):
+        for filename in [self.module_file, self.compiled_file]:
+            os.remove(filename) if os.path.exists(filename) else None
+
+    @setup
+    def setup_module(self):
+        self.create_module('one')
+
+    def create_module(self, value):
+        self.remove_module()
+        with open(self.module_file, 'w') as fh:
+            fh.write(self.module_content % value)
 
     def test_python_configuration(self):
         config_data = loader.PythonConfiguration(self.module)
         assert_equal(config_data['some_value'], 'test')
         assert_equal(config_data['more_values.depth'], 'one')
+
+    def test_python_configuration_reload(self):
+        config_data = loader.PythonConfiguration(self.module)
+        assert_equal(config_data['more_values.depth'], 'one')
+        self.create_module('two')
+        config_data = loader.PythonConfiguration(self.module)
+        assert_equal(config_data['more_values.depth'], 'two')
 
 
 class INIConfigurationTestCase(LoaderTestCase):
