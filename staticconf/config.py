@@ -2,10 +2,12 @@
 Classes for storing configuration by namespace, and reloading configuration
 while files change.
 """
+import functools
 import logging
 import os
 import time
 from collections import namedtuple
+import weakref
 
 from staticconf import errors
 
@@ -51,17 +53,17 @@ class ConfigNamespace(object):
     def __init__(self, name):
         self.name = name
         self.configuration_values = {}
-        self.value_proxies = []
+        self.value_proxies = weakref.WeakValueDictionary()
 
     def get_name(self):
         return self.name
 
     def get_value_proxies(self):
-        return self.value_proxies
+        return self.value_proxies.values()
 
     def register_proxy(self, proxy):
         """Register a new value proxy in this namespace."""
-        self.value_proxies.append(proxy)
+        self.value_proxies[id(proxy)] = proxy
 
     def apply_config_data(self, config_data, error_on_unknown, error_on_dupe):
         """Validate, check for duplicates, and update the config."""
@@ -76,7 +78,7 @@ class ConfigNamespace(object):
         return self.configuration_values
 
     def get_known_keys(self):
-        return set(vproxy.config_key for vproxy in self.value_proxies)
+        return set(vproxy.config_key for vproxy in self.get_value_proxies())
 
     def validate_keys(self, config_data, error_on_unknown):
         """Raise an exception if error_on_unknown is true, and keys contains
@@ -112,7 +114,7 @@ class ConfigNamespace(object):
 
     def _reset(self):
         self.clear()
-        self.value_proxies[:] = []
+        self.value_proxies.clear()
 
     def __str__(self):
         return "%s(%s)" % (type(self).__name__, self.name)
@@ -256,6 +258,9 @@ class ConfigurationWatcher(object):
         self.reloader()
         return config_dict
 
+    def get_reloader(self):
+        return self.reloader
+
 
 class ReloadCallbackChain(object):
     """This object can be used as a convenient way of adding and removing
@@ -277,3 +282,27 @@ class ReloadCallbackChain(object):
         reload(name=self.namespace, all_names=self.all_names)
         for callback in self.callbacks.itervalues():
             callback()
+
+
+class ConfigFacade(object):
+    """A facade around a ConfigurationWatcher and a ReloadCallbackChain.
+    """
+
+    def __init__(self, watcher):
+        self.watcher = watcher
+        self.callback_chain = watcher.get_reloader()
+
+    @classmethod
+    def load(cls, filename, namespace, loader_func, min_interval=0):
+        loader = functools.partial(loader_func, filename, namespace=namespace)
+        reloader = ReloadCallbackChain(namespace=namespace)
+        watcher = ConfigurationWatcher(
+            loader, filename, min_interval=min_interval, reloader=reloader)
+        loader()
+        return cls(watcher)
+
+    def add_callback(self, identifier, callback):
+        self.callback_chain.add(identifier, callback)
+
+    def reload_if_changed(self, force=False):
+        self.watcher.reload_if_changed(force=force)

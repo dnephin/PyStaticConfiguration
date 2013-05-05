@@ -69,7 +69,14 @@ class ValueTypeDefinition(object):
 
 
 class ValueToken(object):
-    __slots__ = ['validator', 'config_key', 'default', '_value', 'namespace']
+    __slots__ = [
+        'validator',
+        'config_key',
+        'default',
+        '_value',
+        'namespace',
+        '__weakref__'
+    ]
 
     def __init__(self, validator, namespace, key, default):
         self.validator      = validator

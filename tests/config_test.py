@@ -1,11 +1,13 @@
 import contextlib
+import gc
 import mock
 import tempfile
+import time
 from testify import run, assert_equal, TestCase, setup, teardown, setup_teardown
 from testify.assertions import assert_raises
 from testify import class_setup, class_teardown
 
-from staticconf import config, errors
+from staticconf import config, errors, testing, proxy
 import staticconf
 
 
@@ -61,9 +63,20 @@ class ConfigurationNamespaceTestCase(TestCase):
 
     def test_register_get_value_proxies(self):
         proxies = [mock.Mock(), mock.Mock()]
-        for proxy in proxies:
-            self.namespace.register_proxy(proxy)
+        for mock_proxy in proxies:
+            self.namespace.register_proxy(mock_proxy)
         assert_equal(self.namespace.get_value_proxies(), proxies)
+
+    def test_get_value_proxies_does_not_contain_out_of_scope_proxies(self):
+        assert not self.namespace.get_value_proxies()
+        def a_scope():
+            mock_proxy = mock.create_autospec(proxy.ValueProxy)
+            self.namespace.register_proxy(mock_proxy)
+
+        a_scope()
+        a_scope()
+        gc.collect()
+        assert_equal(len(self.namespace.get_value_proxies()), 0)
 
     def test_update_values(self):
         values = dict(one=1, two=2)
@@ -78,14 +91,15 @@ class ConfigurationNamespaceTestCase(TestCase):
 
     def test_get_known_keys(self):
         proxies = [mock.Mock(), mock.Mock()]
-        for proxy in proxies:
-            self.namespace.register_proxy(proxy)
-        expected = set([proxy.config_key for proxy in proxies])
+        for mock_proxy in proxies:
+            self.namespace.register_proxy(mock_proxy)
+        expected = set([mock_proxy.config_key for mock_proxy in proxies])
         assert_equal(self.namespace.get_known_keys(), expected)
 
     def test_validate_keys_no_unknown_keys(self):
         proxies = [mock.Mock(config_key=i) for i in self.config_data]
-        self.namespace.value_proxies = proxies
+        for mock_proxy in proxies:
+            self.namespace.register_proxy(mock_proxy)
         with mock.patch('staticconf.config.log') as mock_log:
             self.namespace.validate_keys(self.config_data, True)
             self.namespace.validate_keys(self.config_data, False)
@@ -105,6 +119,7 @@ class ConfigurationNamespaceTestCase(TestCase):
         assert self.namespace.get_config_values()
         self.namespace.clear()
         assert_equal(self.namespace.get_config_values(), {})
+
 
 class GetNamespaceTestCase(TestCase):
 
@@ -141,7 +156,7 @@ class ReloadTestCase(TestCase):
         staticconf.DictConfiguration(dict(two='three'), namespace=name)
         one, two = staticconf.get('one'), staticconf.get('two', namespace=name)
         # access the values to set the value_proxy cache
-        _ = bool(one), bool(two)
+        one.value, two.value
 
         staticconf.DictConfiguration(dict(one='four'))
         staticconf.DictConfiguration(dict(two='five'), namespace=name)
@@ -155,7 +170,7 @@ class ReloadTestCase(TestCase):
         staticconf.DictConfiguration(dict(two='three'), namespace=name)
         one, two = staticconf.get('one'), staticconf.get('two', namespace=name)
         # access the values to set the value_proxy cache
-        _ = bool(one), bool(two)
+        one.value, two.value
 
         staticconf.DictConfiguration(dict(one='four'))
         staticconf.DictConfiguration(dict(two='five'), namespace=name)
@@ -178,7 +193,7 @@ class ValidateTestCase(TestCase):
         config.validate()
 
     def test_validate_single_fails(self):
-        staticconf.get_int('one.two')
+        _ = staticconf.get_int('one.two')
         assert_raises(errors.ConfigurationError, config.validate)
 
     def test_validate_all_passes(self):
@@ -195,7 +210,7 @@ class ValidateTestCase(TestCase):
 
     def test_validate_all_fails(self):
         name = 'yan'
-        staticconf.get_string('foo', namespace=name)
+        _ = staticconf.get_string('foo', namespace=name)
         assert_raises(errors.ConfigurationError, config.validate, all_names=True)
 
 
@@ -356,12 +371,81 @@ class ReloadCallbackChainTestCase(TestCase):
         assert 'one' not in self.callback_chain.callbacks
 
     def test_call(self):
-        self.callback_chain.namespace = namespace = 'the_namespace'
+        self.callback_chain.namespace = 'the_namespace'
         with mock.patch('staticconf.config.reload') as mock_reload:
             self.callback_chain()
             for _, callback in self.callbacks:
                 callback.assert_called_with()
                 mock_reload.assert_called_with(name='the_namespace', all_names=False)
+
+
+class ConfigFacadeTestCase(TestCase):
+
+    @setup_teardown
+    def patch_watcher(self):
+        patcher = mock.patch('staticconf.config.ConfigurationWatcher',
+            autospec=True)
+        with patcher as self.mock_config_watcher:
+            yield
+
+    @setup
+    def setup_facade(self):
+        self.watcher = mock.create_autospec(config.ConfigurationWatcher)
+        self.watcher.get_reloader.return_value = mock.create_autospec(
+            config.ReloadCallbackChain)
+        self.facade = config.ConfigFacade(self.watcher)
+
+    def test_load(self):
+        filename, namespace = "filename", "namespace"
+        loader = mock.Mock()
+        facade = config.ConfigFacade.load(filename, namespace, loader)
+        loader.assert_called_with(filename, namespace=namespace)
+        assert_equal(facade.watcher, self.mock_config_watcher.return_value)
+        reloader = facade.callback_chain
+        assert_equal(reloader, facade.watcher.get_reloader())
+
+    def test_add_callback(self):
+        name, func = 'name', mock.Mock()
+        self.facade.add_callback(name, func)
+        self.facade.callback_chain.add.assert_called_with(name, func)
+
+    def test_reload_if_changed(self):
+        self.facade.reload_if_changed()
+        self.watcher.reload_if_changed.assert_called_with(force=False)
+
+
+class ConfigFacadeAcceptanceTest(TestCase):
+
+    _suites = ['acceptance']
+
+    @setup
+    def setup_env(self):
+        self.file = tempfile.NamedTemporaryFile()
+        self.write("""one: A""")
+
+    def write(self, content):
+        time.sleep(0.01)
+        self.file.file.seek(0)
+        self.file.write(content)
+        self.file.flush()
+
+    @setup_teardown
+    def patch_namespace(self):
+        self.namespace = 'testing_namespace'
+        with testing.MockConfiguration(namespace=self.namespace):
+            yield
+
+    def test_load_end_to_end(self):
+        loader = staticconf.YamlConfiguration
+        callback = mock.Mock()
+        facade = staticconf.ConfigFacade.load(self.file.name, self.namespace, loader)
+        facade.add_callback('one', callback)
+        assert_equal(staticconf.get('one', namespace=self.namespace), "A")
+
+        self.write("""one: B""")
+        facade.reload_if_changed()
+        assert_equal(staticconf.get('one', namespace=self.namespace), "B")
+        callback.assert_called_with()
 
 
 if __name__ == "__main__":

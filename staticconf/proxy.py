@@ -94,7 +94,14 @@ def extract_value(proxy):
 
 class ValueProxy(object):
     """Proxy a configuration value so it can be loaded after import time."""
-    __slots__ = ['validator', 'config_key', 'default', '_value', 'namespace']
+    __slots__ = [
+        'validator',
+        'config_key',
+        'default',
+        '_value',
+        'namespace',
+        '__weakref__'
+    ]
 
     @classmethod
     @cache_as_field('_class_def')
