@@ -29,7 +29,11 @@ def getter_name(validator_name):
     return 'get_%s' % validator_name
 
 
-getter_names = [getter_name(name) for name in validation.validators]
+def list_of_getter_name(validator_name):
+    return 'get_list_of_%s' % validator_name
+
+getter_names = ([getter_name(name) for name in validation.validators] +
+                [list_of_getter_name(name) for name in validation.validators])
 
 
 __all__ = getter_names + ['NamespaceGetters']
@@ -58,13 +62,22 @@ def build_getter(validator, getter_namespace=None):
 
 
 class NamespaceGetters(object):
-    """An object with getters, which have their namespace already defined."""
+    """An object with getters, which have their namespace already defined.
+    Calling a getter method on this object will return a ValueProxy which is
+    attached to the namespace.
+    """
 
     def __init__(self, name):
-        self.namespace      = name
-        for validator_name, validator in validation.validators.iteritems():
-            getter = build_getter(validator, name)
-            setattr(self, getter_name(validator_name), getter)
+        self.namespace = name
+        [self._add_getter(*item) for item in validation.validators.iteritems()]
+
+    def _add_getter(self, name, validator):
+        self._set_getter(getter_name(name), validator)
+        self._set_getter(list_of_getter_name(name),
+            validation.build_list_type_validator(validator))
+
+    def _set_getter(self, name, validator):
+        setattr(self, name, build_getter(validator, self.namespace))
 
 
 default_getters = NamespaceGetters(config.DEFAULT)

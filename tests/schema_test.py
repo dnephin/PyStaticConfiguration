@@ -36,6 +36,7 @@ class TestingSchema(object):
     all_of_them = schema.list()
     some_of_them = schema.set()
     wrapped = schema.tuple()
+    options = schema.list_of_bool()
 
 
 class SchemaMetaTestCase(TestCase):

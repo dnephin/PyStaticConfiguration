@@ -80,7 +80,7 @@ def validate_time(value):
     raise ValidationError("Invalid time format: %s" % value)
 
 
-def validate_iterable(iterable_type, value):
+def _validate_iterable(iterable_type, value):
     """Convert the iterable to iterable_type, or raise a Configuration
     exception.
     """
@@ -95,15 +95,15 @@ def validate_iterable(iterable_type, value):
 
 
 def validate_list(value):
-    return validate_iterable(list, value)
+    return _validate_iterable(list, value)
 
 
 def validate_set(value):
-    return validate_iterable(set, value)
+    return _validate_iterable(set, value)
 
 
 def validate_tuple(value):
-    return validate_iterable(tuple, value)
+    return _validate_iterable(tuple, value)
 
 
 def validate_regex(value):
@@ -111,6 +111,15 @@ def validate_regex(value):
         return re.compile(value)
     except (re.error, TypeError), e:
         raise ValidationError("Invalid regex: %s, %s" % (e, value))
+
+
+def build_list_type_validator(item_validator):
+    """Return a function which validates that the value is a list of items
+    which are validated using item_validator.
+    """
+    def validate_list_of_type(value):
+        return [item_validator(item) for item in validate_list(value)]
+    return validate_list_of_type
 
 
 def validate_any(value):

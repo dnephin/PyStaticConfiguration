@@ -27,6 +27,7 @@ class EndToEndTestCase(TestCase):
         'globals': False,
         'enable': 'True',
         'matcher': '\d+',
+        'options': ['1', '7', '3', '9']
     }
 
     @teardown
@@ -46,6 +47,7 @@ class EndToEndTestCase(TestCase):
         assert_equal(some_class.msg, None)
         assert staticconf.get_regex('matcher').match('12345')
         assert not staticconf.get_regex('matcher').match('a')
+        assert_equal(staticconf.get_list_of_int('options'), [1, 7, 3, 9])
 
     def test_load_and_validate_namespace(self):
         real_config = {'SomeClass.min': 20, 'SomeClass.max': 25}

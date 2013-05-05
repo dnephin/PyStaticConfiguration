@@ -84,5 +84,31 @@ class RegexValidationTestCase(TestCase):
         assert_raises_and_contains(errors.ValidationError, 'None',
             validation.validate_regex, None)
 
+
+class BuildListOfTypeValidatorTestCase(TestCase):
+
+    def test_build_list_of_type_ints_success(self):
+        validator = validation.build_list_type_validator(
+            validation.validate_int)
+        expected = range(3)
+        assert_equal(validator(['0', '1','2']), expected)
+
+    def test_build_list_of_type_float_failed(self):
+        validator = validation.build_list_type_validator(
+            validation.validate_float)
+        assert_raises_and_contains(
+            errors.ValidationError, 'invalid float: a', validator, ['0.1', 'a'])
+
+    def test_build_list_of_type_empty_list(self):
+        validator = validation.build_list_type_validator(
+            validation.validate_string)
+        assert_equal(validator([]), [])
+
+    def test_build_list_of_type_not_a_list(self):
+        validator = validation.build_list_type_validator(
+            validation.validate_any)
+        assert_raises_and_contains(
+            errors.ValidationError, 'invalid iterable', validator, None)
+
 if __name__ == "__main__":
     run()
