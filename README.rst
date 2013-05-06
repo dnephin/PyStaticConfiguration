@@ -23,9 +23,9 @@ Install
 * PyStaticConfiguration is available on pypi: https://pypi.python.org/pypi/PyStaticConfiguration
 * The source is hosted on github: https://github.com/dnephin/PyStaticConfiguration
 
-::
+.. code-block:: bash
 
-    pip install PyStaticConfiguration
+    $ pip install PyStaticConfiguration
 
 
 Documentation
@@ -62,7 +62,7 @@ namespace
 
 Multiple loaders can be used to override values from previous loaders.
 
-::
+.. code-block:: python
 
     import staticconf
 
@@ -98,7 +98,7 @@ The most direct method for reading config values is through the `readers`
 interface. These readers will return the value from the configuration
 namespace after passing them through a validator.
 
-Examples::
+.. code-block:: python
 
     import staticconf
 
@@ -118,7 +118,7 @@ kwarg), you'll need to make sure you're reading your values from that namespace.
 This is done through a `NamespaceReaders` object, or using the namespace kwarg
 on the reader function.
 
-Examples::
+.. code-block:: python
 
     import staticconf
 
@@ -145,7 +145,7 @@ value into a c-module, make sure to pass in `proxy.value` which is the
 underlying raw value.
 
 
-Examples::
+.. code-block:: python
 
     import staticconf
 
@@ -181,7 +181,7 @@ for classes together.  Configuration schemas are created using the
 time, and values can be retrieved from them by accessing the attributes
 of the schema object.
 
-Examples::
+.. code-block:: python
 
     from staticconf import schema
 
@@ -212,7 +212,7 @@ Testing
 `MockConfiguration` is a context manager provided in `staticconf.testing`.
 It patches the configuration namespace while inside the context.
 
-Example::
+.. code-block:: python
 
     import staticconf.testing
 
@@ -231,14 +231,14 @@ The `ConfigurationWatcher` and `ReloadCallbackChain` objects are provided
 as part of the `staticconf.config` module to reload configurations.
 
 `ConfigurationWatcher.reload_if_changed()` will check if the file has been
- modified since the last reload, and reload the configuration when it has.
+modified since the last reload, and reload the configuration when it has.
 
 `ReloadCallbackChain` is provided to add post-reload callbacks. For most cases
 you should be able to create a custom validator to build types from your
 configuration data. If that is not possible, this class can be used to
 call arbitrary methods after the config is reloaded.
 
-Example::
+.. code-block:: python
 
     import staticconf
     from staticconf import config
@@ -266,7 +266,7 @@ ConfigFacade
 A `ConfigFacade` wraps up the `ConfigurationWatcher` and `ReloadCallbackChain`
 in a nicer interface for the most common case.
 
-Example::
+.. code-block:: python
 
     import staticconf
 
@@ -290,7 +290,7 @@ Building configuration loaders
 It takes a single argument which is a function. The function can accept any
 arguments, but must return a dictionary of configuration values.
 
-Example::
+.. code-block:: python
 
     from staticconf import loader
 
@@ -314,7 +314,9 @@ validation function. A validation function should handle all exceptions and
 raise a ValidationError if there is a problem.  It should return the constructed
 value.
 
-First create a validation function::
+First create a validation function
+
+.. code-block:: python
 
     def validate_currency(value):
         try:
@@ -325,7 +327,9 @@ First create a validation function::
             raise ValidationErrror(...)
 
 
-Example of a getter::
+Example of a getter
+
+.. code-block:: python
 
     from staticconf import getters
 
@@ -338,7 +342,9 @@ Example of a getter::
     # Use the getter like any other staticconf getter
     usd = get_currency('currencies.usd', namespace='money_stuff')
 
-Example of a reader::
+Example of a reader
+
+.. code-block:: python
 
     from staticconf import readers
 
@@ -348,7 +354,9 @@ Example of a reader::
 Building custom schema types
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Building custom types for a schema is the same idea. Using the
-`validate_currency()` example from above::
+`validate_currency()` example from above:
+
+.. code-block:: python
 
     from staticconf import schema
 
