@@ -49,6 +49,14 @@ staticconf Package
     :undoc-members:
     :show-inheritance:
 
+:mod:`readers` Module
+-------------------
+
+.. automodule:: staticconf.readers
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 :mod:`schema` Module
 --------------------
 

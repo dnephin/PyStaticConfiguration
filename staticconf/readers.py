@@ -1,7 +1,8 @@
-"""Functions to read values direction from a configuration namespace.  Values
+"""
+Functions to read values direction from a configuration namespace.  Values
 will be validated, but will not be wrapped in a Proxy.
 
-.. code-block: python
+.. code-block:: python
 
     import staticconf
 
@@ -12,7 +13,7 @@ will be validated, but will not be wrapped in a Proxy.
 
 Readers can be attached to a namespace using a NamespaceReaders object.
 
-.. code-block: python
+.. code-block:: python
 
     import staticconf
 

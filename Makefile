@@ -1,5 +1,5 @@
 
-.PHONY: clean docs test
+.PHONY: clean docs testi upload
 
 
 clean:
@@ -13,3 +13,7 @@ docs:
 
 test:
 	testify tests
+
+
+upload:
+	python setup.py sdist upload upload_docs

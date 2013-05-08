@@ -1,8 +1,6 @@
 """
 Proxy a configuration value. Defers the lookup until the value is used, so that
 values can be read statically at import time.
-
-
 """
 import functools
 import operator
