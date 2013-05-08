@@ -83,10 +83,18 @@ Reading configuration values
 ----------------------------
 PyStaticConfiguration supports three methods for retrieving your configuration
 values. All of them have a similar set of methods which use validators to
-ensure you're getting the type you expect.  When a value is missing they will
+ensure you're getting the type you expect. When a value is missing they will
 raise `staticconf.errors.ConfigurationError` unless a default was given.
+raises `staticconf.errors.ValidationError` if the value in the config fails to validate.
 
-See the `full list of validators <http://pythonhosted.org/PyStaticConfiguration/staticconf.html#module-staticconf.validation>`_.
+See the `full list of validators <http://pythonhosted.org/PyStaticConfiguration/staticconf.html#module-staticconf.validation>`_. Methods are named using the validator name. For example the methods for getting a
+date would be:
+
+* `staticconf.read_date()`
+* `schema.date()`
+* `staticconf.get_date()`
+
+
 
 .. contents::
     :local:
@@ -131,6 +139,57 @@ on the reader function.
     ratio = config.read_float('ratio')
 
 
+Readers accept the following kwargs:
+
+config_key
+    string configuration key
+default
+    if no `default` is given, the key must be present in the configuration. Raises ConfigurationError on missing key.
+namespace
+    get the value from this namespace instead of DEFAULT.
+
+
+Schemas
+~~~~~~~
+Configuration schemas can be created to group configuration values
+for classes together.  Configuration schemas are created using the
+`staticconf.schema` module. These schemas can be instantiated at import
+time, and values can be retrieved from them by accessing the attributes
+of the schema object.
+
+.. code-block:: python
+
+    from staticconf import schema
+
+    class SomethingUsefulSchema(schema.Schema):
+
+        # namespace is optional, and will default to DEFAULT
+        namespace = 'useful_namespace'
+
+        # This path is prepended to each attribute, so the below schema will
+        # expect values at useful.max_value, useful.ratio, etc
+        config_path = 'useful'
+
+        max_value = schema.int(default=100)
+        ratio     = schema.float()
+        msg       = schema.any(config_key='msg_string', default="Welcome")
+
+
+
+    config = SomethingUsefulSchema()
+    print config.msg
+
+
+Schema accessors accept the following kwargs:
+
+config_key
+    string configuration key
+default
+    if no `default` is given, the key must be present in the configuration. Raises ConfigurationError on missing key.
+help
+    a help string describing the purpose of the config value. See `staticconf.view_help()`.
+
+
 Proxy getters
 ~~~~~~~~~~~~~
 The `getters` interface follows the same naming convention, but returns a
@@ -169,39 +228,6 @@ help
 namespace
     get the value from this namespace instead of DEFAULT.
 
-
-raises `ConfigurationError` if the value in the config fails to validate.
-
-
-Schemas
-~~~~~~~
-Configuration schemas can be created to group configuration values
-for classes together.  Configuration schemas are created using the
-`staticconf.schema` module. These schemas can be instantiated at import
-time, and values can be retrieved from them by accessing the attributes
-of the schema object.
-
-.. code-block:: python
-
-    from staticconf import schema
-
-    class SomethingUsefulSchema(schema.Schema):
-
-        # namespace is optional, and will default to DEFAULT
-        namespace = 'useful_namespace'
-
-        # This path is prepended to each attribute, so the below schema will
-        # expect values at useful.max_value, useful.ratio, etc
-        config_path = 'useful'
-
-        max_value = schema.int(default=100)
-        ratio     = schema.float()
-        msg       = schema.any(config_key='msg_string', default="Welcome")
-
-
-
-    config = SomethingUsefulSchema()
-    print config.msg
 
 
 Advanced usage
