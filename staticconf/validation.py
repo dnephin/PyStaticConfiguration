@@ -122,6 +122,16 @@ def build_list_type_validator(item_validator):
     return validate_list_of_type
 
 
+def build_map_type_validator(item_validator):
+    """Return a function which validates that the value is a mapping of
+    items. The function should return pairs of items that will be
+    passed to the `dict` constructor.
+    """
+    def validate_mapping(value):
+        return dict(item_validator(item) for item in validate_list(value))
+    return validate_mapping
+
+
 def validate_any(value):
     return value
 

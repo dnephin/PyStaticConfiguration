@@ -7,10 +7,10 @@ from staticconf import testing, schema, validation, config, errors
 
 class CreateValueTypeTestCase(TestCase):
 
-    def test_create_value_type(self):
+    def test_build_value_type(self):
         help_text = 'what?'
         config_key = 'one'
-        float_type = schema.create_value_type(validation.validate_float)
+        float_type = schema.build_value_type(validation.validate_float)
         assert callable(float_type)
         value_def = float_type(default=5, config_key=config_key, help=help_text)
         assert_equal(value_def.default, 5)

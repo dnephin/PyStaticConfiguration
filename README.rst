@@ -46,7 +46,7 @@ Loading configuration files
 PyStaticConfiguration supports loading config values from many file formats
 and python structures. See the
 `full list of loaders <http://pythonhosted.org/PyStaticConfiguration/staticconf.html#module-staticconf.loader>`_.
-When the configuration is loaded, it is put into a `ConfigNamespace` object.
+When the configuration is loaded, it is put into a ``ConfigNamespace`` object.
 Configuration loaders accept the following kwargs:
 
 error_on_unknown
@@ -84,15 +84,16 @@ Reading configuration values
 PyStaticConfiguration supports three methods for retrieving your configuration
 values. All of them have a similar set of methods which use validators to
 ensure you're getting the type you expect. When a value is missing they will
-raise `staticconf.errors.ConfigurationError` unless a default was given.
-raises `staticconf.errors.ValidationError` if the value in the config fails to validate.
+raise ``staticconf.errors.ConfigurationError`` unless a default was given.
+raises ``staticconf.errors.ValidationError`` if the value in the config fails
+to validate.
 
 See the `full list of validators <http://pythonhosted.org/PyStaticConfiguration/staticconf.html#module-staticconf.validation>`_. Methods are named using the validator name. For example the methods for getting a
 date would be:
 
-* `staticconf.read_date()`
-* `schema.date()`
-* `staticconf.get_date()`
+* ``staticconf.read_date()``
+* ``schema.date()``
+* ``staticconf.get_date()``
 
 
 
@@ -102,7 +103,7 @@ date would be:
 
 Simple readers
 ~~~~~~~~~~~~~~
-The most direct method for reading config values is through the `readers`
+The most direct method for reading config values is through the ``readers``
 interface. These readers will return the value from the configuration
 namespace after passing them through a validator.
 
@@ -123,7 +124,7 @@ namespace after passing them through a validator.
 
 If you've loaded your config into a namespace (using the namespace
 kwarg), you'll need to make sure you're reading your values from that namespace.
-This is done through a `NamespaceReaders` object, or using the namespace kwarg
+This is done through a ``NamespaceReaders`` object, or using the namespace kwarg
 on the reader function.
 
 .. code-block:: python
@@ -153,7 +154,7 @@ Schemas
 ~~~~~~~
 Configuration schemas can be created to group configuration values
 for classes together.  Configuration schemas are created using the
-`staticconf.schema` module. These schemas can be instantiated at import
+``staticconf.schema`` module. These schemas can be instantiated at import
 time, and values can be retrieved from them by accessing the attributes
 of the schema object.
 
@@ -185,22 +186,22 @@ Schema accessors accept the following kwargs:
 config_key
     string configuration key
 default
-    if no `default` is given, the key must be present in the configuration. Raises ConfigurationError on missing key.
+    if no ``default`` is given, the key must be present in the configuration. Raises ConfigurationError on missing key.
 help
-    a help string describing the purpose of the config value. See `staticconf.view_help()`.
+    a help string describing the purpose of the config value. See ``staticconf.view_help()``.
 
 
 Proxy getters
 ~~~~~~~~~~~~~
-The `getters` interface follows the same naming convention, but returns a
-`ValueProxy` instead of the raw value. This has a few advantages over the
-`readers` interface
+The ``getters`` interface follows the same naming convention, but returns a
+``ValueProxy`` instead of the raw value. This has a few advantages over the
+``readers`` interface
 
 * these calls can be made at import time, so all expected configuration values are known when the configuration is read.
 * when a config is reloaded the proxies will refer to the new value
 
-Note: `ValueProxy` objects do not work with c-modules. If you're passing a
-value into a c-module, make sure to pass in `proxy.value` which is the
+Note: ``ValueProxy`` objects do not work with c-modules. If you're passing a
+value into a c-module, make sure to pass in ``proxy.value`` which is the
 underlying raw value.
 
 
@@ -222,9 +223,9 @@ Getters accept the following kwargs:
 config_key
     string configuration key
 default
-    if no `default` is given, the key must be present in the configuration. Raises ConfigurationError on missing key.
+    if no ``default`` is given, the key must be present in the configuration. Raises ConfigurationError on missing key.
 help
-    a help string describing the purpose of the config value. See `staticconf.view_help()`.
+    a help string describing the purpose of the config value. See ``staticconf.view_help()``.
 namespace
     get the value from this namespace instead of DEFAULT.
 
@@ -235,7 +236,7 @@ Advanced usage
 
 Testing
 ~~~~~~~
-`MockConfiguration` is a context manager provided in `staticconf.testing`.
+``MockConfiguration`` is a context manager provided in ``staticconf.testing``.
 It patches the configuration namespace while inside the context.
 
 .. code-block:: python
@@ -253,13 +254,13 @@ It patches the configuration namespace while inside the context.
 Reloading configuration
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-The `ConfigurationWatcher` and `ReloadCallbackChain` objects are provided
-as part of the `staticconf.config` module to reload configurations.
+The ``ConfigurationWatcher`` and ``ReloadCallbackChain`` objects are provided
+as part of the ``staticconf.config`` module to reload configurations.
 
-`ConfigurationWatcher.reload_if_changed()` will check if the file has been
+``ConfigurationWatcher.reload_if_changed()`` will check if the file has been
 modified since the last reload, and reload the configuration when it has.
 
-`ReloadCallbackChain` is provided to add post-reload callbacks. For most cases
+``ReloadCallbackChain`` is provided to add post-reload callbacks. For most cases
 you should be able to create a custom validator to build types from your
 configuration data. If that is not possible, this class can be used to
 call arbitrary methods after the config is reloaded.
@@ -289,8 +290,8 @@ call arbitrary methods after the config is reloaded.
 
 ConfigFacade
 ~~~~~~~~~~~~
-A `ConfigFacade` wraps up the `ConfigurationWatcher` and `ReloadCallbackChain`
-in a nicer interface for the most common case.
+A ``ConfigFacade`` wraps up the ``ConfigurationWatcher`` and 
+``ReloadCallbackChain`` in a nicer interface for the most common case.
 
 .. code-block:: python
 
@@ -312,7 +313,7 @@ Extending staticconf
 
 Building configuration loaders
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-`staticconf.loader.build_loader` can be used to create new configuration loaders.
+``staticconf.loader.build_loader`` can be used to create new configuration loaders.
 It takes a single argument which is a function. The function can accept any
 arguments, but must return a dictionary of configuration values.
 
@@ -334,7 +335,7 @@ arguments, but must return a dictionary of configuration values.
 
 Building custom getters or readers
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Both `staticconf.getters` and `staticconf.readers` provide a similar mechanism
+Both ``staticconf.getters`` and ``staticconf.readers`` provide a similar mechanism
 for creating a function to retrieve values from the configuration from a
 validation function. A validation function should handle all exceptions and
 raise a ValidationError if there is a problem.  It should return the constructed
@@ -380,13 +381,13 @@ Example of a reader
 Building custom schema types
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Building custom types for a schema is the same idea. Using the
-`validate_currency()` example from above:
+``validate_currency()`` example from above:
 
 .. code-block:: python
 
     from staticconf import schema
 
-    currency = schema.create_value_type(validate_currency)
+    currency = schema.build_value_type(validate_currency)
 
     class PaymentSchema(object):
 
@@ -397,3 +398,63 @@ Building custom types for a schema is the same idea. Using the
     # And use it
     config = PaymentSchema()
     print config.usd
+
+
+Reading dicts
+~~~~~~~~~~~~~
+PyStaticConfiguration flattens all the values it receives from the loaders. This
+makes it impossible to read a mapping structure (dict) directly from the
+configuration. This is necessary in order to preserve the single key per
+value structure that staticconf provides.
+
+Dict structures can instead be represented by lists of values (either a list of
+pairs or a list of dicts). This list can then be converted into a dict mapping
+using a custom getter. 
+
+Below are some examples on how this is done. The ``readers`` interface is used as
+an example, but the same can be done for the ``getters`` and ``schema`` interafce
+by replacing ``readers.build_reader()`` with ``getters.build_getter()`` and
+``schema.build_value_type()``.
+
+
+Create a reader which translates a list of dicts into a mapping
+
+.. code-block:: python
+
+    from staticconf import validation, readers
+
+    def build_map_from_key_value(item):
+        return item['key'], ['value']
+
+    read_mapping = readers.build_reader(
+        validation.build_map_type_validator(build_map_from_key_value))
+
+    my_mapping = read_mapping('config_key_of_a_list_of_dicts')
+
+
+Create a reader which translates a list of pairs into a mapping
+
+.. code-block:: python
+
+    from staticconf import validation, readers
+
+    read_mapping = readers.build_reader(
+        validation.build_map_type_validator(tuple))
+
+    my_mapping = read_mapping('config_key_of_a_list_of_pairs')
+
+Create a reader from translates a list of complex dicts into a mapping
+
+.. code-block:: python
+
+    from staticconf import validation, readers
+
+    def build_map_from_dicts(item):
+        return item.pop('name'), item
+
+    read_mapping = readers.build_reader(
+        validation.build_map_type_validator(build_map_from_dicts))
+
+    my_mapping = read_mapping('config_key_of_a_list_of_dicts')
+
+
