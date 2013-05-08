@@ -19,20 +19,8 @@ object.
 
 """
 
-from staticconf import validation, config, proxy
+from staticconf import validation, config, proxy, readers
 from staticconf.proxy import UndefToken
-
-
-def getter_name(validator_name):
-    if not validator_name:
-        return 'get'
-    return 'get_%s' % validator_name
-
-
-getter_names = [getter_name(name) for name in validation.validators]
-
-
-__all__ = getter_names + ['NamespaceGetters']
 
 
 def register_value_proxy(namespace, value_proxy, help_text):
@@ -57,16 +45,21 @@ def build_getter(validator, getter_namespace=None):
     return proxy_register
 
 
-class NamespaceGetters(object):
-    """An object with getters, which have their namespace already defined."""
+class GetterNameFactory(object):
 
-    def __init__(self, name):
-        self.namespace      = name
-        for validator_name, validator in validation.validators.iteritems():
-            getter = build_getter(validator, name)
-            setattr(self, getter_name(validator_name), getter)
+    @staticmethod
+    def get_name(validator_name):
+        return 'get_%s' % validator_name if validator_name else 'get'
+
+    @staticmethod
+    def get_list_of_name(validator_name):
+        return 'get_list_of_%s' % validator_name
+
+
+NamespaceGetters = readers.build_accessor_type(GetterNameFactory, build_getter)
 
 
 default_getters = NamespaceGetters(config.DEFAULT)
-for name in getter_names:
-    globals()[name] = getattr(default_getters, name)
+globals().update(default_getters.get_methods())
+
+__all__ = ['NamespaceGetters'] + list(default_getters.get_methods())

@@ -1,6 +1,7 @@
 import datetime
 from testify import assert_equal, run, TestCase
-from staticconf import validation
+from testify.assertions import assert_raises_and_contains
+from staticconf import validation, errors
 
 
 class ValidationTestCase(TestCase):
@@ -65,6 +66,49 @@ class IterableValidationTestCase(TestCase):
         expected = set([3, 2, 1])
         actual = validation.validate_set([1,3,2,2,1,3,2])
         assert_equal(expected, actual)
+
+
+class RegexValidationTestCase(TestCase):
+
+    def test_validate_regex_success(self):
+        pattern = '^(:?what)\s+could\s+go\s+(wrong)[!?.,]$'
+        actual = validation.validate_regex(pattern)
+        assert_equal(pattern, actual.pattern)
+
+    def test_validate_regex_failed(self):
+        pattern = "((this) regex is broken"
+        assert_raises_and_contains(errors.ValidationError, pattern,
+            validation.validate_regex, pattern)
+
+    def test_validate_regex_none(self):
+        assert_raises_and_contains(errors.ValidationError, 'None',
+            validation.validate_regex, None)
+
+
+class BuildListOfTypeValidatorTestCase(TestCase):
+
+    def test_build_list_of_type_ints_success(self):
+        validator = validation.build_list_type_validator(
+            validation.validate_int)
+        expected = range(3)
+        assert_equal(validator(['0', '1','2']), expected)
+
+    def test_build_list_of_type_float_failed(self):
+        validator = validation.build_list_type_validator(
+            validation.validate_float)
+        assert_raises_and_contains(
+            errors.ValidationError, 'invalid float: a', validator, ['0.1', 'a'])
+
+    def test_build_list_of_type_empty_list(self):
+        validator = validation.build_list_type_validator(
+            validation.validate_string)
+        assert_equal(validator([]), [])
+
+    def test_build_list_of_type_not_a_list(self):
+        validator = validation.build_list_type_validator(
+            validation.validate_any)
+        assert_raises_and_contains(
+            errors.ValidationError, 'invalid iterable', validator, None)
 
 if __name__ == "__main__":
     run()

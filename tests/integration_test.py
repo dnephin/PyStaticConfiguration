@@ -25,7 +25,9 @@ class EndToEndTestCase(TestCase):
             'ratio': '7.7'
         },
         'globals': False,
-        'enable': 'True'
+        'enable': 'True',
+        'matcher': '\d+',
+        'options': ['1', '7', '3', '9']
     }
 
     @teardown
@@ -43,6 +45,9 @@ class EndToEndTestCase(TestCase):
         assert_equal(staticconf.get('enable'), 'True')
         assert_equal(staticconf.get_bool('enable'), True)
         assert_equal(some_class.msg, None)
+        assert staticconf.get_regex('matcher').match('12345')
+        assert not staticconf.get_regex('matcher').match('a')
+        assert_equal(staticconf.get_list_of_int('options'), [1, 7, 3, 9])
 
     def test_load_and_validate_namespace(self):
         real_config = {'SomeClass.min': 20, 'SomeClass.max': 25}
@@ -53,6 +58,12 @@ class EndToEndTestCase(TestCase):
         assert_equal(some_class.min, 0)
         assert_equal(some_class.real_min, 20)
         assert_equal(some_class.real_max, 25)
+
+    def test_readers(self):
+        staticconf.DictConfiguration(self.config)
+        assert_equal(staticconf.read_float('SomeClass.ratio'), 7.7)
+        assert_equal(staticconf.read_bool('globals'), False)
+        assert_equal(staticconf.read_list_of_int('options'), [1, 7, 3, 9])
 
 
 class MockConfigurationTestCase(TestCase):

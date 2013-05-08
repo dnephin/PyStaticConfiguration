@@ -5,6 +5,7 @@ configuration definitions together.
 
 .. code-block:: python
 
+    from staticconf import schema
 
     class MyClassSchema(object):
         __metaclass__ = schema.SchemaMeta
@@ -26,6 +27,8 @@ You can also create your schema objects by subclassing Schema
 
 .. code-block:: python
 
+    from staticconf import schema
+
     class MyClassSchema(schema.Schema):
         ...
 
@@ -42,8 +45,10 @@ You can also create your own custom types:
 
 .. code-block:: python
 
+    from staticconf import schema
+
     validator = ...
-    custom_type = create_value_type(validator)
+    custom_type = schema.create_value_type(validator)
 
 
     class MySchema(object):
@@ -160,6 +165,8 @@ def create_value_type(validator):
     return functools.partial(ValueTypeDefinition, validator)
 
 
-for name, validator in validation.validators.iteritems():
+for name, validator in validation.get_validators():
     name = name or 'any'
     globals()[name] = create_value_type(validator)
+    list_of_validator = validation.build_list_type_validator(validator)
+    globals()['list_of_%s' % name] = create_value_type(list_of_validator)

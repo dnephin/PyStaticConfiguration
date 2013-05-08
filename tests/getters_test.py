@@ -45,7 +45,8 @@ class NamespaceGettersTestCase(TestCase):
         get_conf = getters.NamespaceGetters(self.namespace)
         proxies = [
             get_conf.get_bool('is_it'),
-            get_conf.get_time('when')
+            get_conf.get_time('when'),
+            get_conf.get_list_of_bool('options')
         ]
 
         namespace = config.get_namespace(get_conf.namespace)
