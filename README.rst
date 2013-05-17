@@ -245,7 +245,7 @@ It patches the configuration namespace while inside the context.
     config = {
         ...
     }
-    with staticconf.testing.MockConfiguration(config, namespace='special):
+    with staticconf.testing.MockConfiguration(config, namespace='special'):
         # Run your tests.
         ...
 
