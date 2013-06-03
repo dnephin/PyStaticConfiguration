@@ -1,5 +1,5 @@
 """
-Functions to read values direction from a configuration namespace.  Values
+Functions to read values directly from a configuration namespace.  Values
 will be validated, but will not be wrapped in a Proxy.
 
 .. code-block:: python
@@ -22,7 +22,27 @@ Readers can be attached to a namespace using a NamespaceReaders object.
     currency = bling_reader.read_string('currency')
     value = bling_reader.read_float('value')
 
+Available reader accessors include:
 
+    - read_bool()
+    - read_date()
+    - read_datetime()
+    - read_float()
+    - read_int()
+    - read_list()
+    - read_list_of_bool()
+    - read_list_of_date()
+    - read_list_of_datetime()
+    - read_list_of_float()
+    - read_list_of_int()
+    - read_list_of_list()
+    - read_list_of_set()
+    - read_list_of_time()
+    - read_list_of_tuple()
+    - read_regex()
+    - read_set()
+    - read_string()
+    - read_tuple()
 """
 from staticconf import validation, config, errors
 from staticconf.proxy import UndefToken
