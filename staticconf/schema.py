@@ -48,7 +48,7 @@ You can also create your own custom types:
     from staticconf import schema
 
     validator = ...
-    custom_type = schema.create_value_type(validator)
+    custom_type = schema.build_value_type(validator)
 
 
     class MySchema(object):
@@ -161,12 +161,16 @@ class Schema(object):
     namespace = None
 
 
-def create_value_type(validator):
+def build_value_type(validator):
     return functools.partial(ValueTypeDefinition, validator)
+
+
+# Backwards compatible with staticconf 0.5.2
+create_value_type = build_value_type
 
 
 for name, validator in validation.get_validators():
     name = name or 'any'
-    globals()[name] = create_value_type(validator)
+    globals()[name] = build_value_type(validator)
     list_of_validator = validation.build_list_type_validator(validator)
-    globals()['list_of_%s' % name] = create_value_type(list_of_validator)
+    globals()['list_of_%s' % name] = build_value_type(list_of_validator)
