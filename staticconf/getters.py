@@ -19,16 +19,37 @@ object.
 
 """
 
-from staticconf import validation, config, proxy, readers
+from staticconf import config, proxy, readers
 from staticconf.proxy import UndefToken
 
 
 def register_value_proxy(namespace, value_proxy, help_text):
     """Register a value proxy with the namespace, and add the help_text."""
     namespace.register_proxy(value_proxy)
-    config.add_config_key_description(
+    config.config_help.add(
         value_proxy.config_key, value_proxy.validator, value_proxy.default,
         namespace.get_name(), help_text)
+
+
+class ProxyFactory(object):
+    """Create ProxyValue objects so that there is never a duplicate
+    proxy for any (namespace, validator, config_key, default) group.
+    """
+
+    def __init__(self):
+        self.proxies = {}
+
+    def build(self, validator, namespace, config_key, default, help):
+        proxy_key = validator, namespace, config_key, default
+        if proxy_key in self.proxies:
+            return self.proxies[proxy_key]
+
+        value_proxy = proxy.ValueProxy(*proxy_key)
+        register_value_proxy(namespace, value_proxy, help)
+        return self.proxies.setdefault(proxy_key, value_proxy)
+
+
+proxy_factory = ProxyFactory()
 
 
 def build_getter(validator, getter_namespace=None):
@@ -38,9 +59,7 @@ def build_getter(validator, getter_namespace=None):
     def proxy_register(key_name, default=UndefToken, help=None, namespace=None):
         name        = namespace or getter_namespace or config.DEFAULT
         namespace   = config.get_namespace(name)
-        value_proxy = proxy.ValueProxy(validator, namespace, key_name, default)
-        register_value_proxy(namespace, value_proxy, help)
-        return value_proxy
+        return proxy_factory.build(validator, namespace, key_name, default, help)
 
     return proxy_register
 
