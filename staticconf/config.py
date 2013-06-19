@@ -2,7 +2,6 @@
 Classes for storing configuration by namespace, and reloading configuration
 while files change.
 """
-import functools
 import logging
 import os
 import time
@@ -201,7 +200,6 @@ config_help = ConfigHelp()
 view_help = config_help.view_help
 
 
-# TODO: remove
 def _reset():
     """Used for internal testing."""
     for namespace in configuration_namespaces.values():
@@ -250,11 +248,9 @@ class ConfigurationWatcher(object):
         return max(os.path.getmtime(name) for name in self.filenames)
 
     def _get_inodes(self):
-        values = []
-        for filename in self.filenames:
-            stbuf = os.stat(filename)
-            values.append((stbuf.st_dev, stbuf.st_ino))
-        return values
+        def get_inode(stbuf):
+            return stbuf.st_dev, stbuf.st_ino
+        return [get_inode(os.stat(filename)) for filename in self.filenames]
 
     def reload_if_changed(self, force=False):
         if (force or self.should_check) and self.file_modified():
@@ -273,6 +269,9 @@ class ConfigurationWatcher(object):
 
     def get_reloader(self):
         return self.reloader
+
+    def load_config(self):
+        return self.config_loader()
 
 
 class ReloadCallbackChain(object):
@@ -297,6 +296,13 @@ class ReloadCallbackChain(object):
             callback()
 
 
+def build_loader_callable(load_func, filename, namespace):
+    def load_configuration():
+        get_namespace(namespace).clear()
+        return load_func(filename, namespace=namespace)
+    return load_configuration
+
+
 class ConfigFacade(object):
     """A facade around a ConfigurationWatcher and a ReloadCallbackChain.
     """
@@ -307,11 +313,12 @@ class ConfigFacade(object):
 
     @classmethod
     def load(cls, filename, namespace, loader_func, min_interval=0):
-        loader = functools.partial(loader_func, filename, namespace=namespace)
-        reloader = ReloadCallbackChain(namespace=namespace)
         watcher = ConfigurationWatcher(
-            loader, filename, min_interval=min_interval, reloader=reloader)
-        loader()
+            build_loader_callable(loader_func, filename, namespace=namespace),
+            filename,
+            min_interval=min_interval,
+            reloader=ReloadCallbackChain(namespace=namespace))
+        watcher.load_config()
         return cls(watcher)
 
     def add_callback(self, identifier, callback):
