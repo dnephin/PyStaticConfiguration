@@ -346,6 +346,12 @@ class ConfigurationWatcherTestCase(TestCase):
         self.mock_stat.st_ino = 3
         assert self.watcher.file_modified()
 
+    @mock.patch('staticconf.config.os.stat', autospec=True)
+    def test_get_inodes(self, mock_stat):
+        inodes = self.watcher._get_inodes()
+        expected = [(mock_stat.return_value.st_dev, mock_stat.return_value.st_ino)]
+        assert_equal(inodes, expected)
+
     def test_reload_default(self):
         self.watcher.reload()
         self.loader.assert_called_with()
@@ -404,7 +410,7 @@ class ConfigFacadeTestCase(TestCase):
         filename, namespace = "filename", "namespace"
         loader = mock.Mock()
         facade = config.ConfigFacade.load(filename, namespace, loader)
-        loader.assert_called_with(filename, namespace=namespace)
+        facade.watcher.load_config.assert_called_with()
         assert_equal(facade.watcher, self.mock_config_watcher.return_value)
         reloader = facade.callback_chain
         assert_equal(reloader, facade.watcher.get_reloader())
@@ -451,6 +457,27 @@ class ConfigFacadeAcceptanceTest(TestCase):
         facade.reload_if_changed()
         assert_equal(staticconf.get('one', namespace=self.namespace), "B")
         callback.assert_called_with()
+
+
+class BuildLoaderCallable(TestCase):
+
+    @setup_teardown
+    def patch_namespace(self):
+        self.namespace = 'the_namespace'
+        patcher = mock.patch('staticconf.config.get_namespace', autospec=True)
+        with patcher as self.mock_get_namespace:
+            yield
+
+    def test_build_loader_callable(self):
+        load_func, filename = mock.Mock(), mock.Mock()
+        loader_callable = config.build_loader_callable(
+                load_func, filename, self.namespace)
+        result = loader_callable()
+        self.mock_get_namespace.assert_called_with(self.namespace)
+        mock_namespace = self.mock_get_namespace.return_value
+        mock_namespace.clear.assert_called_with()
+        load_func.assert_called_with(filename, namespace=self.namespace)
+        assert_equal(result, load_func.return_value)
 
 
 if __name__ == "__main__":
