@@ -3,11 +3,10 @@ import gc
 import mock
 import tempfile
 import time
-from testify import run, assert_equal, TestCase, setup, teardown, setup_teardown
+from testify import run, assert_equal, TestCase, setup, setup_teardown
 from testify.assertions import assert_raises
-from testify import class_setup, class_teardown
 
-from staticconf import config, errors, testing, proxy
+from staticconf import config, errors, testing, proxy, validation
 import staticconf
 
 
@@ -123,6 +122,11 @@ class ConfigurationNamespaceTestCase(TestCase):
 
 class GetNamespaceTestCase(TestCase):
 
+    @setup_teardown
+    def mock_namespaces(self):
+        with mock.patch.dict(config.configuration_namespaces):
+            yield
+
     def test_get_namespace_new(self):
         name = 'some_unlikely_name'
         assert name not in config.configuration_namespaces
@@ -137,9 +141,10 @@ class GetNamespaceTestCase(TestCase):
 
 class ReloadTestCase(TestCase):
 
-    @teardown
-    def teardown_config(self):
-        config._reset()
+    @setup_teardown
+    def mock_namespaces(self):
+        with mock.patch.dict(config.configuration_namespaces):
+            yield
 
     def test_reload_default(self):
         staticconf.DictConfiguration(dict(one='three', seven='nine'))
@@ -179,11 +184,13 @@ class ReloadTestCase(TestCase):
         assert_equal(two, 'three')
 
 
-class ValidateTestCase(TestCase):
+class ValidateConfigTestCase(TestCase):
 
-    @teardown
-    def teardown_config(self):
-        config._reset()
+    @setup_teardown
+    def patch_config(self):
+        with mock.patch.dict(config.configuration_namespaces, clear=True):
+            with testing.MockConfiguration():
+                yield
 
     def test_validate_single_passes(self):
         staticconf.DictConfiguration({})
@@ -214,26 +221,24 @@ class ValidateTestCase(TestCase):
         assert_raises(errors.ConfigurationError, config.validate, all_names=True)
 
 
-class ViewHelpTestCase(TestCase):
-
-    @class_setup
-    def setup_descriptions(self):
-        staticconf.get('one', help="the one")
-        staticconf.get_time('when', default='NOW', help="The time")
-        staticconf.get_bool('you sure', default='No', help='Are you?')
-        staticconf.get('one', help="the one", namespace='Beta')
-        staticconf.get('one', help="the one", namespace='Alpha')
-        staticconf.get('two', help="the two", namespace='Alpha')
-
-    @class_teardown
-    def teardown_descriptions(self):
-        config._reset()
+class ConfigHelpTestCase(TestCase):
 
     @setup
-    def setup_lines(self):
-        self.lines = config.view_help().split('\n')
-
-        print config.view_help()
+    def setup_config_help(self):
+        self.config_help = config.ConfigHelp()
+        self.config_help.add('one',
+            validation.validate_any, None, 'DEFAULT', "the one")
+        self.config_help.add('when',
+            validation.validate_time, 'NOW', 'DEFAULT', "The time")
+        self.config_help.add('you sure',
+            validation.validate_bool, 'No', 'DEFAULT', "Are you?")
+        self.config_help.add('one',
+            validation.validate_any, None, 'Beta',  "the one")
+        self.config_help.add('one',
+            validation.validate_any, None, 'Alpha', "the one")
+        self.config_help.add('two',
+            validation.validate_any, None, 'Alpha',  "the two")
+        self.lines = self.config_help.view_help().split('\n')
 
     def test_view_help_format(self):
         line, help = self.lines[4:6]
