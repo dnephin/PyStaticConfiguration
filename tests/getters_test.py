@@ -1,6 +1,6 @@
 import mock
-from testify import TestCase, assert_equal, run, setup_teardown
-from testify.assertions import assert_in
+from testify import TestCase, assert_equal, run, setup_teardown, setup
+from testify.assertions import assert_in, assert_is
 from staticconf import getters, config, testing
 
 
@@ -52,6 +52,42 @@ class NamespaceGettersTestCase(TestCase):
         namespace = config.get_namespace(get_conf.namespace)
         for proxy in proxies:
             assert_in(id(proxy), namespace.value_proxies)
+
+
+class ProxyFactoryTestCase(TestCase):
+
+    @setup_teardown
+    def patch_registries(self):
+        patcher = mock.patch('staticconf.getters.register_value_proxy')
+        with patcher as self.mock_register:
+            yield
+
+    @setup
+    def setup_factory(self):
+        self.factory = getters.ProxyFactory()
+        self.validator = mock.Mock()
+        self.namespace = mock.create_autospec(config.ConfigNamespace)
+        self.config_key = 'some_key'
+        self.default = 'bad_default'
+        self.help = 'some help message no one reads'
+        self.args = (
+            self.validator,
+            self.namespace,
+            self.config_key,
+            self.default,
+            self.help)
+
+    def test_build_new(self):
+        value_proxy = self.factory.build(*self.args)
+        self.mock_register.assert_called_with(
+            self.namespace, value_proxy, self.help)
+
+    def test_build_existing(self):
+        value_proxy = self.factory.build(*self.args)
+        self.mock_register.reset_mock()
+
+        assert_is(value_proxy, self.factory.build(*self.args))
+        assert not self.mock_register.mock_calls
 
 
 if __name__ == "__main__":

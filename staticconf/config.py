@@ -120,7 +120,6 @@ class ConfigNamespace(object):
         return "%s(%s)" % (type(self).__name__, self.name)
 
 
-config_key_descriptions = {}
 configuration_namespaces = {DEFAULT: ConfigNamespace(DEFAULT)}
 
 
@@ -151,11 +150,6 @@ def reload(name=DEFAULT, all_names=False):
             value_proxy.reset()
 
 
-def add_config_key_description(name, validator, default, namespace, help):
-    desc = KeyDescription(name, validator, default, help)
-    config_key_descriptions.setdefault(namespace, []).append(desc)
-
-
 def validate(name=DEFAULT, all_names=False):
     """Access values in all registered proxies in a namespace. Missing values
     raise ConfigurationError. Defaults to the DEFAULT namespace. If all_names
@@ -165,36 +159,55 @@ def validate(name=DEFAULT, all_names=False):
         all(bool(value_proxy) for value_proxy in namespace.get_value_proxies())
 
 
-def view_help():
-    """Return a help message describing all the statically configured keys.
-    """
-    def format(desc):
-        help        = desc.help or ''
-        type_name   = desc.validator.__name__.replace('validate_', '')
-        fmt         = "%s (Type: %s, Default: %s)\n%s"
-        return fmt % (desc.name, type_name, desc.default, help)
+class ConfigHelp(object):
+    """Register and display help messages about config keys."""
 
-    def format_namespace(key, desc_list):
-        fmt = "\nNamespace: %s\n%s"
-        seq = sorted(format(desc) for  desc in desc_list)
-        return fmt % (key, '\n'.join(seq))
+    def __init__(self):
+        self.descriptions = {}
 
-    def namespace_sort(lhs, rhs):
-        if lhs == DEFAULT:
-            return -1
-        if rhs == DEFAULT:
-            return 1
-        return lhs < rhs
+    def add(self, name, validator, default, namespace, help):
+        desc = KeyDescription(name, validator, default, help)
+        self.descriptions.setdefault(namespace, []).append(desc)
 
-    seq = sorted(config_key_descriptions.iteritems(), cmp=namespace_sort)
-    return '\n'.join(format_namespace(*desc) for desc in seq)
+    def view_help(self):
+        """Return a help message describing all the statically configured keys.
+        """
+        def format(desc):
+            help        = desc.help or ''
+            type_name   = desc.validator.__name__.replace('validate_', '')
+            fmt         = "%s (Type: %s, Default: %s)\n%s"
+            return fmt % (desc.name, type_name, desc.default, help)
+
+        def format_namespace(key, desc_list):
+            fmt = "\nNamespace: %s\n%s"
+            seq = sorted(format(desc) for  desc in desc_list)
+            return fmt % (key, '\n'.join(seq))
+
+        def namespace_sort(lhs, rhs):
+            if lhs == DEFAULT:
+                return -1
+            if rhs == DEFAULT:
+                return 1
+            return lhs < rhs
+
+        seq = sorted(self.descriptions.iteritems(), cmp=namespace_sort)
+        return '\n'.join(format_namespace(*desc) for desc in seq)
+
+    def clear(self):
+        self.descriptions.clear()
 
 
+config_help = ConfigHelp()
+view_help = config_help.view_help
+
+
+# TODO: remove
 def _reset():
     """Used for internal testing."""
     for namespace in configuration_namespaces.values():
         namespace._reset()
-    config_key_descriptions.clear()
+    config_help.clear()
+
 
 
 def has_duplicate_keys(config_data, base_conf, raise_error):

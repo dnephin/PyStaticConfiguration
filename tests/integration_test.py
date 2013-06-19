@@ -1,19 +1,23 @@
-from testify import assert_equal, TestCase, run, teardown, assert_raises
+from testify import assert_equal, TestCase, run, assert_raises
 
 import staticconf
-from staticconf import config, testing, errors
+from staticconf import testing, errors
 
 
 class SomeClass(object):
 
-    max = staticconf.get_int('SomeClass.max')
-    min = staticconf.get_int('SomeClass.min')
-    ratio = staticconf.get_float('SomeClass.ratio')
-    alt_ratio = staticconf.get_float('SomeClass.alt_ratio', 6.0)
-    msg = staticconf.get_string('SomeClass.msg', None)
+    namespace = 'UniqueNamespaceForEndToEndTesting'
+    alt_name  = 'UniqueNamespaceForEndToEndTestingAlternative'
 
-    real_max = staticconf.get_int('SomeClass.max', namespace='real')
-    real_min = staticconf.get_int('SomeClass.min', namespace='real')
+    getters   = staticconf.NamespaceGetters(namespace)
+    max       = getters.get_int('SomeClass.max')
+    min       = getters.get_int('SomeClass.min')
+    ratio     = getters.get_float('SomeClass.ratio')
+    alt_ratio = getters.get_float('SomeClass.alt_ratio', 6.0)
+    msg       = getters.get_string('SomeClass.msg', None)
+
+    real_max  = staticconf.get_int('SomeClass.max', namespace=alt_name)
+    real_min  = staticconf.get_int('SomeClass.min', namespace=alt_name)
 
 
 class EndToEndTestCase(TestCase):
@@ -30,29 +34,25 @@ class EndToEndTestCase(TestCase):
         'options': ['1', '7', '3', '9']
     }
 
-    @teardown
-    def teardown_configs(self):
-        config._reset()
-
     def test_load_and_validate(self):
-        staticconf.DictConfiguration(self.config)
+        staticconf.DictConfiguration(self.config, namespace=SomeClass.namespace)
         some_class = SomeClass()
         assert_equal(some_class.max, 100)
         assert_equal(some_class.min, 0)
         assert_equal(some_class.ratio, 7.7)
         assert_equal(some_class.alt_ratio, 6.0)
-        assert_equal(staticconf.get('globals'), False)
-        assert_equal(staticconf.get('enable'), 'True')
-        assert_equal(staticconf.get_bool('enable'), True)
+        assert_equal(SomeClass.getters.get('globals'), False)
+        assert_equal(SomeClass.getters.get('enable'), 'True')
+        assert_equal(SomeClass.getters.get_bool('enable'), True)
         assert_equal(some_class.msg, None)
-        assert staticconf.get_regex('matcher').match('12345')
-        assert not staticconf.get_regex('matcher').match('a')
-        assert_equal(staticconf.get_list_of_int('options'), [1, 7, 3, 9])
+        assert SomeClass.getters.get_regex('matcher').match('12345')
+        assert not SomeClass.getters.get_regex('matcher').match('a')
+        assert_equal(SomeClass.getters.get_list_of_int('options'), [1, 7, 3, 9])
 
     def test_load_and_validate_namespace(self):
         real_config = {'SomeClass.min': 20, 'SomeClass.max': 25}
-        staticconf.DictConfiguration(self.config)
-        staticconf.DictConfiguration(real_config, namespace='real')
+        staticconf.DictConfiguration(self.config, namespace=SomeClass.namespace)
+        staticconf.DictConfiguration(real_config, namespace=SomeClass.alt_name)
         some_class = SomeClass()
         assert_equal(some_class.max, 100)
         assert_equal(some_class.min, 0)
@@ -68,25 +68,29 @@ class EndToEndTestCase(TestCase):
 
 class MockConfigurationTestCase(TestCase):
 
-    def test_mock_configuration_context_manager(self):
-        one = staticconf.get('one')
-        three = staticconf.get_int('three', default=3)
+    namespace = 'UniqueNamespaceForMockConfigurationTesting'
+    getters = staticconf.NamespaceGetters(namespace)
 
-        with testing.MockConfiguration(dict(one=7)):
+    def test_mock_configuration_context_manager(self):
+        one = self.getters.get('one')
+        three = self.getters.get_int('three', default=3)
+
+        with testing.MockConfiguration(dict(one=7), namespace=self.namespace):
             assert_equal(one, 7)
             assert_equal(three, 3)
-        assert_raises(errors.ConfigurationError, staticconf.get('one'))
+        assert_raises(errors.ConfigurationError, self.getters.get('one'))
 
     def test_mock_configuration(self):
-        two = staticconf.get_string('two')
-        stars = staticconf.get_bool('stars')
+        two = self.getters.get_string('two')
+        stars = self.getters.get_bool('stars')
 
-        mock_config = testing.MockConfiguration(dict(two=2, stars=False))
+        mock_config = testing.MockConfiguration(
+            dict(two=2, stars=False), namespace=self.namespace)
         mock_config.setup()
         assert_equal(two, '2')
         assert not stars
         mock_config.teardown()
-        assert_raises(errors.ConfigurationError, staticconf.get('two'))
+        assert_raises(errors.ConfigurationError, self.getters.get('two'))
 
 
 if __name__ == "__main__":
