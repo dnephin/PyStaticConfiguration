@@ -1,5 +1,5 @@
 import datetime
-from testify import assert_equal, run, TestCase
+from testify import assert_equal, run, TestCase, setup
 from testify.assertions import assert_raises_and_contains
 from staticconf import validation, errors
 
@@ -109,6 +109,25 @@ class BuildListOfTypeValidatorTestCase(TestCase):
             validation.validate_any)
         assert_raises_and_contains(
             errors.ValidationError, 'invalid iterable', validator, None)
+
+
+class BuildMappingTypeValidatorTestCase(TestCase):
+
+    @setup
+    def setup_validator(self):
+        self.pair_validator = validation.build_map_type_validator(lambda i: i)
+        map_by_id = lambda d: (d['id'], d['value'])
+        self.map_validator = validation.build_map_type_validator(map_by_id)
+
+    def test_build_map_from_list_of_pairs(self):
+        expected = {0: 0, 1: 1, 2:2}
+        assert_equal(self.pair_validator(enumerate(range(3))), expected)
+
+    def test_build_map_from_list_of_dicts(self):
+        expected = {'a': 'b', 'c': 'd'}
+        source = [dict(id='a', value='b'), dict(id='c', value='d')]
+        assert_equal(self.map_validator(source), expected)
+
 
 if __name__ == "__main__":
     run()
