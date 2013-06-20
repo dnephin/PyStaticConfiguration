@@ -40,11 +40,15 @@ class ProxyFactory(object):
         self.proxies = {}
 
     def build(self, validator, namespace, config_key, default, help):
-        proxy_key = validator, namespace, config_key, default
+        """Build or retrieve a ValueProxy from the attributes. Proxies are
+        keyed using a repr because default values can be mutable types.
+        """
+        proxy_attrs = validator, namespace, config_key, default
+        proxy_key = repr(proxy_attrs)
         if proxy_key in self.proxies:
             return self.proxies[proxy_key]
 
-        value_proxy = proxy.ValueProxy(*proxy_key)
+        value_proxy = proxy.ValueProxy(*proxy_attrs)
         register_value_proxy(namespace, value_proxy, help)
         return self.proxies.setdefault(proxy_key, value_proxy)
 

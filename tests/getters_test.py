@@ -89,6 +89,11 @@ class ProxyFactoryTestCase(TestCase):
         assert_is(value_proxy, self.factory.build(*self.args))
         assert not self.mock_register.mock_calls
 
+    def test_build_with_immutable_default(self):
+        args = self.validator, self.namespace, self.config_key, [], self.help
+        self.factory.build(*args)
+        assert_in(repr(args[:-1]), self.factory.proxies)
+
 
 if __name__ == "__main__":
     run()
