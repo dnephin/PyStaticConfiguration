@@ -436,12 +436,12 @@ class ConfigFacadeAcceptanceTest(TestCase):
         self.write("""one: A""")
 
     def write(self, content, mtime_seconds=0):
-        tstamp = time.time() - mtime_seconds
-        os.utime(self.file.name, (tstamp, tstamp))
         time.sleep(0.03)
         self.file.file.seek(0)
         self.file.write(content)
         self.file.flush()
+        tstamp = time.time() + mtime_seconds
+        os.utime(self.file.name, (tstamp, tstamp))
 
     @setup_teardown
     def patch_namespace(self):
@@ -456,7 +456,7 @@ class ConfigFacadeAcceptanceTest(TestCase):
         facade.add_callback('one', callback)
         assert_equal(staticconf.get('one', namespace=self.namespace), "A")
 
-        self.write("""one: B""", 5)
+        self.write("""one: B""", 10)
         facade.reload_if_changed()
         assert_equal(staticconf.get('one', namespace=self.namespace), "B")
         callback.assert_called_with()
