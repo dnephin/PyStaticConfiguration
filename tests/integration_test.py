@@ -1,3 +1,5 @@
+import logging
+
 from testify import assert_equal, TestCase, run, assert_raises
 
 import staticconf
@@ -31,7 +33,8 @@ class EndToEndTestCase(TestCase):
         'globals': False,
         'enable': 'True',
         'matcher': '\d+',
-        'options': ['1', '7', '3', '9']
+        'options': ['1', '7', '3', '9'],
+        'level': 'INFO',
     }
 
     def test_load_and_validate(self):
@@ -48,6 +51,7 @@ class EndToEndTestCase(TestCase):
         assert SomeClass.getters.get_regex('matcher').match('12345')
         assert not SomeClass.getters.get_regex('matcher').match('a')
         assert_equal(SomeClass.getters.get_list_of_int('options'), [1, 7, 3, 9])
+        assert_equal(SomeClass.getters.get_log_level('level'), logging.INFO)
 
     def test_load_and_validate_namespace(self):
         real_config = {'SomeClass.min': 20, 'SomeClass.max': 25}

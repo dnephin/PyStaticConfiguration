@@ -1,4 +1,6 @@
 import datetime
+import logging
+
 from testify import assert_equal, run, TestCase, setup
 from testify.assertions import assert_raises_and_contains
 from staticconf import validation, errors
@@ -127,6 +129,18 @@ class BuildMappingTypeValidatorTestCase(TestCase):
         expected = {'a': 'b', 'c': 'd'}
         source = [dict(id='a', value='b'), dict(id='c', value='d')]
         assert_equal(self.map_validator(source), expected)
+
+
+class ValidateLogLevelTestCase(TestCase):
+
+    def test_valid_log_level(self):
+        assert_equal(validation.validate_log_level('WARN'), logging.WARN)
+        assert_equal(validation.validate_log_level('DEBUG'), logging.DEBUG)
+
+    def test_invalid_log_level(self):
+        assert_raises_and_contains(
+            errors.ValidationError, 'UNKNOWN', validation.validate_log_level, 'UNKNOWN')
+
 
 
 if __name__ == "__main__":

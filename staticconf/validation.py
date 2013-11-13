@@ -2,8 +2,10 @@
 Validate and convert a configuration value to it's expected type.
 """
 import datetime
+import logging
 import re
 import time
+
 from staticconf.errors import ValidationError
 
 
@@ -132,23 +134,34 @@ def build_map_type_validator(item_validator):
     return validate_mapping
 
 
+def validate_log_level(value):
+    """Validate a log level from a string value. Returns a constants from
+    the :mod:`logging` module.
+    """
+    try:
+        return getattr(logging, value)
+    except AttributeError:
+        raise ValidationError("Unknown log level: %s" % value)
+
+
 def validate_any(value):
     return value
 
 
 validators = {
-    '':         validate_any,
-    'bool':     validate_bool,
-    'date':     validate_date,
-    'datetime': validate_datetime,
-    'float':    validate_float,
-    'int':      validate_int,
-    'list':     validate_list,
-    'set':      validate_set,
-    'string':   validate_string,
-    'time':     validate_time,
-    'tuple':    validate_tuple,
-    'regex':    validate_regex,
+    '':          validate_any,
+    'bool':      validate_bool,
+    'date':      validate_date,
+    'datetime':  validate_datetime,
+    'float':     validate_float,
+    'int':       validate_int,
+    'list':      validate_list,
+    'set':       validate_set,
+    'string':    validate_string,
+    'time':      validate_time,
+    'tuple':     validate_tuple,
+    'regex':     validate_regex,
+    'log_level': validate_log_level,
 }
 
 def get_validators():
