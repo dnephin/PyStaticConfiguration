@@ -58,6 +58,8 @@ class ValueProxyTestCase(TestCase):
         assert_equal(abs(value_proxy), 2)
         assert_equal(hex(value_proxy), "0x2")
         assert bool(value_proxy)
+        assert_equal(range(5)[value_proxy], 2)
+        assert_equal(range(5)[:value_proxy], [0, 1])
 
     def test_proxy_with_string(self):
         validator = mock.Mock(return_value='one%s')
