@@ -135,7 +135,7 @@ def build_map_type_validator(item_validator):
 
 
 def validate_log_level(value):
-    """Validate a log level from a string value. Returns a constants from
+    """Validate a log level from a string value. Returns a constant from
     the :mod:`logging` module.
     """
     try:

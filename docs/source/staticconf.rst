@@ -50,7 +50,7 @@ staticconf Package
     :show-inheritance:
 
 :mod:`readers` Module
--------------------
+---------------------
 
 .. automodule:: staticconf.readers
     :members:
