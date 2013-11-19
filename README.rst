@@ -12,6 +12,7 @@ has the following design goals:
 
 
 .. image:: https://travis-ci.org/dnephin/PyStaticConfiguration.png
+    :target https://travis-ci.org/dnephin/PyStaticConfiguration
 
 
 .. contents:: Contents
