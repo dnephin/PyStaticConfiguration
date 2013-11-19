@@ -12,7 +12,7 @@ docs:
 
 
 test:
-	testify tests
+	tox -e py26
 
 
 upload:

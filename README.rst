@@ -11,6 +11,9 @@ has the following design goals:
 * allow for easy extension of validators and loaders
 
 
+.. image:: https://travis-ci.org/dnephin/PyStaticConfiguration.png
+
+
 .. contents:: Contents
     :local:
     :depth: 1

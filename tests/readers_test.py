@@ -1,7 +1,7 @@
 import mock
 from testify import TestCase, setup
 from testify.assertions import assert_equal, assert_raises
-from testify.test_case import setup_teardown
+from testify import setup_teardown
 
 from staticconf import config, readers, proxy, errors, testing
 
