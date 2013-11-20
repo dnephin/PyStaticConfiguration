@@ -4,7 +4,7 @@ from staticconf.getters import *
 from staticconf.readers import *
 
 
-version         = "0.6.0"
+version         = "0.7.0"
 
 view_help       = config.view_help
 reload          = config.reload

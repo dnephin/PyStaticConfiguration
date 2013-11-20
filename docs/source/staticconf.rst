@@ -81,3 +81,12 @@ staticconf Package
     :undoc-members:
     :show-inheritance:
 
+
+:mod:`depinj` Module
+------------------------
+
+.. automodule:: staticconf.depinj
+    :members:
+    :undoc-members:
+    :show-inheritance:
+

@@ -6,6 +6,7 @@ import functools
 import operator
 from staticconf import errors
 
+
 class UndefToken(object):
     """A token to represent an undefined value, so that None can be used
     as a default value.
@@ -76,7 +77,7 @@ def cache_as_field(cache_name):
 
 
 def extract_value(proxy):
-    """Given a value proxy type, Retrieve a value from a namespace, raising
+    """Given a value proxy type, retrieve a value from a namespace, raising
     exception if no value is found, or the value does not validate.
     """
     value = proxy.namespace.get(proxy.config_key, proxy.default)
