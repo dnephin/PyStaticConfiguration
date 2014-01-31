@@ -218,7 +218,7 @@ class ValidateConfigTestCase(TestCase):
 
     def test_validate_all_fails(self):
         name = 'yan'
-        _ = staticconf.get_string('foo', namespace=name)
+        _ = staticconf.get_string('foo', namespace=name)  # flake8: noqa
         assert_raises(errors.ConfigurationError, config.validate, all_names=True)
 
 
@@ -272,8 +272,12 @@ class HasDuplicateKeysTestCase(TestCase):
 
     def test_has_duplicate_keys_raises(self):
         config_data = dict(fear=123)
-        assert_raises(errors.ConfigurationError,
-            config.has_duplicate_keys, config_data, self.base_conf, True)
+        assert_raises(
+                errors.ConfigurationError,
+                config.has_duplicate_keys,
+                config_data,
+                self.base_conf,
+                True)
 
     def test_has_duplicate_keys_no_raise(self):
         config_data = dict(mind=123)
@@ -293,8 +297,8 @@ class ConfigurationWatcherTestCase(TestCase):
         ) as (self.mock_time, self.mock_path, self.mock_stat, file):
             # Create the file
             file.flush()
-            self.mock_stat.st_ino=1
-            self.mock_stat.st_dev=2
+            self.mock_stat.st_ino = 1
+            self.mock_stat.st_dev = 2
             self.filename = file.name
             self.watcher = config.ConfigurationWatcher(self.loader, self.filename)
             yield
@@ -395,8 +399,9 @@ class ConfigFacadeTestCase(TestCase):
 
     @setup_teardown
     def patch_watcher(self):
-        patcher = mock.patch('staticconf.config.ConfigurationWatcher',
-            autospec=True)
+        patcher = mock.patch(
+                'staticconf.config.ConfigurationWatcher',
+                autospec=True)
         with patcher as self.mock_config_watcher:
             yield
 
