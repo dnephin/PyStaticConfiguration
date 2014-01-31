@@ -2,10 +2,11 @@
 Classes for storing configuration by namespace, and reloading configuration
 while files change.
 """
+from collections import namedtuple
 import logging
+import operator
 import os
 import time
-from collections import namedtuple
 import weakref
 
 from staticconf import errors
@@ -172,26 +173,29 @@ class ConfigHelp(object):
     def view_help(self):
         """Return a help message describing all the statically configured keys.
         """
-        def format(desc):
-            help        = desc.help or ''
-            type_name   = desc.validator.__name__.replace('validate_', '')
-            fmt         = "%s (Type: %s, Default: %s)\n%s"
-            return fmt % (desc.name, type_name, desc.default, help)
+        def format_desc(desc):
+            return "%s (Type: %s, Default: %s)\n%s" % (
+                    desc.name,
+                    desc.validator.__name__.replace('validate_', ''),
+                    desc.default,
+                    desc.help or '')
 
         def format_namespace(key, desc_list):
-            fmt = "\nNamespace: %s\n%s"
-            seq = sorted(format(desc) for desc in desc_list)
-            return fmt % (key, '\n'.join(seq))
+            return "\nNamespace: %s\n%s" % (
+                    key,
+                    '\n'.join(sorted(format_desc(desc) for desc in desc_list)))
 
-        def namespace_sort(lhs, rhs):
+        def namespace_cmp(lhs, rhs):
             if lhs == DEFAULT:
                 return -1
             if rhs == DEFAULT:
                 return 1
-            return lhs < rhs
+            return -1 if lhs < rhs else 1
 
-        seq = sorted(self.descriptions.iteritems(), cmp=namespace_sort)
-        return '\n'.join(format_namespace(*desc) for desc in seq)
+        return '\n'.join(format_namespace(*desc) for desc in
+                         sorted(self.descriptions.iteritems(),
+                                cmp=namespace_cmp,
+                                key=operator.itemgetter(0)))
 
     def clear(self):
         self.descriptions.clear()
