@@ -82,8 +82,13 @@ def build_loader(loader_func):
 
 def yaml_loader(filename):
     import yaml
+    try:
+        from yaml import CLoader as Loader
+    except ImportError:
+        from yaml import Loader
+        
     with open(filename) as fh:
-        return yaml.load(fh) or {}
+        return yaml.load(fh, Loader=Loader) or {}
 
 def json_loader(filename):
     try:
