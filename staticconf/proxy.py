@@ -6,6 +6,7 @@ import functools
 import operator
 from staticconf import errors
 
+
 class UndefToken(object):
     """A token to represent an undefined value, so that None can be used
     as a default value.
@@ -42,6 +43,7 @@ unary_funcs = {
     '__nonzero__':  bool,
     '__hash__':     hash,
 }
+
 
 def build_class_def(cls):
     def build_method(name):

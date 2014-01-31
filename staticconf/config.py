@@ -124,6 +124,7 @@ configuration_namespaces = {DEFAULT: ConfigNamespace(DEFAULT)}
 
 KeyDescription = namedtuple('KeyDescription', 'name validator default help')
 
+
 def get_namespaces_from_names(name, all_names):
     """Return a generator which yields namespace objects."""
     names = configuration_namespaces.keys() if all_names else [name]
@@ -179,7 +180,7 @@ class ConfigHelp(object):
 
         def format_namespace(key, desc_list):
             fmt = "\nNamespace: %s\n%s"
-            seq = sorted(format(desc) for  desc in desc_list)
+            seq = sorted(format(desc) for desc in desc_list)
             return fmt % (key, '\n'.join(seq))
 
         def namespace_sort(lhs, rhs):
@@ -205,7 +206,6 @@ def _reset():
     for namespace in configuration_namespaces.values():
         namespace._reset()
     config_help.clear()
-
 
 
 def has_duplicate_keys(config_data, base_conf, raise_error):

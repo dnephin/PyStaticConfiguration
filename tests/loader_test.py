@@ -5,8 +5,8 @@ from testify.assertions import assert_raises, assert_not_in
 import tempfile
 import textwrap
 
-
 from staticconf import loader, errors
+
 
 class LoaderTestCase(TestCase):
 
@@ -92,6 +92,7 @@ class YamlConfigurationTestCase(LoaderTestCase):
         assert_equal(config_data['another'], 'blind')
         assert_equal(config_data['somekey.token'], 'smarties')
 
+
 class JSONConfigurationTestCase(LoaderTestCase):
 
     content = '{"somekey": {"token": "smarties"}, "another": "blind"}'
@@ -130,8 +131,7 @@ class AutoConfigurationTestCase(LoaderTestCase):
             assert_equal(config_data['key'], 1)
 
     def test_auto_failed(self):
-        assert_raises(errors.ConfigurationError,
-                loader.AutoConfiguration)
+        assert_raises(errors.ConfigurationError, loader.AutoConfiguration)
 
 
 class PythonConfigurationTestCase(LoaderTestCase):
@@ -228,8 +228,11 @@ class XMLConfigurationTestCase(LoaderTestCase):
             </config>
         """
         self.write_content_to_file(content)
-        assert_raises(errors.ConfigurationError,
-                loader.XMLConfiguration, self.tmpfile.name, safe=True)
+        assert_raises(
+                errors.ConfigurationError,
+                loader.XMLConfiguration,
+                self.tmpfile.name,
+                safe=True)
 
     def test_xml_configuration_safe_value_tag(self):
         content = """
@@ -238,8 +241,11 @@ class XMLConfigurationTestCase(LoaderTestCase):
             </config>
         """
         self.write_content_to_file(content)
-        assert_raises(errors.ConfigurationError,
-            loader.XMLConfiguration, self.tmpfile.name, safe=True)
+        assert_raises(
+                errors.ConfigurationError,
+                loader.XMLConfiguration,
+                self.tmpfile.name,
+                safe=True)
 
 
 class PropertiesConfigurationTestCase(LoaderTestCase):
@@ -272,8 +278,10 @@ class PropertiesConfigurationTestCase(LoaderTestCase):
     def test_invalid_line(self):
         self.tmpfile.write('justkey\n')
         self.tmpfile.flush()
-        assert_raises(errors.ConfigurationError,
-                loader.PropertiesConfiguration, self.tmpfile.name)
+        assert_raises(
+                errors.ConfigurationError,
+                loader.PropertiesConfiguration,
+                self.tmpfile.name)
 
 
 class CompositeConfigurationTestCase(TestCase):
@@ -281,7 +289,7 @@ class CompositeConfigurationTestCase(TestCase):
     def test_load(self):
         loaders = [(mock.Mock(return_value={i: 0}), 1, 2) for i in xrange(3)]
         composite = loader.CompositeConfiguration(loaders)
-        assert_equal(composite.load(), {0:0, 1:0, 2:0})
+        assert_equal(composite.load(), {0: 0, 1: 0, 2: 0})
 
         for loader_call, arg_one, arg_two in loaders:
             loader_call.assert_called_with(arg_one, arg_two)

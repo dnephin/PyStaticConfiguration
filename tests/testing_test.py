@@ -3,8 +3,9 @@ from testify import TestCase, assert_equal, run
 import staticconf
 from staticconf import testing
 
+
 class MockConfigurationTestCase(TestCase):
-    
+
     def test_init(self):
         with testing.MockConfiguration(a='one', b='two'):
             assert_equal(staticconf.get('a'), 'one')
@@ -14,8 +15,8 @@ class MockConfigurationTestCase(TestCase):
         conf = {
             'a': {
                 'b': 'two',
-             },
-             'c': 'three'
+            },
+            'c': 'three'
         }
         with testing.MockConfiguration(conf):
             assert_equal(staticconf.get('a.b'), 'two')
