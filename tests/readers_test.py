@@ -20,8 +20,12 @@ class BuildReaderTestCase(TestCase):
 
     def test_read_config_failed(self):
         self.namespace.get.return_value = proxy.UndefToken
-        assert_raises(errors.ConfigurationError,
-            readers._read_config, 'some_key', self.namespace, None)
+        assert_raises(
+                errors.ConfigurationError,
+                readers._read_config,
+                'some_key',
+                self.namespace,
+                None)
 
     @mock.patch('staticconf.readers.config.get_namespace', autospec=True)
     def test_build_reader(self, mock_get_namespace):
@@ -37,8 +41,8 @@ class BuildReaderTestCase(TestCase):
 class NamespaceReaderTestCase(TestCase):
 
     config = {
-        'one':  '1',
-        'three': '3.0',
+        'one':     '1',
+        'three':   '3.0',
         'options': ['seven', 'stars']
     }
 

@@ -90,6 +90,7 @@ def yaml_loader(filename):
     with open(filename) as fh:
         return yaml.load(fh, Loader=Loader) or {}
 
+
 def json_loader(filename):
     try:
         import simplejson as json
@@ -167,9 +168,8 @@ def xml_loader(filename, safe=False):
     return build_from_element(tree.getroot())
 
 
-split_pattern = re.compile(r'[=:]')
-
 def properties_loader(filename):
+    split_pattern = re.compile(r'[=:]')
 
     def parse_line(line):
         line = line.strip()
