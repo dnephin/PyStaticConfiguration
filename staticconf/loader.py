@@ -86,7 +86,7 @@ def yaml_loader(filename):
         from yaml import CLoader as Loader
     except ImportError:
         from yaml import Loader
-        
+
     with open(filename) as fh:
         return yaml.load(fh, Loader=Loader) or {}
 
