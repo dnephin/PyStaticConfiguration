@@ -4,7 +4,7 @@
 
 clean:
 	find -name *.pyc -exec rm {} \;
-	rm -r docs/build/html
+	rm -rf docs/build/html
 
 
 docs:
