@@ -429,7 +429,7 @@ Create a reader which translates a list of dicts into a mapping
     from staticconf import validation, readers
 
     def build_map_from_key_value(item):
-        return item['key'], ['value']
+        return item['key'], item['value']
 
     read_mapping = readers.build_reader(
         validation.build_map_type_validator(build_map_from_key_value))
