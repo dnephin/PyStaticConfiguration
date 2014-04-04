@@ -69,11 +69,11 @@ def build_loader(loader_func):
     def loader(*args, **kwargs):
         err_on_unknown      = kwargs.pop('error_on_unknown', False)
         err_on_dupe         = kwargs.pop('error_on_duplicate', False)
-        preserve_structure  = kwargs.pop('preserve_structure', False)
+        flatten             = kwargs.pop('flatten', True)
         name                = kwargs.pop('namespace', config.DEFAULT)
 
         config_data = load_config_data(loader_func, *args, **kwargs)
-        if not preserve_structure:
+        if flatten:
             config_data = dict(flatten_dict(config_data))
         namespace   = config.get_namespace(name)
         namespace.apply_config_data(config_data, err_on_unknown, err_on_dupe)

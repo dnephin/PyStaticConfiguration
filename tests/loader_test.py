@@ -83,7 +83,7 @@ class BuildLoaderTestCase(LoaderTestCase):
         loader_func = mock.Mock(return_value=source)
         config_loader = loader.build_loader(loader_func)
 
-        config = config_loader(source, preserve_structure=True)
+        config = config_loader(source, flatten=False)
         assert_equal(config, source)
 
 
