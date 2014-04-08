@@ -297,8 +297,8 @@ class ConfigurationWatcherTestCase(TestCase):
         ) as (self.mock_time, self.mock_path, self.mock_stat, file):
             # Create the file
             file.flush()
-            self.mock_stat.st_ino = 1
-            self.mock_stat.st_dev = 2
+            self.mock_stat.return_value.st_ino = 1
+            self.mock_stat.return_value.st_dev = 2
             self.filename = file.name
             self.watcher = config.ConfigurationWatcher(self.loader, self.filename)
             yield
@@ -337,7 +337,7 @@ class ConfigurationWatcherTestCase(TestCase):
         assert_equal(self.watcher.last_check, self.mock_time.time.return_value)
 
     def test_file_modified(self):
-        self.watcher.last_check = 123456
+        self.watcher.last_max_mtime = 123456
         self.mock_time.time.return_value = 123460
         self.mock_path.getmtime.return_value = self.watcher.last_check + 5
 
@@ -345,10 +345,11 @@ class ConfigurationWatcherTestCase(TestCase):
         assert_equal(self.watcher.last_check, self.mock_time.time.return_value)
 
     def test_file_modified_moved(self):
-        self.watcher.last_check = self.mock_path.getmtime.return_value = 123456
-        self.mock_time.time.return_value = 123455
+        self.mock_path.getmtime.return_value = 123456
+        self.watcher.last_max_mtime = 123456
         assert not self.watcher.file_modified()
-        self.mock_stat.st_ino = 3
+        self.mock_stat.return_value.st_ino = 3
+        print self.watcher.inodes
         assert self.watcher.file_modified()
 
     @mock.patch('staticconf.config.os.stat', autospec=True)
@@ -465,6 +466,23 @@ class ConfigFacadeAcceptanceTest(TestCase):
         facade.reload_if_changed()
         assert_equal(staticconf.get('one', namespace=self.namespace), "B")
         callback.assert_called_with()
+
+    def test_reload_end_to_end(self):
+        loader = mock.Mock()
+        callback = mock.Mock()
+        facade = staticconf.ConfigFacade.load(
+                self.file.name,
+                self.namespace,
+                loader)
+
+        assert_equal(loader.call_count, 1)
+        time.sleep(1)
+
+        facade.reload_if_changed()
+        assert_equal(loader.call_count, 1)
+        os.utime(self.file.name, None)
+        facade.reload_if_changed()
+        assert_equal(loader.call_count, 2)
 
 
 class BuildLoaderCallable(TestCase):
