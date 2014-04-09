@@ -11,7 +11,7 @@ has the following design goals:
 * allow for easy extension of validators and loaders
 
 
-.. image:: https://travis-ci.org/dnephin/PyStaticConfiguration.png
+.. image:: https://travis-ci.org/dnephin/PyStaticConfiguration.svg?branch=master
     :alt: Travis CI build status
     :target: https://travis-ci.org/dnephin/PyStaticConfiguration
 
