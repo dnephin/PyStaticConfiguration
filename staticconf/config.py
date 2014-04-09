@@ -236,6 +236,7 @@ class ConfigurationWatcher(object):
         self.inodes         = self._get_inodes()
         self.min_interval   = min_interval
         self.last_check     = time.time()
+        self.last_max_mtime = self.most_recent_changed
         self.reloader       = reloader or ReloadCallbackChain(all_names=True)
 
     def get_filename_list(self, filenames):
@@ -261,10 +262,12 @@ class ConfigurationWatcher(object):
             return self.reload()
 
     def file_modified(self):
-        prev_check, self.last_check = self.last_check, time.time()
-        last_inodes, self.inodes    = self.inodes, self._get_inodes()
+        self.last_check = time.time()
+        last_mtime, self.last_max_mtime = (
+                self.last_max_mtime, self.most_recent_changed)
+        last_inodes, self.inodes = self.inodes, self._get_inodes()
         return (last_inodes != self.inodes or
-                prev_check < self.most_recent_changed)
+                last_mtime < self.last_max_mtime)
 
     def reload(self):
         config_dict = self.config_loader()
