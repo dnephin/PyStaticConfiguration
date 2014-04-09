@@ -78,6 +78,14 @@ class BuildLoaderTestCase(LoaderTestCase):
         config_loader(optional=True)
         assert_raises(ValueError, config_loader)
 
+    def test_build_loader_without_flatten(self):
+        source = {'base': {'one': 'thing', 'two': 'foo'}}
+        loader_func = mock.Mock(return_value=source)
+        config_loader = loader.build_loader(loader_func)
+
+        config = config_loader(source, flatten=False)
+        assert_equal(config, source)
+
 
 class YamlConfigurationTestCase(LoaderTestCase):
 
