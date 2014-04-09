@@ -406,7 +406,7 @@ Building custom types for a schema is the same idea. Using the
 
 
 Reading dicts
-=============
+-------------
 By default PyStaticConfiguration flattens all the values it receives from
 the loaders. There are two ways to get dicts from a loader.
 
@@ -422,13 +422,13 @@ Example:
     YamlConfiguration(filename, flatten=False)
 
 The disadvantage with this approach is that the entire config file will
-preserve it's nested structure, so you lose out of the ability to easily
+preserve its nested structure, so you lose out of the ability to easily
 merge and override configuration files.
 
 Custom Reader
 ~~~~~~~~~~~~~
 
-The second option is to represent :class:`dict` structures using lists of values
+The second option is to represent a dict structures using lists of values
 (either a list of pairs or a list of dicts). This list can then be converted
 into a dict mapping using a custom getter/reader.
 
