@@ -406,18 +406,34 @@ Building custom types for a schema is the same idea. Using the
 
 
 Reading dicts
-~~~~~~~~~~~~~
-PyStaticConfiguration flattens all the values it receives from the loaders. This
-makes it impossible to read a mapping structure (dict) directly from the
-configuration. This is necessary in order to preserve the single key per
-value structure that staticconf provides.
+=============
+By default PyStaticConfiguration flattens all the values it receives from
+the loaders. There are two ways to get dicts from a loader.
 
-Dict structures can instead be represented by lists of values (either a list of
-pairs or a list of dicts). This list can then be converted into a dict mapping
-using a custom getter. 
+Disable Flatten
+~~~~~~~~~~~~~~~
+
+You can call loaders with the kwargs ``flatten=False``.
+
+Example:
+
+.. code-block:: python
+
+    YamlConfiguration(filename, flatten=False)
+
+The disadvantage with this approach is that the entire config file will
+preserve it's nested structure, so you lose out of the ability to easily
+merge and override configuration files.
+
+Custom Reader
+~~~~~~~~~~~~~
+
+The second option is to represent :class:`dict` structures using lists of values
+(either a list of pairs or a list of dicts). This list can then be converted
+into a dict mapping using a custom getter/reader.
 
 Below are some examples on how this is done. The ``readers`` interface is used as
-an example, but the same can be done for the ``getters`` and ``schema`` interafce
+an example, but the same can be done for the ``getters`` and ``schema`` interface
 by replacing ``readers.build_reader()`` with ``getters.build_getter()`` and
 ``schema.build_value_type()``.
 
