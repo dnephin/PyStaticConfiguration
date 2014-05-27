@@ -157,7 +157,7 @@ def validate(name=DEFAULT, all_names=False):
      is True, validate all namespaces.
     """
     for namespace in get_namespaces_from_names(name, all_names):
-        all(bool(value_proxy) for value_proxy in namespace.get_value_proxies())
+        all(value_proxy.get_value() for value_proxy in namespace.get_value_proxies())
 
 
 class ConfigHelp(object):

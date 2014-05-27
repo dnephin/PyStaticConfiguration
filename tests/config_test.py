@@ -196,7 +196,7 @@ class ValidateConfigTestCase(TestCase):
     def test_validate_single_passes(self):
         staticconf.DictConfiguration({})
         config.validate()
-        staticconf.get_string('one.two')
+        _ = staticconf.get_string('one.two')
         staticconf.DictConfiguration({'one.two': 'nice'})
         config.validate()
 
