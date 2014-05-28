@@ -7,7 +7,7 @@ import time
 from testify import run, assert_equal, TestCase, setup, setup_teardown
 from testify.assertions import assert_raises
 
-from staticconf import config, errors, testing, proxy, validation
+from staticconf import config, errors, testing, proxy, validation, schema
 import staticconf
 
 
@@ -219,7 +219,19 @@ class ValidateConfigTestCase(TestCase):
     def test_validate_all_fails(self):
         name = 'yan'
         _ = staticconf.get_string('foo', namespace=name)  # flake8: noqa
-        assert_raises(errors.ConfigurationError, config.validate, all_names=True)
+        assert_raises(errors.ConfigurationError,
+                      config.validate,
+                      all_names=True)
+
+    def test_validate_value_token(self):
+        class ExampleSchema(schema.Schema):
+            namespace = 'DEFAULT'
+
+            thing = schema.int()
+
+        assert_raises(errors.ConfigurationError,
+                      config.validate,
+                      all_names=True)
 
 
 class ConfigHelpTestCase(TestCase):
