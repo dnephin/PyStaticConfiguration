@@ -12,8 +12,8 @@ class MockConfiguration(object):
         flatten             = kwargs.pop('flatten', True)
         config_data         = dict(*args, **kwargs)
         self.namespace      = config.get_namespace(name)
-        self.config_data    = (dict(loader.flatten_dict(config_data))
-                               if flatten else config_data)
+        self.config_data    = (dict(loader.flatten_dict(config_data)) if flatten
+                              else config_data)
         self.old_values     = None
 
     def setup(self):
