@@ -331,15 +331,14 @@ class ConfigurationWatcherTestCase(TestCase):
         assert self.watcher.should_check
 
     def test_file_modified_not_modified(self):
-        self.watcher.last_check = self.mock_path.getmtime.return_value = 222
+        self.watcher.last_max_mtime = self.mock_path.getmtime.return_value = 222
         self.mock_time.time.return_value = 123456
         assert not self.watcher.file_modified()
         assert_equal(self.watcher.last_check, self.mock_time.time.return_value)
 
     def test_file_modified(self):
         self.watcher.last_max_mtime = 123456
-        self.mock_time.time.return_value = 123460
-        self.mock_path.getmtime.return_value = self.watcher.last_check + 5
+        self.mock_path.getmtime.return_value = 123460
 
         assert self.watcher.file_modified()
         assert_equal(self.watcher.last_check, self.mock_time.time.return_value)
@@ -349,7 +348,6 @@ class ConfigurationWatcherTestCase(TestCase):
         self.watcher.last_max_mtime = 123456
         assert not self.watcher.file_modified()
         self.mock_stat.return_value.st_ino = 3
-        print self.watcher.inodes
         assert self.watcher.file_modified()
 
     @mock.patch('staticconf.config.os.stat', autospec=True)
