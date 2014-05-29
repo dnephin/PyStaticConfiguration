@@ -123,10 +123,11 @@ class ValueProxy(object):
         self.namespace      = namespace
         self._value         = UndefToken
 
-    @property
     @cache_as_field('_value')
-    def value(self):
+    def get_value(self):
         return extract_value(self)
+
+    value = property(get_value)
 
     def __getattr__(self, item):
         return getattr(self.value, item)
