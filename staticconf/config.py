@@ -161,7 +161,7 @@ def validate(name=DEFAULT, all_names=False):
 
     :param name: the namespace to validate
     :type  name: string
-    :param all_names: if True validates all namespaces and ignores `name` 
+    :param all_names: if True validates all namespaces and ignores `name`
     :type  all_names: boolean
     """
     for namespace in get_namespaces_from_names(name, all_names):

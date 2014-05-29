@@ -242,13 +242,67 @@ class CompositeConfiguration(object):
         return self.load()
 
 
-YamlConfiguration       = build_loader(yaml_loader)
-JSONConfiguration       = build_loader(json_loader)
-ListConfiguration       = build_loader(list_loader)
-DictConfiguration       = build_loader(lambda d: d)
-ObjectConfiguration     = build_loader(object_loader)
-AutoConfiguration       = build_loader(auto_loader)
-PythonConfiguration     = build_loader(python_loader)
-INIConfiguration        = build_loader(ini_file_loader)
-XMLConfiguration        = build_loader(xml_loader)
+YamlConfiguration = build_loader(yaml_loader)
+"""Load configuration from a yaml file.
+
+:param filename: path to a yaml file
+"""
+
+JSONConfiguration = build_loader(json_loader)
+"""Load configuration from a json file.
+
+:param filename: path to a json file
+"""
+
+ListConfiguration = build_loader(list_loader)
+"""Load configuration from a list of strings in the form `key=value`.
+
+:param seq: a sequence of strings
+"""
+
+DictConfiguration = build_loader(lambda d: d)
+"""Load configuration from a :class:`dict`.
+
+:param dict: a dictionary
+"""
+
+ObjectConfiguration = build_loader(object_loader)
+"""Load configuration from any object. Attributes are keys and the attribute
+value are values.
+
+:param object: an object
+"""
+
+AutoConfiguration = build_loader(auto_loader)
+"""
+.. deprecated:: v0.7.0
+    Do not use. It will be removed in future versions.
+"""
+
+
+PythonConfiguration = build_loader(python_loader)
+"""Load configuration from a python module.
+
+:param module: python path to a module as you would pass it to
+    :func:`__import__`
+"""
+
+
+INIConfiguration = build_loader(ini_file_loader)
+"""Load configuration from a .ini file
+
+:param filename: path to the ini file
+"""
+
+
+XMLConfiguration = build_loader(xml_loader)
+"""Load configuration from an XML file.
+
+:param filename: path to the XML file
+"""
+
 PropertiesConfiguration = build_loader(properties_loader)
+"""Load configuration from a properties file
+
+:param filename: path to the properties file
+"""
