@@ -1,8 +1,4 @@
-try:
-    from setuptools import setup
-    assert setup
-except ImportError:
-    from distutils.core import setup
+from setuptools import setup
 
 import staticconf
 

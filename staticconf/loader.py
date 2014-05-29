@@ -7,17 +7,49 @@ Nested dictionaries are flattened using dotted notation.
     staticconf.YamlConfiguration('config.yaml')
 
 
+Configuration loaders accept the following kwargs:
+
+error_on_unknown
+    raises an error if there are keys in the config that have not been
+    defined by a getter or a schema
+
+optional
+    if True only warns on failure to load configuration (Default False)
+
+namespace
+    load the configuration values into a namespace. Defaults to the
+    `DEFAULT` namespace.
+
+flatten
+    flatten nested structures into a mapping with depth of 1 (Default True)
+
+
+.. versionadded:: 0.7.0
+    `flatten` was added as a kwarg to all loaders
+
+
+Custom Loader
+-------------
+
 You can create your own loaders for other formats by using
-``loader.build_loader()``.
+:func:`build_loader()`.
 
 .. code-block:: python
 
     from staticconf import loader
+
     def custom_loader(*args):
         ...
         return config_dict
 
     CustomConfiguration = loader.build_loader(custom_loader)
+
+    ...
+
+    # Use it to load config things returned from `custom_loader()`
+    # into the namespace
+    CustomConfiguration(some_arg1, namespace='this_namespace')
+
 
 ."""
 import logging
