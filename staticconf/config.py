@@ -2,10 +2,11 @@
 Classes for storing configuration by namespace, and reloading configuration
 while files change.
 """
+from collections import namedtuple
 import logging
+import operator
 import os
 import time
-from collections import namedtuple
 import weakref
 
 from staticconf import errors
@@ -124,6 +125,7 @@ configuration_namespaces = {DEFAULT: ConfigNamespace(DEFAULT)}
 
 KeyDescription = namedtuple('KeyDescription', 'name validator default help')
 
+
 def get_namespaces_from_names(name, all_names):
     """Return a generator which yields namespace objects."""
     names = configuration_namespaces.keys() if all_names else [name]
@@ -155,7 +157,7 @@ def validate(name=DEFAULT, all_names=False):
      is True, validate all namespaces.
     """
     for namespace in get_namespaces_from_names(name, all_names):
-        all(bool(value_proxy) for value_proxy in namespace.get_value_proxies())
+        all(value_proxy.get_value() for value_proxy in namespace.get_value_proxies())
 
 
 class ConfigHelp(object):
@@ -171,26 +173,29 @@ class ConfigHelp(object):
     def view_help(self):
         """Return a help message describing all the statically configured keys.
         """
-        def format(desc):
-            help        = desc.help or ''
-            type_name   = desc.validator.__name__.replace('validate_', '')
-            fmt         = "%s (Type: %s, Default: %s)\n%s"
-            return fmt % (desc.name, type_name, desc.default, help)
+        def format_desc(desc):
+            return "%s (Type: %s, Default: %s)\n%s" % (
+                    desc.name,
+                    desc.validator.__name__.replace('validate_', ''),
+                    desc.default,
+                    desc.help or '')
 
         def format_namespace(key, desc_list):
-            fmt = "\nNamespace: %s\n%s"
-            seq = sorted(format(desc) for  desc in desc_list)
-            return fmt % (key, '\n'.join(seq))
+            return "\nNamespace: %s\n%s" % (
+                    key,
+                    '\n'.join(sorted(format_desc(desc) for desc in desc_list)))
 
-        def namespace_sort(lhs, rhs):
+        def namespace_cmp(lhs, rhs):
             if lhs == DEFAULT:
                 return -1
             if rhs == DEFAULT:
                 return 1
-            return lhs < rhs
+            return -1 if lhs < rhs else 1
 
-        seq = sorted(self.descriptions.iteritems(), cmp=namespace_sort)
-        return '\n'.join(format_namespace(*desc) for desc in seq)
+        return '\n'.join(format_namespace(*desc) for desc in
+                         sorted(self.descriptions.iteritems(),
+                                cmp=namespace_cmp,
+                                key=operator.itemgetter(0)))
 
     def clear(self):
         self.descriptions.clear()
@@ -205,7 +210,6 @@ def _reset():
     for namespace in configuration_namespaces.values():
         namespace._reset()
     config_help.clear()
-
 
 
 def has_duplicate_keys(config_data, base_conf, raise_error):
@@ -232,6 +236,7 @@ class ConfigurationWatcher(object):
         self.inodes         = self._get_inodes()
         self.min_interval   = min_interval
         self.last_check     = time.time()
+        self.last_max_mtime = self.most_recent_changed
         self.reloader       = reloader or ReloadCallbackChain(all_names=True)
 
     def get_filename_list(self, filenames):
@@ -257,10 +262,12 @@ class ConfigurationWatcher(object):
             return self.reload()
 
     def file_modified(self):
-        prev_check, self.last_check = self.last_check, time.time()
-        last_inodes, self.inodes    = self.inodes, self._get_inodes()
+        self.last_check = time.time()
+        last_mtime, self.last_max_mtime = (
+                self.last_max_mtime, self.most_recent_changed)
+        last_inodes, self.inodes = self.inodes, self._get_inodes()
         return (last_inodes != self.inodes or
-                prev_check < self.most_recent_changed)
+                last_mtime < self.last_max_mtime)
 
     def reload(self):
         config_dict = self.config_loader()

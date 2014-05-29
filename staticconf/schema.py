@@ -66,7 +66,12 @@ from staticconf import validation, proxy, config, errors, getters
 class ValueTypeDefinition(object):
     __slots__ = ['validator', 'config_key', 'default', 'help']
 
-    def __init__(self, validator, config_key=None, default=proxy.UndefToken, help=None):
+    def __init__(
+            self,
+            validator,
+            config_key=None,
+            default=proxy.UndefToken,
+            help=None):
         self.validator      = validator
         self.config_key     = config_key
         self.default        = default
@@ -133,6 +138,7 @@ class SchemaMeta(type):
         """
         config_path = attributes.get('config_path')
         tokens = {}
+
         def build_config_key(value_def, config_key):
             key = value_def.config_key or config_key
             return '%s.%s' % (config_path, key) if config_path else key

@@ -66,7 +66,7 @@ class IterableValidationTestCase(TestCase):
 
     def test_validate_set(self):
         expected = set([3, 2, 1])
-        actual = validation.validate_set([1,3,2,2,1,3,2])
+        actual = validation.validate_set([1, 3, 2, 2, 1, 3, 2])
         assert_equal(expected, actual)
 
 
@@ -79,12 +79,18 @@ class RegexValidationTestCase(TestCase):
 
     def test_validate_regex_failed(self):
         pattern = "((this) regex is broken"
-        assert_raises_and_contains(errors.ValidationError, pattern,
-            validation.validate_regex, pattern)
+        assert_raises_and_contains(
+                errors.ValidationError,
+                pattern,
+                validation.validate_regex,
+                pattern)
 
     def test_validate_regex_none(self):
-        assert_raises_and_contains(errors.ValidationError, 'None',
-            validation.validate_regex, None)
+        assert_raises_and_contains(
+                errors.ValidationError,
+                'None',
+                validation.validate_regex,
+                None)
 
 
 class BuildListOfTypeValidatorTestCase(TestCase):
@@ -93,7 +99,7 @@ class BuildListOfTypeValidatorTestCase(TestCase):
         validator = validation.build_list_type_validator(
             validation.validate_int)
         expected = range(3)
-        assert_equal(validator(['0', '1','2']), expected)
+        assert_equal(validator(['0', '1', '2']), expected)
 
     def test_build_list_of_type_float_failed(self):
         validator = validation.build_list_type_validator(
@@ -122,7 +128,7 @@ class BuildMappingTypeValidatorTestCase(TestCase):
         self.map_validator = validation.build_map_type_validator(map_by_id)
 
     def test_build_map_from_list_of_pairs(self):
-        expected = {0: 0, 1: 1, 2:2}
+        expected = {0: 0, 1: 1, 2: 2}
         assert_equal(self.pair_validator(enumerate(range(3))), expected)
 
     def test_build_map_from_list_of_dicts(self):
@@ -139,8 +145,10 @@ class ValidateLogLevelTestCase(TestCase):
 
     def test_invalid_log_level(self):
         assert_raises_and_contains(
-            errors.ValidationError, 'UNKNOWN', validation.validate_log_level, 'UNKNOWN')
-
+                errors.ValidationError,
+                'UNKNOWN',
+                validation.validate_log_level,
+                'UNKNOWN')
 
 
 if __name__ == "__main__":

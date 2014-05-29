@@ -7,7 +7,7 @@ import time
 from testify import run, assert_equal, TestCase, setup, setup_teardown
 from testify.assertions import assert_raises
 
-from staticconf import config, errors, testing, proxy, validation
+from staticconf import config, errors, testing, proxy, validation, schema
 import staticconf
 
 
@@ -196,7 +196,7 @@ class ValidateConfigTestCase(TestCase):
     def test_validate_single_passes(self):
         staticconf.DictConfiguration({})
         config.validate()
-        staticconf.get_string('one.two')
+        _ = staticconf.get_string('one.two')
         staticconf.DictConfiguration({'one.two': 'nice'})
         config.validate()
 
@@ -218,8 +218,20 @@ class ValidateConfigTestCase(TestCase):
 
     def test_validate_all_fails(self):
         name = 'yan'
-        _ = staticconf.get_string('foo', namespace=name)
-        assert_raises(errors.ConfigurationError, config.validate, all_names=True)
+        _ = staticconf.get_string('foo', namespace=name)  # flake8: noqa
+        assert_raises(errors.ConfigurationError,
+                      config.validate,
+                      all_names=True)
+
+    def test_validate_value_token(self):
+        class ExampleSchema(schema.Schema):
+            namespace = 'DEFAULT'
+
+            thing = schema.int()
+
+        assert_raises(errors.ConfigurationError,
+                      config.validate,
+                      all_names=True)
 
 
 class ConfigHelpTestCase(TestCase):
@@ -272,8 +284,12 @@ class HasDuplicateKeysTestCase(TestCase):
 
     def test_has_duplicate_keys_raises(self):
         config_data = dict(fear=123)
-        assert_raises(errors.ConfigurationError,
-            config.has_duplicate_keys, config_data, self.base_conf, True)
+        assert_raises(
+                errors.ConfigurationError,
+                config.has_duplicate_keys,
+                config_data,
+                self.base_conf,
+                True)
 
     def test_has_duplicate_keys_no_raise(self):
         config_data = dict(mind=123)
@@ -293,8 +309,8 @@ class ConfigurationWatcherTestCase(TestCase):
         ) as (self.mock_time, self.mock_path, self.mock_stat, file):
             # Create the file
             file.flush()
-            self.mock_stat.st_ino=1
-            self.mock_stat.st_dev=2
+            self.mock_stat.return_value.st_ino = 1
+            self.mock_stat.return_value.st_dev = 2
             self.filename = file.name
             self.watcher = config.ConfigurationWatcher(self.loader, self.filename)
             yield
@@ -327,24 +343,23 @@ class ConfigurationWatcherTestCase(TestCase):
         assert self.watcher.should_check
 
     def test_file_modified_not_modified(self):
-        self.watcher.last_check = self.mock_path.getmtime.return_value = 222
+        self.watcher.last_max_mtime = self.mock_path.getmtime.return_value = 222
         self.mock_time.time.return_value = 123456
         assert not self.watcher.file_modified()
         assert_equal(self.watcher.last_check, self.mock_time.time.return_value)
 
     def test_file_modified(self):
-        self.watcher.last_check = 123456
-        self.mock_time.time.return_value = 123460
-        self.mock_path.getmtime.return_value = self.watcher.last_check + 5
+        self.watcher.last_max_mtime = 123456
+        self.mock_path.getmtime.return_value = 123460
 
         assert self.watcher.file_modified()
         assert_equal(self.watcher.last_check, self.mock_time.time.return_value)
 
     def test_file_modified_moved(self):
-        self.watcher.last_check = self.mock_path.getmtime.return_value = 123456
-        self.mock_time.time.return_value = 123455
+        self.mock_path.getmtime.return_value = 123456
+        self.watcher.last_max_mtime = 123456
         assert not self.watcher.file_modified()
-        self.mock_stat.st_ino = 3
+        self.mock_stat.return_value.st_ino = 3
         assert self.watcher.file_modified()
 
     @mock.patch('staticconf.config.os.stat', autospec=True)
@@ -395,8 +410,9 @@ class ConfigFacadeTestCase(TestCase):
 
     @setup_teardown
     def patch_watcher(self):
-        patcher = mock.patch('staticconf.config.ConfigurationWatcher',
-            autospec=True)
+        patcher = mock.patch(
+                'staticconf.config.ConfigurationWatcher',
+                autospec=True)
         with patcher as self.mock_config_watcher:
             yield
 
@@ -460,6 +476,23 @@ class ConfigFacadeAcceptanceTest(TestCase):
         facade.reload_if_changed()
         assert_equal(staticconf.get('one', namespace=self.namespace), "B")
         callback.assert_called_with()
+
+    def test_reload_end_to_end(self):
+        loader = mock.Mock()
+        callback = mock.Mock()
+        facade = staticconf.ConfigFacade.load(
+                self.file.name,
+                self.namespace,
+                loader)
+
+        assert_equal(loader.call_count, 1)
+        time.sleep(1)
+
+        facade.reload_if_changed()
+        assert_equal(loader.call_count, 1)
+        os.utime(self.file.name, None)
+        facade.reload_if_changed()
+        assert_equal(loader.call_count, 2)
 
 
 class BuildLoaderCallable(TestCase):

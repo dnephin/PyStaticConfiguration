@@ -21,5 +21,8 @@ setup(
         "Intended Audience :: Developers",
         "Development Status :: 4 - Beta",
     ],
+    extras_require={
+        'yaml': ['pyyaml'],
+    },
     packages=['staticconf'],
 )

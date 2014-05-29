@@ -11,7 +11,7 @@ has the following design goals:
 * allow for easy extension of validators and loaders
 
 
-.. image:: https://travis-ci.org/dnephin/PyStaticConfiguration.png
+.. image:: https://travis-ci.org/dnephin/PyStaticConfiguration.svg?branch=master
     :alt: Travis CI build status
     :target: https://travis-ci.org/dnephin/PyStaticConfiguration
 
@@ -309,7 +309,7 @@ A ``ConfigFacade`` wraps up the ``ConfigurationWatcher`` and
         min_interval=3 # Wait at least 3 seconds before checking modified time
     )
 
-    watcher.add_callback(do_this_after_reload)
+    watcher.add_callback('identifier', do_this_after_reload)
     watcher.reload_if_changed()
 
 
@@ -406,18 +406,34 @@ Building custom types for a schema is the same idea. Using the
 
 
 Reading dicts
-~~~~~~~~~~~~~
-PyStaticConfiguration flattens all the values it receives from the loaders. This
-makes it impossible to read a mapping structure (dict) directly from the
-configuration. This is necessary in order to preserve the single key per
-value structure that staticconf provides.
+-------------
+By default PyStaticConfiguration flattens all the values it receives from
+the loaders. There are two ways to get dicts from a loader.
 
-Dict structures can instead be represented by lists of values (either a list of
-pairs or a list of dicts). This list can then be converted into a dict mapping
-using a custom getter. 
+Disable Flatten
+~~~~~~~~~~~~~~~
+
+You can call loaders with the kwargs ``flatten=False``.
+
+Example:
+
+.. code-block:: python
+
+    YamlConfiguration(filename, flatten=False)
+
+The disadvantage with this approach is that the entire config file will
+preserve its nested structure, so you lose out of the ability to easily
+merge and override configuration files.
+
+Custom Reader
+~~~~~~~~~~~~~
+
+The second option is to represent a dict structures using lists of values
+(either a list of pairs or a list of dicts). This list can then be converted
+into a dict mapping using a custom getter/reader.
 
 Below are some examples on how this is done. The ``readers`` interface is used as
-an example, but the same can be done for the ``getters`` and ``schema`` interafce
+an example, but the same can be done for the ``getters`` and ``schema`` interface
 by replacing ``readers.build_reader()`` with ``getters.build_getter()`` and
 ``schema.build_value_type()``.
 
@@ -429,7 +445,7 @@ Create a reader which translates a list of dicts into a mapping
     from staticconf import validation, readers
 
     def build_map_from_key_value(item):
-        return item['key'], ['value']
+        return item['key'], item['value']
 
     read_mapping = readers.build_reader(
         validation.build_map_type_validator(build_map_from_key_value))

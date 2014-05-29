@@ -69,10 +69,12 @@ def build_loader(loader_func):
     def loader(*args, **kwargs):
         err_on_unknown      = kwargs.pop('error_on_unknown', False)
         err_on_dupe         = kwargs.pop('error_on_duplicate', False)
+        flatten             = kwargs.pop('flatten', True)
         name                = kwargs.pop('namespace', config.DEFAULT)
 
         config_data = load_config_data(loader_func, *args, **kwargs)
-        config_data = dict(flatten_dict(config_data))
+        if flatten:
+            config_data = dict(flatten_dict(config_data))
         namespace   = config.get_namespace(name)
         namespace.apply_config_data(config_data, err_on_unknown, err_on_dupe)
         return config_data
@@ -82,8 +84,14 @@ def build_loader(loader_func):
 
 def yaml_loader(filename):
     import yaml
+    try:
+        from yaml import CLoader as Loader
+    except ImportError:
+        from yaml import Loader
+
     with open(filename) as fh:
-        return yaml.load(fh) or {}
+        return yaml.load(fh, Loader=Loader) or {}
+
 
 def json_loader(filename):
     try:
@@ -162,9 +170,8 @@ def xml_loader(filename, safe=False):
     return build_from_element(tree.getroot())
 
 
-split_pattern = re.compile(r'[=:]')
-
 def properties_loader(filename):
+    split_pattern = re.compile(r'[=:]')
 
     def parse_line(line):
         line = line.strip()

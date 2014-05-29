@@ -19,15 +19,22 @@ class ExtractValueTestCase(TestCase):
 
     def test_extract_value_unset(self):
         expected = [self.name, self.config_key]
-        assert_raises_and_contains(errors.ConfigurationError,
-            expected, lambda: self.value_proxy.value)
+        assert_raises_and_contains(
+                errors.ConfigurationError,
+                expected,
+                lambda: self.value_proxy.value)
 
     def test_get_value_fails_validation(self):
         expected = [self.name, self.config_key]
-        validator = mock.Mock(side_effect = validation.ValidationError)
-        _ = proxy.ValueProxy(validator, self.namespace, 'something.broken')
-        assert_raises_and_contains(errors.ConfigurationError,
-            expected, lambda: self.value_proxy.value)
+        validator = mock.Mock(side_effect=validation.ValidationError)
+        _ = proxy.ValueProxy(  # flake8: noqa
+                validator,
+                self.namespace,
+                'something.broken')
+        assert_raises_and_contains(
+                errors.ConfigurationError,
+                expected,
+                lambda: self.value_proxy.value)
 
 
 class ValueProxyTestCase(TestCase):
@@ -81,7 +88,7 @@ class ValueProxyTestCase(TestCase):
         assert_equal(value_proxy, the_date)
         assert value_proxy < datetime.datetime(2012, 12, 3)
         assert value_proxy > datetime.datetime(2012, 1, 4)
-        four_days_ahead = datetime.datetime(2012, 12, 4 ,5, 5, 5)
+        four_days_ahead = datetime.datetime(2012, 12, 4, 5, 5, 5)
         assert_equal(value_proxy + datetime.timedelta(days=3), four_days_ahead)
         assert_equal(repr(value_proxy), repr(the_date))
         assert_equal(str(value_proxy), str(the_date))
@@ -110,7 +117,7 @@ class ValueProxyTestCase(TestCase):
         validator = mock.Mock()
         value_proxy = proxy.ValueProxy(
             validator, self.value_cache, 'something.string')
-        value_proxy._value =  expected
+        value_proxy._value = expected
         assert_equal(value_proxy.value, expected)
         validator.assert_not_called()
 
