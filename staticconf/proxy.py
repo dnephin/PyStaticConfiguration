@@ -27,7 +27,7 @@ _special_names = [
     '__isub__', '__iter__', '__itruediv__', '__ixor__', '__le__', '__len__',
     '__long__', '__lshift__', '__lt__', '__mod__', '__mul__', '__ne__',
     '__neg__', '__oct__', '__or__', '__pos__', '__pow__', '__radd__',
-    '__rand__', '__rdiv__', '__rdivmod__', '__reduce__', '__reduce_ex__',
+    '__rand__', '__rdiv__', '__rdivmod__',
     '__repr__', '__reversed__', '__rfloorfiv__', '__rlshift__', '__rmod__',
     '__rmul__', '__ror__', '__rpow__', '__rrshift__', '__rshift__', '__rsub__',
     '__rtruediv__', '__rxor__', '__setitem__', '__setslice__', '__sub__',
