@@ -60,6 +60,9 @@ You can also create your own custom types:
 
 """
 import functools
+
+import six
+
 from staticconf import validation, proxy, config, errors, getters
 
 
@@ -156,7 +159,8 @@ class SchemaMeta(type):
                 return name, attribute
             return build_token(name, attribute)
 
-        attributes = dict(build_attr(*item) for item in attributes.iteritems())
+        attributes = dict(build_attr(*item)
+                          for item in six.iteritems(attributes))
         attributes['_tokens'] = tokens
         return attributes
 

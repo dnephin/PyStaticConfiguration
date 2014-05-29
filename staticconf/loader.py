@@ -7,23 +7,59 @@ Nested dictionaries are flattened using dotted notation.
     staticconf.YamlConfiguration('config.yaml')
 
 
+Configuration loaders accept the following kwargs:
+
+error_on_unknown
+    raises an error if there are keys in the config that have not been
+    defined by a getter or a schema
+
+optional
+    if True only warns on failure to load configuration (Default False)
+
+namespace
+    load the configuration values into a namespace. Defaults to the
+    `DEFAULT` namespace.
+
+flatten
+    flatten nested structures into a mapping with depth of 1 (Default True)
+
+
+.. versionadded:: 0.7.0
+    `flatten` was added as a kwarg to all loaders
+
+
+Custom Loader
+-------------
+
 You can create your own loaders for other formats by using
-``loader.build_loader()``.
+:func:`build_loader()`.
 
 .. code-block:: python
 
     from staticconf import loader
+
     def custom_loader(*args):
         ...
         return config_dict
 
     CustomConfiguration = loader.build_loader(custom_loader)
 
+    ...
+
+    # Use it to load config things returned from `custom_loader()`
+    # into the namespace
+    CustomConfiguration(some_arg1, namespace='this_namespace')
+
+
 ."""
 import logging
 import os
 import itertools
 import re
+
+import six
+from six.moves import reload_module
+
 from staticconf import config, errors
 
 __all__ = [
@@ -45,8 +81,8 @@ log = logging.getLogger(__name__)
 
 
 def flatten_dict(config_data):
-    for key, value in config_data.iteritems():
-        if hasattr(value, 'iteritems'):
+    for key, value in six.iteritems(config_data):
+        if hasattr(value, 'items') or hasattr(value, 'iteritems'):
             for k, v in flatten_dict(value):
                 yield '%s.%s' % (key, k), v
             continue
@@ -58,7 +94,7 @@ def load_config_data(loader_func, *args, **kwargs):
     optional = kwargs.pop('optional', False)
     try:
         return loader_func(*args, **kwargs)
-    except Exception, e:
+    except Exception as e:
         log.info("Optional configuration failed: %s" % e)
         if not optional:
             raise
@@ -126,7 +162,7 @@ def auto_loader(base_dir='.', auto_configurations=None):
 
 def python_loader(module_name):
     module = __import__(module_name, fromlist=['*'])
-    reload(module)
+    reload_module(module)
     return object_loader(module)
 
 
@@ -210,13 +246,67 @@ class CompositeConfiguration(object):
         return self.load()
 
 
-YamlConfiguration       = build_loader(yaml_loader)
-JSONConfiguration       = build_loader(json_loader)
-ListConfiguration       = build_loader(list_loader)
-DictConfiguration       = build_loader(lambda d: d)
-ObjectConfiguration     = build_loader(object_loader)
-AutoConfiguration       = build_loader(auto_loader)
-PythonConfiguration     = build_loader(python_loader)
-INIConfiguration        = build_loader(ini_file_loader)
-XMLConfiguration        = build_loader(xml_loader)
+YamlConfiguration = build_loader(yaml_loader)
+"""Load configuration from a yaml file.
+
+:param filename: path to a yaml file
+"""
+
+JSONConfiguration = build_loader(json_loader)
+"""Load configuration from a json file.
+
+:param filename: path to a json file
+"""
+
+ListConfiguration = build_loader(list_loader)
+"""Load configuration from a list of strings in the form `key=value`.
+
+:param seq: a sequence of strings
+"""
+
+DictConfiguration = build_loader(lambda d: d)
+"""Load configuration from a :class:`dict`.
+
+:param dict: a dictionary
+"""
+
+ObjectConfiguration = build_loader(object_loader)
+"""Load configuration from any object. Attributes are keys and the attribute
+value are values.
+
+:param object: an object
+"""
+
+AutoConfiguration = build_loader(auto_loader)
+"""
+.. deprecated:: v0.7.0
+    Do not use. It will be removed in future versions.
+"""
+
+
+PythonConfiguration = build_loader(python_loader)
+"""Load configuration from a python module.
+
+:param module: python path to a module as you would pass it to
+    :func:`__import__`
+"""
+
+
+INIConfiguration = build_loader(ini_file_loader)
+"""Load configuration from a .ini file
+
+:param filename: path to the ini file
+"""
+
+
+XMLConfiguration = build_loader(xml_loader)
+"""Load configuration from an XML file.
+
+:param filename: path to the XML file
+"""
+
 PropertiesConfiguration = build_loader(properties_loader)
+"""Load configuration from a properties file
+
+:param filename: path to the properties file
+"""

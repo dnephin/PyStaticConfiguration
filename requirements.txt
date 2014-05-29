@@ -1,6 +1,7 @@
--e .[yaml]
+-e .
 
 # Testing requirements
+pyyaml
 testify
 mock
 pyflakes

@@ -1,14 +1,14 @@
-try:
-    from setuptools import setup
-    assert setup
-except ImportError:
-    from distutils.core import setup
+import os.path
+from setuptools import setup
 
-import staticconf
+about = {}
+version_path = os.path.join(os.path.dirname(__file__), 'staticconf', 'version.py')
+with open(version_path) as f:
+    exec(f.read(), about)
 
 setup(
     name="PyStaticConfiguration",
-    version=staticconf.version,
+    version=about['version'],
     provides=["staticconf"],
     author="Daniel Nephin",
     author_email="dnephin@gmail.com",
@@ -25,4 +25,5 @@ setup(
         'yaml': ['pyyaml'],
     },
     packages=['staticconf'],
+    install_requires=['six',],
 )

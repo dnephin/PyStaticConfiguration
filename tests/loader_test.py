@@ -5,6 +5,8 @@ from testify.assertions import assert_raises, assert_not_in
 import tempfile
 import textwrap
 
+from six.moves import range
+
 from staticconf import loader, errors
 
 
@@ -295,7 +297,7 @@ class PropertiesConfigurationTestCase(LoaderTestCase):
 class CompositeConfigurationTestCase(TestCase):
 
     def test_load(self):
-        loaders = [(mock.Mock(return_value={i: 0}), 1, 2) for i in xrange(3)]
+        loaders = [(mock.Mock(return_value={i: 0}), 1, 2) for i in range(3)]
         composite = loader.CompositeConfiguration(loaders)
         assert_equal(composite.load(), {0: 0, 1: 0, 2: 0})
 

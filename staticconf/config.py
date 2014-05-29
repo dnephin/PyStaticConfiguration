@@ -1,6 +1,6 @@
 """
-Classes for storing configuration by namespace, and reloading configuration
-while files change.
+Store configuration in :class:`ConfigNamespace` objects and provide tools
+for reloading, validating and displaying help messages.
 """
 from collections import namedtuple
 import logging
@@ -8,6 +8,8 @@ import operator
 import os
 import time
 import weakref
+
+import six
 
 from staticconf import errors
 
@@ -19,9 +21,12 @@ DEFAULT = 'DEFAULT'
 
 
 def remove_by_keys(dictionary, keys):
-    """Remove keys from dict, and return a sequence of key/value pairs."""
     keys = set(keys)
-    return filter(lambda (k, v): k not in keys, dictionary.iteritems())
+
+    def filter_by_keys(item):
+        k, v = item
+        return k not in keys
+    return filter(filter_by_keys, six.iteritems(dictionary))
 
 
 class ConfigMap(object):
@@ -48,6 +53,11 @@ class ConfigMap(object):
 class ConfigNamespace(object):
     """A configuration namespace, which contains the list of value proxies
     and configuration values.
+
+    You will rarely interact with these objects directly unless you are
+    debugging. To load data into these objects see :mod:`staticconf.loader`. To
+    read config from them see :mod:`staticconf.readers`,
+    or :mod:`staticconf.schema`.
     """
 
     def __init__(self, name):
@@ -62,11 +72,9 @@ class ConfigNamespace(object):
         return self.value_proxies.values()
 
     def register_proxy(self, proxy):
-        """Register a new value proxy in this namespace."""
         self.value_proxies[id(proxy)] = proxy
 
     def apply_config_data(self, config_data, error_on_unknown, error_on_dupe):
-        """Validate, check for duplicates, and update the config."""
         self.validate_keys(config_data, error_on_unknown)
         self.has_duplicate_keys(config_data, error_on_dupe)
         self.update_values(config_data)
@@ -75,15 +83,14 @@ class ConfigNamespace(object):
         self.configuration_values.update(*args, **kwargs)
 
     def get_config_values(self):
+        """Return all configuration stored in this object as a dict.
+        """
         return self.configuration_values
 
     def get_known_keys(self):
         return set(vproxy.config_key for vproxy in self.get_value_proxies())
 
     def validate_keys(self, config_data, error_on_unknown):
-        """Raise an exception if error_on_unknown is true, and keys contains
-        a key which is not defined in a registeredValueProxy.
-        """
         unknown = remove_by_keys(config_data, self.get_known_keys())
         if not unknown:
             return
@@ -152,9 +159,16 @@ def reload(name=DEFAULT, all_names=False):
 
 
 def validate(name=DEFAULT, all_names=False):
-    """Access values in all registered proxies in a namespace. Missing values
-    raise ConfigurationError. Defaults to the DEFAULT namespace. If all_names
-     is True, validate all namespaces.
+    """Validate all registered keys after loading configuration.
+
+    Missing values or values which do not pass validation raise
+    :class:`staticconf.errors.ConfigurationError`. By default only validates
+    the `DEFAULT` namespace.
+
+    :param name: the namespace to validate
+    :type  name: string
+    :param all_names: if True validates all namespaces and ignores `name`
+    :type  all_names: boolean
     """
     for namespace in get_namespaces_from_names(name, all_names):
         all(value_proxy.get_value() for value_proxy in namespace.get_value_proxies())
@@ -193,7 +207,7 @@ class ConfigHelp(object):
             return -1 if lhs < rhs else 1
 
         return '\n'.join(format_namespace(*desc) for desc in
-                         sorted(self.descriptions.iteritems(),
+                         sorted(six.iteritems(self.descriptions),
                                 cmp=namespace_cmp,
                                 key=operator.itemgetter(0)))
 
@@ -240,7 +254,7 @@ class ConfigurationWatcher(object):
         self.reloader       = reloader or ReloadCallbackChain(all_names=True)
 
     def get_filename_list(self, filenames):
-        if isinstance(filenames, basestring):
+        if isinstance(filenames, six.string_types):
             filenames = [filenames]
         return sorted(os.path.abspath(name) for name in filenames)
 
@@ -299,7 +313,7 @@ class ReloadCallbackChain(object):
 
     def __call__(self):
         reload(name=self.namespace, all_names=self.all_names)
-        for callback in self.callbacks.itervalues():
+        for callback in six.itervalues(self.callbacks):
             callback()
 
 

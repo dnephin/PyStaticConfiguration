@@ -11,15 +11,21 @@ has the following design goals:
 * allow for easy extension of validators and loaders
 
 
+.. contents:: Contents
+    :local:
+    :depth: 1
+    :backlinks: none
+
+
+
+Build Status
+------------
+
 .. image:: https://travis-ci.org/dnephin/PyStaticConfiguration.svg?branch=master
     :alt: Travis CI build status
     :target: https://travis-ci.org/dnephin/PyStaticConfiguration
 
 
-.. contents:: Contents
-    :local:
-    :depth: 1
-    :backlinks: none
 
 
 Install
@@ -33,10 +39,13 @@ Install
     $ pip install PyStaticConfiguration
 
 
+Also see the 
+`release notes <http://pythonhosted.org/PyStaticConfiguration/release_notes.html>`_.
+
 Documentation
 -------------
-* Full documentation: http://pythonhosted.org/PyStaticConfiguration/
-* API reference: http://pythonhosted.org/PyStaticConfiguration/staticconf.html
+
+http://pythonhosted.org/PyStaticConfiguration/
 
 
 Overview
@@ -52,17 +61,6 @@ PyStaticConfiguration supports loading config values from many file formats
 and python structures. See the
 `full list of loaders <http://pythonhosted.org/PyStaticConfiguration/staticconf.html#module-staticconf.loader>`_.
 When the configuration is loaded, it is put into a ``ConfigNamespace`` object.
-Configuration loaders accept the following kwargs:
-
-error_on_unknown
-    raises an error if there are keys in the config that have not been
-    defined by a getter or a schema
-
-optional
-    if True only warns on failure to load configuration
-
-namespace
-    load the configuration values into a namespace. Defaults to the DEFAULT namespace.
 
 
 Multiple loaders can be used to override values from previous loaders.
@@ -80,8 +78,9 @@ Multiple loaders can be used to override values from previous loaders.
     # Further override with some command line options
     staticconf.ListConfiguration(opts.config_values)
 
-For configuration reloading see `Reloading configuration`_ .
+For configuration reloading see `Reloading configuration`_
 
+API docs: :doc:`loader`
 
 
 Reading configuration values
@@ -238,22 +237,6 @@ namespace
 
 Advanced usage
 --------------
-
-Testing
-~~~~~~~
-``MockConfiguration`` is a context manager provided in ``staticconf.testing``.
-It patches the configuration namespace while inside the context.
-
-.. code-block:: python
-
-    import staticconf.testing
-
-    config = {
-        ...
-    }
-    with staticconf.testing.MockConfiguration(config, namespace='special'):
-        # Run your tests.
-        ...
 
 
 Reloading configuration

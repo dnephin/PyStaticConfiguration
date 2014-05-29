@@ -1,2 +1,2 @@
 test_runner_name: full_suite
-command: ['testify', '-v', '--summary', 'tests']
+command: ['python', '-m', 'testify.test_program', '-v', '--summary', 'tests']
