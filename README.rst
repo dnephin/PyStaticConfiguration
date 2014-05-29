@@ -309,7 +309,7 @@ A ``ConfigFacade`` wraps up the ``ConfigurationWatcher`` and
         min_interval=3 # Wait at least 3 seconds before checking modified time
     )
 
-    watcher.add_callback(do_this_after_reload)
+    watcher.add_callback('identifier', do_this_after_reload)
     watcher.reload_if_changed()
 
 
