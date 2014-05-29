@@ -9,6 +9,8 @@ import os
 import time
 import weakref
 
+import six
+
 from staticconf import errors
 
 log = logging.getLogger(__name__)
@@ -20,7 +22,11 @@ DEFAULT = 'DEFAULT'
 
 def remove_by_keys(dictionary, keys):
     keys = set(keys)
-    return filter(lambda (k, v): k not in keys, dictionary.iteritems())
+
+    def filter_by_keys(item):
+        k, v = item
+        return k not in keys
+    return filter(filter_by_keys, six.iteritems(dictionary))
 
 
 class ConfigMap(object):
@@ -201,7 +207,7 @@ class ConfigHelp(object):
             return -1 if lhs < rhs else 1
 
         return '\n'.join(format_namespace(*desc) for desc in
-                         sorted(self.descriptions.iteritems(),
+                         sorted(six.iteritems(self.descriptions),
                                 cmp=namespace_cmp,
                                 key=operator.itemgetter(0)))
 
@@ -248,7 +254,7 @@ class ConfigurationWatcher(object):
         self.reloader       = reloader or ReloadCallbackChain(all_names=True)
 
     def get_filename_list(self, filenames):
-        if isinstance(filenames, basestring):
+        if isinstance(filenames, six.string_types):
             filenames = [filenames]
         return sorted(os.path.abspath(name) for name in filenames)
 
@@ -307,7 +313,7 @@ class ReloadCallbackChain(object):
 
     def __call__(self):
         reload(name=self.namespace, all_names=self.all_names)
-        for callback in self.callbacks.itervalues():
+        for callback in six.itervalues(self.callbacks):
             callback()
 
 

@@ -6,11 +6,13 @@ import logging
 import re
 import time
 
+import six
+
 from staticconf.errors import ValidationError
 
 
 def validate_string(value):
-    return None if value is None else unicode(value)
+    return None if value is None else six.text_type(value)
 
 
 def validate_bool(value):
@@ -86,7 +88,7 @@ def _validate_iterable(iterable_type, value):
     """Convert the iterable to iterable_type, or raise a Configuration
     exception.
     """
-    if isinstance(value, basestring):
+    if isinstance(value, six.string_types):
         msg = "Invalid iterable of type(%s): %s"
         raise ValidationError(msg % (tuple(value), value))
 
@@ -111,7 +113,7 @@ def validate_tuple(value):
 def validate_regex(value):
     try:
         return re.compile(value)
-    except (re.error, TypeError), e:
+    except (re.error, TypeError) as e:
         raise ValidationError("Invalid regex: %s, %s" % (e, value))
 
 
@@ -167,4 +169,4 @@ validators = {
 
 def get_validators():
     """Return an iterator of (validator_name, validator) pairs."""
-    return validators.iteritems()
+    return six.iteritems(validators)

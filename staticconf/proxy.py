@@ -4,7 +4,9 @@ values can be read statically at import time.
 """
 import functools
 import operator
+
 from staticconf import errors
+import six
 
 
 class UndefToken(object):
@@ -37,7 +39,7 @@ _special_names = [
 
 
 unary_funcs = {
-    '__unicode__':  unicode,
+    '__unicode__':  six.text_type,
     '__str__':      str,
     '__repr__':     repr,
     '__nonzero__':  bool,
@@ -88,7 +90,7 @@ def extract_value(proxy):
 
     try:
         return proxy.validator(value)
-    except errors.ValidationError, e:
+    except errors.ValidationError as e:
         raise errors.ConfigurationError("%s failed to validate %s: %s" %
             (proxy.namespace, proxy.config_key, e))
 

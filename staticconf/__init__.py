@@ -1,10 +1,8 @@
-from staticconf import config
-from staticconf.loader import *   # flake8: noqa
-from staticconf.getters import *  # flake8: noqa
-from staticconf.readers import *  # flake8: noqa
-
-
-version         = "0.7.0"
+from . import config
+from .version import version
+from .loader import *   # flake8: noqa
+from .getters import *  # flake8: noqa
+from .readers import *  # flake8: noqa
 
 view_help       = config.view_help
 reload          = config.reload

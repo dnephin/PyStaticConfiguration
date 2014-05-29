@@ -56,6 +56,10 @@ import logging
 import os
 import itertools
 import re
+
+import six
+from six.moves import reload_module
+
 from staticconf import config, errors
 
 __all__ = [
@@ -77,8 +81,8 @@ log = logging.getLogger(__name__)
 
 
 def flatten_dict(config_data):
-    for key, value in config_data.iteritems():
-        if hasattr(value, 'iteritems'):
+    for key, value in six.iteritems(config_data):
+        if hasattr(value, 'items') or hasattr(value, 'iteritems'):
             for k, v in flatten_dict(value):
                 yield '%s.%s' % (key, k), v
             continue
@@ -90,7 +94,7 @@ def load_config_data(loader_func, *args, **kwargs):
     optional = kwargs.pop('optional', False)
     try:
         return loader_func(*args, **kwargs)
-    except Exception, e:
+    except Exception as e:
         log.info("Optional configuration failed: %s" % e)
         if not optional:
             raise
@@ -158,7 +162,7 @@ def auto_loader(base_dir='.', auto_configurations=None):
 
 def python_loader(module_name):
     module = __import__(module_name, fromlist=['*'])
-    reload(module)
+    reload_module(module)
     return object_loader(module)
 
 
