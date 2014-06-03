@@ -1,5 +1,3 @@
-import contextlib
-
 import mock
 import pytest
 
@@ -46,12 +44,11 @@ class ATestingSchema(object):
 
 @pytest.yield_fixture
 def meta_schema():
-    with contextlib.nested(
-        mock.patch('staticconf.schema.config', autospec=True),
-        mock.patch('staticconf.schema.getters', autospec=True)
-    ) as (mock_config, mock_getters):
-        schema_object = ATestingSchema()
-        yield schema_object.__class__, mock_config, mock_getters
+    with mock.patch('staticconf.schema.config', autospec=True) as mock_config:
+        with mock.patch('staticconf.schema.getters',
+                        autospec=True) as mock_getters:
+            schema_object = ATestingSchema()
+            yield schema_object.__class__, mock_config, mock_getters
 
 
 class TestSchemaMeta(object):

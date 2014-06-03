@@ -62,9 +62,7 @@ class TestDateTimeValidation(object):
 class TestIterableValidation(object):
 
     def test_validate_list(self):
-        expected = range(3)
-        actual = validation.validate_list((0, 1, 2))
-        assert_equal(expected, actual)
+        assert_equal([0, 1, 2], validation.validate_list((0, 1, 2)))
 
     def test_validate_set(self):
         expected = set([3, 2, 1])
@@ -100,8 +98,7 @@ class TestBuildListOfTypeValidator(object):
     def test_build_list_of_type_ints_success(self):
         validator = validation.build_list_type_validator(
             validation.validate_int)
-        expected = range(3)
-        assert_equal(validator(['0', '1', '2']), expected)
+        assert_equal(validator(['0', '1', '2']), [0, 1, 2])
 
     def test_build_list_of_type_float_failed(self):
         validator = validation.build_list_type_validator(

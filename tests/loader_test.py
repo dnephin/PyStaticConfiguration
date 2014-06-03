@@ -4,6 +4,7 @@ import textwrap
 
 import mock
 import pytest
+import six
 from six.moves import range
 
 from testing.testifycompat import (
@@ -91,11 +92,11 @@ class TestBuildLoader(LoaderTestCase):
 
 class TestYamlConfiguration(LoaderTestCase):
 
-    content = textwrap.dedent("""
+    content = six.b(textwrap.dedent("""
         somekey:
             token: "smarties"
         another: blind
-    """)
+    """))
 
     def test_loader(self):
         config_data = loader.YamlConfiguration(self.tmpfile.name)
@@ -151,13 +152,13 @@ class TestPythonConfiguration(LoaderTestCase):
     module_file     = 'example_mod.py'
     compiled_file   = 'example_mod.pyc'
 
-    module_content  = textwrap.dedent("""
+    module_content  = six.b(textwrap.dedent("""
         some_value = "test"
 
         more_values = {
             "depth": "%s"
         }
-    """)
+    """))
 
     @pytest.yield_fixture(autouse=True)
     def teardown_module(self):
@@ -170,7 +171,7 @@ class TestPythonConfiguration(LoaderTestCase):
 
     @pytest.fixture(autouse=True)
     def setup_module(self):
-        self.create_module('one')
+        self.create_module(b'one')
 
     def create_module(self, value):
         self.remove_module()

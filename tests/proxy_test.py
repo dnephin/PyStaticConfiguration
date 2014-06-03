@@ -138,5 +138,5 @@ class TestValueProxy(object):
         value_proxy = proxy.ValueProxy(validator, self.value_cache, 'the_list')
         assert_equal(value_proxy, the_list)
         assert_in(2, value_proxy)
-        assert_equal(value_proxy[:1], [0])
+        assert_equal(value_proxy[:1], range(0, 1))
         assert_equal(len(value_proxy), 3)

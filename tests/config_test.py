@@ -1,4 +1,3 @@
-import contextlib
 import gc
 import mock
 import os
@@ -19,18 +18,18 @@ class TestRemoveByKeys(object):
 
     def test_empty_dict(self):
         keys = range(3)
-        assert_equal([], config.remove_by_keys({}, keys))
+        assert_equal([], list(config.remove_by_keys({}, keys)))
 
     def test_no_keys(self):
         keys = []
         map = dict(enumerate(range(3)))
-        assert_equal(map.items(), config.remove_by_keys(map, keys))
+        assert_equal(list(map.items()), list(config.remove_by_keys(map, keys)))
 
     def test_overlap(self):
         keys = [1, 3, 5 ,7]
         map = dict(enumerate(range(8)))
         expected = [(0,0), (2, 2), (4, 4), (6, 6)]
-        assert_equal(expected, config.remove_by_keys(map, keys))
+        assert_equal(expected, list(config.remove_by_keys(map, keys)))
 
 
 class TestConfigMap(object):
@@ -271,7 +270,7 @@ class TestConfigHelp(object):
         assert_equal(blank, '')
 
     def test_view_help_namespace_sort(self):
-        lines = filter(lambda l: l.startswith('Namespace'), self.lines)
+        lines = list(filter(lambda l: l.startswith('Namespace'), self.lines))
         expected = ['Namespace: DEFAULT', 'Namespace: Alpha', 'Namespace: Beta']
         assert_equal(lines, expected)
 
@@ -306,19 +305,17 @@ class TestConfigurationWatcher(object):
     @pytest.yield_fixture(autouse=True)
     def setup_mocks_and_config_watcher(self):
         self.loader = mock.Mock()
-        with contextlib.nested(
-            mock.patch('staticconf.config.time'),
-            mock.patch('staticconf.config.os.path'),
-            mock.patch('staticconf.config.os.stat'),
-            tempfile.NamedTemporaryFile()
-        ) as (self.mock_time, self.mock_path, self.mock_stat, file):
-            # Create the file
-            file.flush()
-            self.mock_stat.return_value.st_ino = 1
-            self.mock_stat.return_value.st_dev = 2
-            self.filename = file.name
-            self.watcher = config.ConfigurationWatcher(self.loader, self.filename)
-            yield
+        with mock.patch('staticconf.config.time') as self.mock_time:
+            with mock.patch('staticconf.config.os.stat') as self.mock_stat:
+                with tempfile.NamedTemporaryFile() as file:
+                    with mock.patch('staticconf.config.os.path') as self.mock_path:
+                        file.flush()
+                        self.mock_stat.return_value.st_ino = 1
+                        self.mock_stat.return_value.st_dev = 2
+                        self.filename = file.name
+                        self.watcher = config.ConfigurationWatcher(
+                                self.loader, self.filename)
+                        yield
 
     def test_get_filename_list_from_string(self):
         self.mock_path.abspath.side_effect = lambda p: p
@@ -453,7 +450,7 @@ class TestConfigFacadeAcceptance(object):
     @pytest.fixture(autouse=True)
     def setup_env(self):
         self.file = tempfile.NamedTemporaryFile()
-        self.write("""one: A""")
+        self.write(b"one: A")
 
     def write(self, content, mtime_seconds=0):
         time.sleep(0.03)
