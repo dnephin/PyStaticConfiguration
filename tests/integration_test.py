@@ -1,7 +1,5 @@
 import logging
 
-import pytest
-
 from testing.testifycompat import (
     assert_equal,
     assert_raises,
@@ -99,7 +97,3 @@ class TestMockConfiguration(object):
         assert not stars
         mock_config.teardown()
         assert_raises(errors.ConfigurationError, self.getters.get('two'))
-
-
-if __name__ == "__main__":
-    run()

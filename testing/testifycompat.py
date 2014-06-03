@@ -1,7 +1,7 @@
 """Compatiblity functions for py.test to migrate code from testify.
 """
-
 import pytest
+
 
 def assert_equal(left, right):
     assert left == right
@@ -15,7 +15,6 @@ def assert_raises_and_contains(exc, text, func, *args, **kwargs):
     text = text if isinstance(text, list) else [text]
     for item in text:
         assert item in str(excinfo.exconly())
-            
 
 
 def assert_raises(exc, func, *args, **kwargs):

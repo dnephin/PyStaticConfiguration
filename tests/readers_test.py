@@ -7,7 +7,6 @@ from testing.testifycompat import (
 )
 from staticconf import config, readers, proxy, errors, testing
 
-    
 
 class TestBuildReader(object):
 

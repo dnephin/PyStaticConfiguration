@@ -57,6 +57,7 @@ class TestConfigMap(object):
     def test_len(self):
         assert_equal(len(self.config_map), 3)
 
+
 class TestConfigurationNamespace(object):
 
     @pytest.fixture(autouse=True)

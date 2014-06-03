@@ -33,7 +33,7 @@ class LoaderTestCase(object):
         self.tmpfile.flush()
 
 
-class ListConfigurationTestCase(LoaderTestCase):
+class TestListConfiguration(LoaderTestCase):
 
     def test_loader(self):
         overrides = ['something=1', 'max=two']
@@ -42,7 +42,7 @@ class ListConfigurationTestCase(LoaderTestCase):
         assert_equal(config_data, expected)
 
 
-class FlattenDictTestCase(LoaderTestCase):
+class TestFlattenDict(LoaderTestCase):
 
     source = {
         'zero': 0,
@@ -65,7 +65,7 @@ class FlattenDictTestCase(LoaderTestCase):
         assert_equal(actual, self.expected)
 
 
-class BuildLoaderTestCase(LoaderTestCase):
+class TestBuildLoader(LoaderTestCase):
 
     def test_build_loader(self):
         loader_func = mock.Mock()
@@ -89,7 +89,7 @@ class BuildLoaderTestCase(LoaderTestCase):
         assert_equal(config, source)
 
 
-class YamlConfigurationTestCase(LoaderTestCase):
+class TestYamlConfiguration(LoaderTestCase):
 
     content = textwrap.dedent("""
         somekey:
@@ -103,7 +103,7 @@ class YamlConfigurationTestCase(LoaderTestCase):
         assert_equal(config_data['somekey.token'], 'smarties')
 
 
-class JSONConfigurationTestCase(LoaderTestCase):
+class TestJSONConfiguration(LoaderTestCase):
 
     content = '{"somekey": {"token": "smarties"}, "another": "blind"}'
 
@@ -113,7 +113,7 @@ class JSONConfigurationTestCase(LoaderTestCase):
         assert_equal(config_data['somekey.token'], 'smarties')
 
 
-class AutoConfigurationTestCase(LoaderTestCase):
+class TestAutoConfiguration(LoaderTestCase):
 
     @pytest.fixture(autouse=True)
     def setup_filename(self):
@@ -145,7 +145,7 @@ class AutoConfigurationTestCase(LoaderTestCase):
         assert_raises(errors.ConfigurationError, loader.AutoConfiguration)
 
 
-class PythonConfigurationTestCase(LoaderTestCase):
+class TestPythonConfiguration(LoaderTestCase):
 
     module          = 'example_mod'
     module_file     = 'example_mod.py'
@@ -160,8 +160,11 @@ class PythonConfigurationTestCase(LoaderTestCase):
     """)
 
     @pytest.yield_fixture(autouse=True)
-    def remove_module(self):
+    def teardown_module(self):
         yield
+        self.remove_module()
+
+    def remove_module(self):
         for filename in [self.module_file, self.compiled_file]:
             os.remove(filename) if os.path.exists(filename) else None
 
@@ -187,7 +190,7 @@ class PythonConfigurationTestCase(LoaderTestCase):
         assert_equal(config_data['more_values.depth'], 'two')
 
 
-class INIConfigurationTestCase(LoaderTestCase):
+class TestINIConfiguration(LoaderTestCase):
 
     content = textwrap.dedent("""
         [Something]
@@ -206,7 +209,7 @@ class INIConfigurationTestCase(LoaderTestCase):
         assert_equal(config_data['Business.why'], 'not today')
 
 
-class XMLConfigurationTestCase(LoaderTestCase):
+class TestXMLConfiguration(LoaderTestCase):
 
     content = """
         <config>
@@ -260,7 +263,7 @@ class XMLConfigurationTestCase(LoaderTestCase):
                 safe=True)
 
 
-class PropertiesConfigurationTestCase(LoaderTestCase):
+class TestPropertiesConfiguration(LoaderTestCase):
 
     content = textwrap.dedent("""
         stars = in the sky
@@ -315,7 +318,7 @@ class StubObject(object):
     __really_private = 'hidden'
 
 
-class ObjectConfigurationTestCase(LoaderTestCase):
+class TestObjectConfiguration(LoaderTestCase):
 
     def test_load(self):
         config_data = loader.ObjectConfiguration(StubObject)
