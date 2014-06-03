@@ -1,25 +1,29 @@
 import os
-import mock
-from testify import assert_equal, TestCase, run, teardown, setup
-from testify.assertions import assert_raises, assert_not_in
 import tempfile
 import textwrap
 
+import mock
+import pytest
 from six.moves import range
 
+from testing.testifycompat import (
+    assert_equal,
+    assert_raises,
+    assert_not_in,
+)
 from staticconf import loader, errors
 
 
-class LoaderTestCase(TestCase):
+class LoaderTestCase(object):
 
     content = None
 
-    @setup
+    @pytest.yield_fixture(autouse=True)
     def mock_config(self):
-        self.patcher = mock.patch('staticconf.config')
-        self.mock_config = self.patcher.start()
+        with mock.patch('staticconf.config') as self.mock_config:
+            yield
 
-    @setup
+    @pytest.fixture(autouse=True)
     def write_content_to_file(self, content=None):
         content = content or self.content
         if not content:
@@ -27,10 +31,6 @@ class LoaderTestCase(TestCase):
         self.tmpfile = tempfile.NamedTemporaryFile()
         self.tmpfile.write(content)
         self.tmpfile.flush()
-
-    @teardown
-    def clear_configuration(self):
-        self.patcher.stop()
 
 
 class ListConfigurationTestCase(LoaderTestCase):
@@ -115,12 +115,13 @@ class JSONConfigurationTestCase(LoaderTestCase):
 
 class AutoConfigurationTestCase(LoaderTestCase):
 
-    @setup
+    @pytest.fixture(autouse=True)
     def setup_filename(self):
         self.filename = None
 
-    @teardown
+    @pytest.yield_fixture(autouse=True)
     def cleanup_file(self):
+        yield
         if self.filename:
             os.unlink(self.filename)
 
@@ -158,12 +159,13 @@ class PythonConfigurationTestCase(LoaderTestCase):
         }
     """)
 
-    @teardown
+    @pytest.yield_fixture(autouse=True)
     def remove_module(self):
+        yield
         for filename in [self.module_file, self.compiled_file]:
             os.remove(filename) if os.path.exists(filename) else None
 
-    @setup
+    @pytest.fixture(autouse=True)
     def setup_module(self):
         self.create_module('one')
 
@@ -294,7 +296,7 @@ class PropertiesConfigurationTestCase(LoaderTestCase):
                 self.tmpfile.name)
 
 
-class CompositeConfigurationTestCase(TestCase):
+class TestCompositeConfiguration(object):
 
     def test_load(self):
         loaders = [(mock.Mock(return_value={i: 0}), 1, 2) for i in range(3)]
@@ -322,7 +324,3 @@ class ObjectConfigurationTestCase(LoaderTestCase):
         assert_equal(config_data['hour'], 15)
         assert_not_in('_private', config_data)
         assert_not_in('__really_private', config_data)
-
-
-if __name__ == "__main__":
-    run()

@@ -1,14 +1,19 @@
 import datetime
-import mock
-from testify import run, assert_equal, TestCase, setup
-from testify.assertions import assert_raises_and_contains, assert_in
 
+import mock
+import pytest
+
+from testing.testifycompat import (
+    assert_equal,
+    assert_raises_and_contains,
+    assert_in,
+)
 from staticconf import proxy, validation, errors, config
 
 
-class ExtractValueTestCase(TestCase):
+class TestExtractValue(object):
 
-    @setup
+    @pytest.fixture(autouse=True)
     def setup_configuration_values(self):
         validator = mock.Mock(return_value=2)
         self.name = 'test_namespace'
@@ -37,9 +42,9 @@ class ExtractValueTestCase(TestCase):
                 lambda: self.value_proxy.value)
 
 
-class ValueProxyTestCase(TestCase):
+class TestValueProxy(object):
 
-    @setup
+    @pytest.fixture(autouse=True)
     def setup_configuration_values(self):
         self.value_cache = {
             'something': 2,
@@ -135,7 +140,3 @@ class ValueProxyTestCase(TestCase):
         assert_in(2, value_proxy)
         assert_equal(value_proxy[:1], [0])
         assert_equal(len(value_proxy), 3)
-
-
-if __name__ == "__main__":
-    run()

@@ -4,14 +4,18 @@ import mock
 import os
 import tempfile
 import time
-from testify import run, assert_equal, TestCase, setup, setup_teardown
-from testify.assertions import assert_raises
 
+import pytest
+
+from testing.testifycompat import (
+    assert_equal,
+    assert_raises,
+)
 from staticconf import config, errors, testing, proxy, validation, schema
 import staticconf
 
 
-class TestRemoveByKeys(TestCase):
+class TestRemoveByKeys(object):
 
     def test_empty_dict(self):
         keys = range(3)
@@ -29,9 +33,9 @@ class TestRemoveByKeys(TestCase):
         assert_equal(expected, config.remove_by_keys(map, keys))
 
 
-class ConfigMapTestCase(TestCase):
+class TestConfigMap(object):
 
-    @setup
+    @pytest.fixture(autouse=True)
     def setup_config_map(self):
         self.config_map = config.ConfigMap(one=1, three=3, seven=7)
 
@@ -53,9 +57,9 @@ class ConfigMapTestCase(TestCase):
     def test_len(self):
         assert_equal(len(self.config_map), 3)
 
-class ConfigurationNamespaceTestCase(TestCase):
+class TestConfigurationNamespace(object):
 
-    @setup
+    @pytest.fixture(autouse=True)
     def setup_namespace(self):
         self.name = 'the_name'
         self.namespace = config.ConfigNamespace(self.name)
@@ -121,9 +125,9 @@ class ConfigurationNamespaceTestCase(TestCase):
         assert_equal(self.namespace.get_config_values(), {})
 
 
-class GetNamespaceTestCase(TestCase):
+class TestGetNamespace(object):
 
-    @setup_teardown
+    @pytest.yield_fixture(autouse=True)
     def mock_namespaces(self):
         with mock.patch.dict(config.configuration_namespaces):
             yield
@@ -140,9 +144,9 @@ class GetNamespaceTestCase(TestCase):
         assert_equal(namespace, config.get_namespace(name))
 
 
-class ReloadTestCase(TestCase):
+class TestReload(object):
 
-    @setup_teardown
+    @pytest.yield_fixture(autouse=True)
     def mock_namespaces(self):
         with mock.patch.dict(config.configuration_namespaces):
             yield
@@ -185,9 +189,9 @@ class ReloadTestCase(TestCase):
         assert_equal(two, 'three')
 
 
-class ValidateConfigTestCase(TestCase):
+class TestValidateConfig(object):
 
-    @setup_teardown
+    @pytest.yield_fixture(autouse=True)
     def patch_config(self):
         with mock.patch.dict(config.configuration_namespaces, clear=True):
             with testing.MockConfiguration():
@@ -234,9 +238,9 @@ class ValidateConfigTestCase(TestCase):
                       all_names=True)
 
 
-class ConfigHelpTestCase(TestCase):
+class TestConfigHelp(object):
 
-    @setup
+    @pytest.fixture(autouse=True)
     def setup_config_help(self):
         self.config_help = config.ConfigHelp()
         self.config_help.add('one',
@@ -271,9 +275,9 @@ class ConfigHelpTestCase(TestCase):
         assert_equal(lines, expected)
 
 
-class HasDuplicateKeysTestCase(TestCase):
+class TestHasDuplicateKeys(object):
 
-    @setup
+    @pytest.fixture(autouse=True)
     def setup_base_conf(self):
         self.base_conf = {'fear': 'is_the', 'mind': 'killer'}
 
@@ -296,9 +300,9 @@ class HasDuplicateKeysTestCase(TestCase):
         assert config.has_duplicate_keys(config_data, self.base_conf, False)
 
 
-class ConfigurationWatcherTestCase(TestCase):
+class TestConfigurationWatcher(object):
 
-    @setup_teardown
+    @pytest.yield_fixture(autouse=True)
     def setup_mocks_and_config_watcher(self):
         self.loader = mock.Mock()
         with contextlib.nested(
@@ -380,9 +384,9 @@ class ConfigurationWatcherTestCase(TestCase):
         reloader.assert_called_with()
 
 
-class ReloadCallbackChainTestCase(TestCase):
+class TestReloadCallbackChain(object):
 
-    @setup
+    @pytest.fixture(autouse=True)
     def setup_callback_chain(self):
         self.callbacks = list(enumerate([mock.Mock(), mock.Mock()]))
         self.callback_chain = config.ReloadCallbackChain(callbacks=self.callbacks)
@@ -406,9 +410,9 @@ class ReloadCallbackChainTestCase(TestCase):
                 mock_reload.assert_called_with(name='the_namespace', all_names=False)
 
 
-class ConfigFacadeTestCase(TestCase):
+class TestConfigFacade(object):
 
-    @setup_teardown
+    @pytest.yield_fixture(autouse=True)
     def patch_watcher(self):
         patcher = mock.patch(
                 'staticconf.config.ConfigurationWatcher',
@@ -416,7 +420,7 @@ class ConfigFacadeTestCase(TestCase):
         with patcher as self.mock_config_watcher:
             yield
 
-    @setup
+    @pytest.fixture(autouse=True)
     def setup_facade(self):
         self.watcher = mock.create_autospec(config.ConfigurationWatcher)
         self.watcher.get_reloader.return_value = mock.create_autospec(
@@ -442,11 +446,10 @@ class ConfigFacadeTestCase(TestCase):
         self.watcher.reload_if_changed.assert_called_with(force=False)
 
 
-class ConfigFacadeAcceptanceTest(TestCase):
+@pytest.mark.acceptance
+class TestConfigFacadeAcceptance(object):
 
-    _suites = ['acceptance']
-
-    @setup
+    @pytest.fixture(autouse=True)
     def setup_env(self):
         self.file = tempfile.NamedTemporaryFile()
         self.write("""one: A""")
@@ -459,7 +462,7 @@ class ConfigFacadeAcceptanceTest(TestCase):
         tstamp = time.time() + mtime_seconds
         os.utime(self.file.name, (tstamp, tstamp))
 
-    @setup_teardown
+    @pytest.yield_fixture(autouse=True)
     def patch_namespace(self):
         self.namespace = 'testing_namespace'
         with testing.MockConfiguration(namespace=self.namespace):
@@ -495,9 +498,9 @@ class ConfigFacadeAcceptanceTest(TestCase):
         assert_equal(loader.call_count, 2)
 
 
-class BuildLoaderCallable(TestCase):
+class TestBuildLoaderCallable(object):
 
-    @setup_teardown
+    @pytest.yield_fixture(autouse=True)
     def patch_namespace(self):
         self.namespace = 'the_namespace'
         patcher = mock.patch('staticconf.config.get_namespace', autospec=True)
@@ -514,7 +517,3 @@ class BuildLoaderCallable(TestCase):
         mock_namespace.clear.assert_called_with()
         load_func.assert_called_with(filename, namespace=self.namespace)
         assert_equal(result, load_func.return_value)
-
-
-if __name__ == "__main__":
-    run()

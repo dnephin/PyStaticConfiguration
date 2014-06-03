@@ -1,18 +1,11 @@
 import datetime
 import logging
 
-import pytest
-
 from staticconf import validation, errors
-
-
-def assert_equal(left, right):
-    assert left == right
-
-def assert_raises_and_contains(exc, text, func, *args, **kwargs):
-    with pytest.raises(exc) as excinfo:
-        func(*args, **kwargs)
-    assert text in str(excinfo.exconly())
+from testing.testifycompat import (
+    assert_equal,
+    assert_raises_and_contains,
+)
 
 
 class TestValidation(object):

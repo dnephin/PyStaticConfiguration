@@ -1,15 +1,18 @@
 import mock
-from testify import TestCase, setup
-from testify.assertions import assert_equal, assert_raises
-from testify import setup_teardown
+import pytest
 
+from testing.testifycompat import (
+    assert_equal,
+    assert_raises,
+)
 from staticconf import config, readers, proxy, errors, testing
 
+    
 
-class BuildReaderTestCase(TestCase):
+class TestBuildReader(object):
 
-    @setup
-    def setup_namespace(self):
+    @pytest.fixture(autouse=True)
+    def namespace(self):
         self.namespace = mock.create_autospec(config.ConfigNamespace)
 
     def test_read_config_success(self):
@@ -29,16 +32,16 @@ class BuildReaderTestCase(TestCase):
 
     @mock.patch('staticconf.readers.config.get_namespace', autospec=True)
     def test_build_reader(self, mock_get_namespace):
-        config_key, validator, namespace = 'the_key', mock.Mock(), 'the_name'
-        reader = readers.build_reader(validator, namespace)
+        config_key, validator, self.namespace = 'the_key', mock.Mock(), 'the_name'
+        reader = readers.build_reader(validator, self.namespace)
         value = reader(config_key)
-        mock_get_namespace.assert_called_with(namespace)
+        mock_get_namespace.assert_called_with(self.namespace)
         validator.assert_called_with(
             mock_get_namespace.return_value.get.return_value)
         assert_equal(value, validator.return_value)
 
 
-class NamespaceReaderTestCase(TestCase):
+class TestNamespaceReader(object):
 
     config = {
         'one':     '1',
@@ -46,7 +49,7 @@ class NamespaceReaderTestCase(TestCase):
         'options': ['seven', 'stars']
     }
 
-    @setup_teardown
+    @pytest.yield_fixture(autouse=True)
     def patch_config(self):
         self.namespace = 'the_name'
         with testing.MockConfiguration(self.config, namespace=self.namespace):

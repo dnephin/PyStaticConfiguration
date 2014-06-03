@@ -1,12 +1,17 @@
 import mock
-from testify import TestCase, assert_equal, run, setup_teardown, setup
-from testify.assertions import assert_in, assert_is
+import pytest
+
+from testing.testifycompat import (
+    assert_equal,
+    assert_in,
+    assert_is,
+)
 from staticconf import getters, config, testing
 
 
-class BuildGetterTestCase(TestCase):
+class TestBuildGetter(object):
 
-    @setup_teardown
+    @pytest.yield_fixture(autouse=True)
     def teardown_proxies(self):
         with testing.MockConfiguration():
             yield
@@ -33,9 +38,9 @@ class BuildGetterTestCase(TestCase):
         assert_equal(value_proxy.namespace, namespace)
 
 
-class NamespaceGettersTestCase(TestCase):
+class TestNamespaceGetters(object):
 
-    @setup_teardown
+    @pytest.yield_fixture(autouse=True)
     def teardown_proxies(self):
         self.namespace = 'the_test_namespace'
         with testing.MockConfiguration(namespace=self.namespace):
@@ -54,15 +59,15 @@ class NamespaceGettersTestCase(TestCase):
             assert_in(id(proxy), namespace.value_proxies)
 
 
-class ProxyFactoryTestCase(TestCase):
+class TestProxyFactory(object):
 
-    @setup_teardown
+    @pytest.yield_fixture(autouse=True)
     def patch_registries(self):
         patcher = mock.patch('staticconf.getters.register_value_proxy')
         with patcher as self.mock_register:
             yield
 
-    @setup
+    @pytest.fixture(autouse=True)
     def setup_factory(self):
         self.factory = getters.ProxyFactory()
         self.validator = mock.Mock()
@@ -93,7 +98,3 @@ class ProxyFactoryTestCase(TestCase):
         args = self.validator, self.namespace, self.config_key, [], self.help
         self.factory.build(*args)
         assert_in(repr(args[:-1]), self.factory.proxies)
-
-
-if __name__ == "__main__":
-    run()
