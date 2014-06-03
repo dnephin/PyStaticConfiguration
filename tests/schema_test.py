@@ -23,7 +23,7 @@ class TestCreateValueType(object):
         assert_equal(value_def.config_key, config_key)
 
 
-class TestingSchema(object):
+class ATestingSchema(object):
     __metaclass__ = schema.SchemaMeta
 
     namespace = 'my_testing_namespace'
@@ -44,14 +44,13 @@ class TestingSchema(object):
     options = schema.list_of_bool()
 
 
-
 @pytest.yield_fixture
 def meta_schema():
     with contextlib.nested(
         mock.patch('staticconf.schema.config', autospec=True),
         mock.patch('staticconf.schema.getters', autospec=True)
     ) as (mock_config, mock_getters):
-        schema_object = TestingSchema()
+        schema_object = ATestingSchema()
         yield schema_object.__class__, mock_config, mock_getters
 
 
@@ -94,14 +93,14 @@ def testing_schema_namespace():
         'my.thing.two': 'another',
         'my.thing.three.four': 'deeper'
     }
-    with testing.MockConfiguration(conf, namespace=TestingSchema.namespace):
+    with testing.MockConfiguration(conf, namespace=ATestingSchema.namespace):
         yield
 
 
 class TestSchemaAcceptance(object):
 
     def test_schema(self, testing_schema_namespace):
-        config_schema = TestingSchema()
+        config_schema = ATestingSchema()
         assert_equal(config_schema.some_value, 'deeper')
         assert_equal(config_schema.one, 1)
         assert_equal(config_schema.two, 'another')
