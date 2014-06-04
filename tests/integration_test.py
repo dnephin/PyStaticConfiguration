@@ -1,7 +1,9 @@
 import logging
 
-from testify import assert_equal, TestCase, run, assert_raises
-
+from testing.testifycompat import (
+    assert_equal,
+    assert_raises,
+)
 import staticconf
 from staticconf import testing, errors
 
@@ -22,7 +24,7 @@ class SomeClass(object):
     real_min  = staticconf.get_int('SomeClass.min', namespace=alt_name)
 
 
-class EndToEndTestCase(TestCase):
+class TestEndToEnd(object):
 
     config = {
         'SomeClass': {
@@ -70,7 +72,7 @@ class EndToEndTestCase(TestCase):
         assert_equal(staticconf.read_list_of_int('options'), [1, 7, 3, 9])
 
 
-class MockConfigurationTestCase(TestCase):
+class TestMockConfiguration(object):
 
     namespace = 'UniqueNamespaceForMockConfigurationTesting'
     getters = staticconf.NamespaceGetters(namespace)
@@ -95,7 +97,3 @@ class MockConfigurationTestCase(TestCase):
         assert not stars
         mock_config.teardown()
         assert_raises(errors.ConfigurationError, self.getters.get('two'))
-
-
-if __name__ == "__main__":
-    run()

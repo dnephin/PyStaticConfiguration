@@ -4,7 +4,6 @@ for reloading, validating and displaying help messages.
 """
 from collections import namedtuple
 import logging
-import operator
 import os
 import time
 import weakref
@@ -69,7 +68,7 @@ class ConfigNamespace(object):
         return self.name
 
     def get_value_proxies(self):
-        return self.value_proxies.values()
+        return list(self.value_proxies.values())
 
     def register_proxy(self, proxy):
         self.value_proxies[id(proxy)] = proxy
@@ -199,17 +198,13 @@ class ConfigHelp(object):
                     key,
                     '\n'.join(sorted(format_desc(desc) for desc in desc_list)))
 
-        def namespace_cmp(lhs, rhs):
-            if lhs == DEFAULT:
-                return -1
-            if rhs == DEFAULT:
-                return 1
-            return -1 if lhs < rhs else 1
+        def namespace_cmp(item):
+            name, _ = item
+            return chr(0) if name == DEFAULT else name
 
         return '\n'.join(format_namespace(*desc) for desc in
                          sorted(six.iteritems(self.descriptions),
-                                cmp=namespace_cmp,
-                                key=operator.itemgetter(0)))
+                                key=namespace_cmp))
 
     def clear(self):
         self.descriptions.clear()

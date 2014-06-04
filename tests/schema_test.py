@@ -1,11 +1,14 @@
-import contextlib
 import mock
-from testify import TestCase, assert_equal, setup_teardown
-from testify.assertions import assert_raises
+import pytest
+
+from testing.testifycompat import (
+    assert_equal,
+    assert_raises,
+)
 from staticconf import testing, schema, validation, config, errors
 
 
-class CreateValueTypeTestCase(TestCase):
+class TestCreateValueType(object):
 
     def test_build_value_type(self):
         help_text = 'what?'
@@ -18,7 +21,7 @@ class CreateValueTypeTestCase(TestCase):
         assert_equal(value_def.config_key, config_key)
 
 
-class TestingSchema(object):
+class ATestingSchema(object):
     __metaclass__ = schema.SchemaMeta
 
     namespace = 'my_testing_namespace'
@@ -39,59 +42,62 @@ class TestingSchema(object):
     options = schema.list_of_bool()
 
 
-class SchemaMetaTestCase(TestCase):
+@pytest.yield_fixture
+def meta_schema():
+    with mock.patch('staticconf.schema.config', autospec=True) as mock_config:
+        with mock.patch('staticconf.schema.getters',
+                        autospec=True) as mock_getters:
+            schema_object = ATestingSchema()
+            yield schema_object.__class__, mock_config, mock_getters
 
-    @setup_teardown
-    def mock_config(self):
-        with contextlib.nested(
-            mock.patch('staticconf.schema.config', autospec=True),
-            mock.patch('staticconf.schema.getters', autospec=True)
-        ) as (self.mock_config, self.mock_getters):
-            self.scheme_object = TestingSchema()
-            self.meta = self.scheme_object.__class__
-            yield
 
-    def test_get_namespace_missing(self):
-        assert_raises(errors.ConfigurationError, self.meta.get_namespace, {})
+class TestSchemaMeta(object):
 
-    def test_get_namespace_present(self):
+    def test_get_namespace_missing(self, meta_schema):
+        meta, _, _ = meta_schema
+        assert_raises(errors.ConfigurationError, meta.get_namespace, {})
+
+    def test_get_namespace_present(self, meta_schema):
+        meta, mock_config, _ = meta_schema
         name = 'the_namespace'
-        namespace = self.meta.get_namespace({'namespace': name})
-        self.mock_config.get_namespace.assert_called_with(name)
-        assert_equal(namespace, self.mock_config.get_namespace.return_value)
+        namespace = meta.get_namespace({'namespace': name})
+        mock_config.get_namespace.assert_called_with(name)
+        assert_equal(namespace, mock_config.get_namespace.return_value)
 
-    def test_build_attributes(self):
+    def test_build_attributes(self, meta_schema):
+        meta, _, mock_getters = meta_schema
         value_def = mock.create_autospec(schema.ValueTypeDefinition)
         attributes = {
             'not_a_token': None,
             'a_token': value_def
         }
         namespace = mock.create_autospec(config.ConfigNamespace)
-        attributes = self.meta.build_attributes(attributes, namespace)
+        attributes = meta.build_attributes(attributes, namespace)
         assert_equal(attributes['not_a_token'], None)
         assert_equal(attributes['_tokens'].keys(), ['a_token'])
         token = attributes['_tokens']['a_token']
         assert_equal(token.config_key, value_def.config_key)
         assert_equal(token.default, value_def.default)
         assert isinstance(attributes['a_token'], property)
-        self.mock_getters.register_value_proxy.assert_called_with(
+        mock_getters.register_value_proxy.assert_called_with(
             namespace, token, value_def.help)
 
 
-class SchemaAcceptanceTestCase(TestCase):
+@pytest.yield_fixture
+def testing_schema_namespace():
+    conf = {
+        'my.thing.one': '1',
+        'my.thing.two': 'another',
+        'my.thing.three.four': 'deeper'
+    }
+    with testing.MockConfiguration(conf, namespace=ATestingSchema.namespace):
+        yield
 
-    @setup_teardown
-    def setup_config(self):
-        conf = {
-            'my.thing.one': '1',
-            'my.thing.two': 'another',
-            'my.thing.three.four': 'deeper'
-        }
-        with testing.MockConfiguration(conf, namespace=TestingSchema.namespace):
-            yield
 
-    def test_schema(self):
-        config_schema = TestingSchema()
+class TestSchemaAcceptance(object):
+
+    def test_schema(self, testing_schema_namespace):
+        config_schema = ATestingSchema()
         assert_equal(config_schema.some_value, 'deeper')
         assert_equal(config_schema.one, 1)
         assert_equal(config_schema.two, 'another')

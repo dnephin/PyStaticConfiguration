@@ -1,25 +1,30 @@
 import os
-import mock
-from testify import assert_equal, TestCase, run, teardown, setup
-from testify.assertions import assert_raises, assert_not_in
 import tempfile
 import textwrap
 
+import mock
+import pytest
+import six
 from six.moves import range
 
+from testing.testifycompat import (
+    assert_equal,
+    assert_raises,
+    assert_not_in,
+)
 from staticconf import loader, errors
 
 
-class LoaderTestCase(TestCase):
+class LoaderTestCase(object):
 
     content = None
 
-    @setup
+    @pytest.yield_fixture(autouse=True)
     def mock_config(self):
-        self.patcher = mock.patch('staticconf.config')
-        self.mock_config = self.patcher.start()
+        with mock.patch('staticconf.config') as self.mock_config:
+            yield
 
-    @setup
+    @pytest.fixture(autouse=True)
     def write_content_to_file(self, content=None):
         content = content or self.content
         if not content:
@@ -28,12 +33,8 @@ class LoaderTestCase(TestCase):
         self.tmpfile.write(content)
         self.tmpfile.flush()
 
-    @teardown
-    def clear_configuration(self):
-        self.patcher.stop()
 
-
-class ListConfigurationTestCase(LoaderTestCase):
+class TestListConfiguration(LoaderTestCase):
 
     def test_loader(self):
         overrides = ['something=1', 'max=two']
@@ -42,7 +43,7 @@ class ListConfigurationTestCase(LoaderTestCase):
         assert_equal(config_data, expected)
 
 
-class FlattenDictTestCase(LoaderTestCase):
+class TestFlattenDict(LoaderTestCase):
 
     source = {
         'zero': 0,
@@ -65,7 +66,7 @@ class FlattenDictTestCase(LoaderTestCase):
         assert_equal(actual, self.expected)
 
 
-class BuildLoaderTestCase(LoaderTestCase):
+class TestBuildLoader(LoaderTestCase):
 
     def test_build_loader(self):
         loader_func = mock.Mock()
@@ -89,13 +90,13 @@ class BuildLoaderTestCase(LoaderTestCase):
         assert_equal(config, source)
 
 
-class YamlConfigurationTestCase(LoaderTestCase):
+class TestYamlConfiguration(LoaderTestCase):
 
-    content = textwrap.dedent("""
+    content = six.b(textwrap.dedent("""
         somekey:
             token: "smarties"
         another: blind
-    """)
+    """))
 
     def test_loader(self):
         config_data = loader.YamlConfiguration(self.tmpfile.name)
@@ -103,7 +104,7 @@ class YamlConfigurationTestCase(LoaderTestCase):
         assert_equal(config_data['somekey.token'], 'smarties')
 
 
-class JSONConfigurationTestCase(LoaderTestCase):
+class TestJSONConfiguration(LoaderTestCase):
 
     content = '{"somekey": {"token": "smarties"}, "another": "blind"}'
 
@@ -113,14 +114,15 @@ class JSONConfigurationTestCase(LoaderTestCase):
         assert_equal(config_data['somekey.token'], 'smarties')
 
 
-class AutoConfigurationTestCase(LoaderTestCase):
+class TestAutoConfiguration(LoaderTestCase):
 
-    @setup
+    @pytest.fixture(autouse=True)
     def setup_filename(self):
         self.filename = None
 
-    @teardown
+    @pytest.yield_fixture(autouse=True)
     def cleanup_file(self):
+        yield
         if self.filename:
             os.unlink(self.filename)
 
@@ -144,28 +146,32 @@ class AutoConfigurationTestCase(LoaderTestCase):
         assert_raises(errors.ConfigurationError, loader.AutoConfiguration)
 
 
-class PythonConfigurationTestCase(LoaderTestCase):
+class TestPythonConfiguration(LoaderTestCase):
 
     module          = 'example_mod'
     module_file     = 'example_mod.py'
     compiled_file   = 'example_mod.pyc'
 
-    module_content  = textwrap.dedent("""
+    module_content  = six.b(textwrap.dedent("""
         some_value = "test"
 
         more_values = {
             "depth": "%s"
         }
-    """)
+    """))
 
-    @teardown
+    @pytest.yield_fixture(autouse=True)
+    def teardown_module(self):
+        yield
+        self.remove_module()
+
     def remove_module(self):
         for filename in [self.module_file, self.compiled_file]:
             os.remove(filename) if os.path.exists(filename) else None
 
-    @setup
+    @pytest.fixture(autouse=True)
     def setup_module(self):
-        self.create_module('one')
+        self.create_module(b'one')
 
     def create_module(self, value):
         self.remove_module()
@@ -185,7 +191,7 @@ class PythonConfigurationTestCase(LoaderTestCase):
         assert_equal(config_data['more_values.depth'], 'two')
 
 
-class INIConfigurationTestCase(LoaderTestCase):
+class TestINIConfiguration(LoaderTestCase):
 
     content = textwrap.dedent("""
         [Something]
@@ -204,7 +210,7 @@ class INIConfigurationTestCase(LoaderTestCase):
         assert_equal(config_data['Business.why'], 'not today')
 
 
-class XMLConfigurationTestCase(LoaderTestCase):
+class TestXMLConfiguration(LoaderTestCase):
 
     content = """
         <config>
@@ -258,7 +264,7 @@ class XMLConfigurationTestCase(LoaderTestCase):
                 safe=True)
 
 
-class PropertiesConfigurationTestCase(LoaderTestCase):
+class TestPropertiesConfiguration(LoaderTestCase):
 
     content = textwrap.dedent("""
         stars = in the sky
@@ -294,7 +300,7 @@ class PropertiesConfigurationTestCase(LoaderTestCase):
                 self.tmpfile.name)
 
 
-class CompositeConfigurationTestCase(TestCase):
+class TestCompositeConfiguration(object):
 
     def test_load(self):
         loaders = [(mock.Mock(return_value={i: 0}), 1, 2) for i in range(3)]
@@ -313,7 +319,7 @@ class StubObject(object):
     __really_private = 'hidden'
 
 
-class ObjectConfigurationTestCase(LoaderTestCase):
+class TestObjectConfiguration(LoaderTestCase):
 
     def test_load(self):
         config_data = loader.ObjectConfiguration(StubObject)
@@ -322,7 +328,3 @@ class ObjectConfigurationTestCase(LoaderTestCase):
         assert_equal(config_data['hour'], 15)
         assert_not_in('_private', config_data)
         assert_not_in('__really_private', config_data)
-
-
-if __name__ == "__main__":
-    run()

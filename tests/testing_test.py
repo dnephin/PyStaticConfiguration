@@ -1,10 +1,11 @@
-from testify import TestCase, assert_equal, run
 
 import staticconf
 from staticconf import testing
 
+from testing.testifycompat import assert_equal
 
-class MockConfigurationTestCase(TestCase):
+
+class TestMockConfiguration(object):
 
     def test_init(self):
         with testing.MockConfiguration(a='one', b='two'):
@@ -21,6 +22,3 @@ class MockConfigurationTestCase(TestCase):
         with testing.MockConfiguration(conf):
             assert_equal(staticconf.get('a.b'), 'two')
             assert_equal(staticconf.get('c'), 'three')
-
-if __name__ == "__main__":
-    run()

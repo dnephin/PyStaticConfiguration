@@ -1,37 +1,40 @@
-import contextlib
 import gc
 import mock
 import os
 import tempfile
 import time
-from testify import run, assert_equal, TestCase, setup, setup_teardown
-from testify.assertions import assert_raises
 
+import pytest
+
+from testing.testifycompat import (
+    assert_equal,
+    assert_raises,
+)
 from staticconf import config, errors, testing, proxy, validation, schema
 import staticconf
 
 
-class TestRemoveByKeys(TestCase):
+class TestRemoveByKeys(object):
 
     def test_empty_dict(self):
         keys = range(3)
-        assert_equal([], config.remove_by_keys({}, keys))
+        assert_equal([], list(config.remove_by_keys({}, keys)))
 
     def test_no_keys(self):
         keys = []
         map = dict(enumerate(range(3)))
-        assert_equal(map.items(), config.remove_by_keys(map, keys))
+        assert_equal(list(map.items()), list(config.remove_by_keys(map, keys)))
 
     def test_overlap(self):
         keys = [1, 3, 5 ,7]
         map = dict(enumerate(range(8)))
         expected = [(0,0), (2, 2), (4, 4), (6, 6)]
-        assert_equal(expected, config.remove_by_keys(map, keys))
+        assert_equal(expected, list(config.remove_by_keys(map, keys)))
 
 
-class ConfigMapTestCase(TestCase):
+class TestConfigMap(object):
 
-    @setup
+    @pytest.fixture(autouse=True)
     def setup_config_map(self):
         self.config_map = config.ConfigMap(one=1, three=3, seven=7)
 
@@ -53,9 +56,10 @@ class ConfigMapTestCase(TestCase):
     def test_len(self):
         assert_equal(len(self.config_map), 3)
 
-class ConfigurationNamespaceTestCase(TestCase):
 
-    @setup
+class TestConfigurationNamespace(object):
+
+    @pytest.fixture(autouse=True)
     def setup_namespace(self):
         self.name = 'the_name'
         self.namespace = config.ConfigNamespace(self.name)
@@ -121,9 +125,9 @@ class ConfigurationNamespaceTestCase(TestCase):
         assert_equal(self.namespace.get_config_values(), {})
 
 
-class GetNamespaceTestCase(TestCase):
+class TestGetNamespace(object):
 
-    @setup_teardown
+    @pytest.yield_fixture(autouse=True)
     def mock_namespaces(self):
         with mock.patch.dict(config.configuration_namespaces):
             yield
@@ -140,9 +144,9 @@ class GetNamespaceTestCase(TestCase):
         assert_equal(namespace, config.get_namespace(name))
 
 
-class ReloadTestCase(TestCase):
+class TestReload(object):
 
-    @setup_teardown
+    @pytest.yield_fixture(autouse=True)
     def mock_namespaces(self):
         with mock.patch.dict(config.configuration_namespaces):
             yield
@@ -185,9 +189,9 @@ class ReloadTestCase(TestCase):
         assert_equal(two, 'three')
 
 
-class ValidateConfigTestCase(TestCase):
+class TestValidateConfig(object):
 
-    @setup_teardown
+    @pytest.yield_fixture(autouse=True)
     def patch_config(self):
         with mock.patch.dict(config.configuration_namespaces, clear=True):
             with testing.MockConfiguration():
@@ -234,9 +238,9 @@ class ValidateConfigTestCase(TestCase):
                       all_names=True)
 
 
-class ConfigHelpTestCase(TestCase):
+class TestConfigHelp(object):
 
-    @setup
+    @pytest.fixture(autouse=True)
     def setup_config_help(self):
         self.config_help = config.ConfigHelp()
         self.config_help.add('one',
@@ -266,14 +270,14 @@ class ConfigHelpTestCase(TestCase):
         assert_equal(blank, '')
 
     def test_view_help_namespace_sort(self):
-        lines = filter(lambda l: l.startswith('Namespace'), self.lines)
+        lines = list(filter(lambda l: l.startswith('Namespace'), self.lines))
         expected = ['Namespace: DEFAULT', 'Namespace: Alpha', 'Namespace: Beta']
         assert_equal(lines, expected)
 
 
-class HasDuplicateKeysTestCase(TestCase):
+class TestHasDuplicateKeys(object):
 
-    @setup
+    @pytest.fixture(autouse=True)
     def setup_base_conf(self):
         self.base_conf = {'fear': 'is_the', 'mind': 'killer'}
 
@@ -296,24 +300,22 @@ class HasDuplicateKeysTestCase(TestCase):
         assert config.has_duplicate_keys(config_data, self.base_conf, False)
 
 
-class ConfigurationWatcherTestCase(TestCase):
+class TestConfigurationWatcher(object):
 
-    @setup_teardown
+    @pytest.yield_fixture(autouse=True)
     def setup_mocks_and_config_watcher(self):
         self.loader = mock.Mock()
-        with contextlib.nested(
-            mock.patch('staticconf.config.time'),
-            mock.patch('staticconf.config.os.path'),
-            mock.patch('staticconf.config.os.stat'),
-            tempfile.NamedTemporaryFile()
-        ) as (self.mock_time, self.mock_path, self.mock_stat, file):
-            # Create the file
-            file.flush()
-            self.mock_stat.return_value.st_ino = 1
-            self.mock_stat.return_value.st_dev = 2
-            self.filename = file.name
-            self.watcher = config.ConfigurationWatcher(self.loader, self.filename)
-            yield
+        with mock.patch('staticconf.config.time') as self.mock_time:
+            with mock.patch('staticconf.config.os.stat') as self.mock_stat:
+                with tempfile.NamedTemporaryFile() as file:
+                    with mock.patch('staticconf.config.os.path') as self.mock_path:
+                        file.flush()
+                        self.mock_stat.return_value.st_ino = 1
+                        self.mock_stat.return_value.st_dev = 2
+                        self.filename = file.name
+                        self.watcher = config.ConfigurationWatcher(
+                                self.loader, self.filename)
+                        yield
 
     def test_get_filename_list_from_string(self):
         self.mock_path.abspath.side_effect = lambda p: p
@@ -380,9 +382,9 @@ class ConfigurationWatcherTestCase(TestCase):
         reloader.assert_called_with()
 
 
-class ReloadCallbackChainTestCase(TestCase):
+class TestReloadCallbackChain(object):
 
-    @setup
+    @pytest.fixture(autouse=True)
     def setup_callback_chain(self):
         self.callbacks = list(enumerate([mock.Mock(), mock.Mock()]))
         self.callback_chain = config.ReloadCallbackChain(callbacks=self.callbacks)
@@ -406,9 +408,9 @@ class ReloadCallbackChainTestCase(TestCase):
                 mock_reload.assert_called_with(name='the_namespace', all_names=False)
 
 
-class ConfigFacadeTestCase(TestCase):
+class TestConfigFacade(object):
 
-    @setup_teardown
+    @pytest.yield_fixture(autouse=True)
     def patch_watcher(self):
         patcher = mock.patch(
                 'staticconf.config.ConfigurationWatcher',
@@ -416,7 +418,7 @@ class ConfigFacadeTestCase(TestCase):
         with patcher as self.mock_config_watcher:
             yield
 
-    @setup
+    @pytest.fixture(autouse=True)
     def setup_facade(self):
         self.watcher = mock.create_autospec(config.ConfigurationWatcher)
         self.watcher.get_reloader.return_value = mock.create_autospec(
@@ -442,14 +444,13 @@ class ConfigFacadeTestCase(TestCase):
         self.watcher.reload_if_changed.assert_called_with(force=False)
 
 
-class ConfigFacadeAcceptanceTest(TestCase):
+@pytest.mark.acceptance
+class TestConfigFacadeAcceptance(object):
 
-    _suites = ['acceptance']
-
-    @setup
+    @pytest.fixture(autouse=True)
     def setup_env(self):
         self.file = tempfile.NamedTemporaryFile()
-        self.write("""one: A""")
+        self.write(b"one: A")
 
     def write(self, content, mtime_seconds=0):
         time.sleep(0.03)
@@ -459,7 +460,7 @@ class ConfigFacadeAcceptanceTest(TestCase):
         tstamp = time.time() + mtime_seconds
         os.utime(self.file.name, (tstamp, tstamp))
 
-    @setup_teardown
+    @pytest.yield_fixture(autouse=True)
     def patch_namespace(self):
         self.namespace = 'testing_namespace'
         with testing.MockConfiguration(namespace=self.namespace):
@@ -495,9 +496,9 @@ class ConfigFacadeAcceptanceTest(TestCase):
         assert_equal(loader.call_count, 2)
 
 
-class BuildLoaderCallable(TestCase):
+class TestBuildLoaderCallable(object):
 
-    @setup_teardown
+    @pytest.yield_fixture(autouse=True)
     def patch_namespace(self):
         self.namespace = 'the_namespace'
         patcher = mock.patch('staticconf.config.get_namespace', autospec=True)
@@ -514,7 +515,3 @@ class BuildLoaderCallable(TestCase):
         mock_namespace.clear.assert_called_with()
         load_func.assert_called_with(filename, namespace=self.namespace)
         assert_equal(result, load_func.return_value)
-
-
-if __name__ == "__main__":
-    run()
