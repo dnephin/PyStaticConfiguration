@@ -4,7 +4,6 @@ for reloading, validating and displaying help messages.
 """
 from collections import namedtuple
 import logging
-import operator
 import os
 import time
 import weakref
