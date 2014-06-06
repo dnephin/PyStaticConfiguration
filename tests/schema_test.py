@@ -1,5 +1,6 @@
 import mock
 import pytest
+import six
 
 from testing.testifycompat import (
     assert_equal,
@@ -21,8 +22,8 @@ class TestCreateValueType(object):
         assert_equal(value_def.config_key, config_key)
 
 
+@six.add_metaclass(schema.SchemaMeta)
 class ATestingSchema(object):
-    __metaclass__ = schema.SchemaMeta
 
     namespace = 'my_testing_namespace'
 
@@ -74,7 +75,7 @@ class TestSchemaMeta(object):
         namespace = mock.create_autospec(config.ConfigNamespace)
         attributes = meta.build_attributes(attributes, namespace)
         assert_equal(attributes['not_a_token'], None)
-        assert_equal(attributes['_tokens'].keys(), ['a_token'])
+        assert_equal(list(attributes['_tokens'].keys()), ['a_token'])
         token = attributes['_tokens']['a_token']
         assert_equal(token.config_key, value_def.config_key)
         assert_equal(token.default, value_def.default)

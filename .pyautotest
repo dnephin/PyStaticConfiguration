@@ -2,4 +2,5 @@ test_runner_name: full_suite
 command:
     - 'py.test'
     - '-v'
+    - '-s'
     - tests
