@@ -66,7 +66,7 @@ Loading configuration files
 ---------------------------
 PyStaticConfiguration supports loading config values from many file formats
 and python structures. See the
-`full list of loaders <http://pythonhosted.org/PyStaticConfiguration/staticconf.html#module-staticconf.loader>`_.
+`full list of loaders <http://pythonhosted.org/PyStaticConfiguration/loader.html>`_.
 When the configuration is loaded, it is put into a ``ConfigNamespace`` object.
 
 
