@@ -33,7 +33,7 @@ Build Status
     :target: https://crate.io/packages/PyStaticConfiguration/
     :alt: Number of PyPI downloads
 
-.. image:: https://coveralls.io/repos/dnephin/PyStaticConfiguration/badge.png
+.. image:: https://coveralls.io/repos/dnephin/PyStaticConfiguration/badge.png?branch=master
     :target: https://coveralls.io/r/dnephin/PyStaticConfiguration
     :alt: Code Test Coverage
 
