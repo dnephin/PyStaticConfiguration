@@ -25,6 +25,13 @@ Build Status
     :alt: Travis CI build status
     :target: https://travis-ci.org/dnephin/PyStaticConfiguration
 
+.. image:: https://pypip.in/v/PyStaticConfiguration/badge.png
+    :target: https://crate.io/packages/PyStaticConfiguration/
+    :alt: Latest PyPI version
+
+.. image:: https://pypip.in/d/PyStaticConfiguration/badge.png
+    :target: https://crate.io/packages/PyStaticConfiguration/
+    :alt: Number of PyPI downloads
 
 
 
