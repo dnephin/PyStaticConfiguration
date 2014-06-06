@@ -165,8 +165,8 @@ class SchemaMeta(type):
         return attributes
 
 
+@six.add_metaclass(SchemaMeta)
 class Schema(object):
-    __metaclass__ = SchemaMeta
 
     namespace = None
 

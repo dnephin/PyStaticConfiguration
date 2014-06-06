@@ -15,6 +15,12 @@ from testing.testifycompat import (
 from staticconf import loader, errors
 
 
+def get_bytecode_filename(module_name):
+    if six.PY2:
+        return module_name + '.pyc'
+    return __import__(module_name).__cached__
+
+
 class LoaderTestCase(object):
 
     content = None
@@ -30,7 +36,7 @@ class LoaderTestCase(object):
         if not content:
             return
         self.tmpfile = tempfile.NamedTemporaryFile()
-        self.tmpfile.write(content)
+        self.tmpfile.write(content.encode('utf8'))
         self.tmpfile.flush()
 
 
@@ -92,11 +98,11 @@ class TestBuildLoader(LoaderTestCase):
 
 class TestYamlConfiguration(LoaderTestCase):
 
-    content = six.b(textwrap.dedent("""
+    content = textwrap.dedent("""
         somekey:
             token: "smarties"
         another: blind
-    """))
+    """)
 
     def test_loader(self):
         config_data = loader.YamlConfiguration(self.tmpfile.name)
@@ -150,15 +156,14 @@ class TestPythonConfiguration(LoaderTestCase):
 
     module          = 'example_mod'
     module_file     = 'example_mod.py'
-    compiled_file   = 'example_mod.pyc'
 
-    module_content  = six.b(textwrap.dedent("""
+    module_content  = textwrap.dedent("""
         some_value = "test"
 
         more_values = {
             "depth": "%s"
         }
-    """))
+    """)
 
     @pytest.yield_fixture(autouse=True)
     def teardown_module(self):
@@ -166,15 +171,15 @@ class TestPythonConfiguration(LoaderTestCase):
         self.remove_module()
 
     def remove_module(self):
-        for filename in [self.module_file, self.compiled_file]:
+        compiled_file = get_bytecode_filename(self.module)
+        for filename in [self.module_file, compiled_file]:
             os.remove(filename) if os.path.exists(filename) else None
 
     @pytest.fixture(autouse=True)
     def setup_module(self):
-        self.create_module(b'one')
+        self.create_module('one')
 
     def create_module(self, value):
-        self.remove_module()
         with open(self.module_file, 'w') as fh:
             fh.write(self.module_content % value)
 
@@ -186,6 +191,7 @@ class TestPythonConfiguration(LoaderTestCase):
     def test_python_configuration_reload(self):
         config_data = loader.PythonConfiguration(self.module)
         assert_equal(config_data['more_values.depth'], 'one')
+        self.remove_module()
         self.create_module('two')
         config_data = loader.PythonConfiguration(self.module)
         assert_equal(config_data['more_values.depth'], 'two')
@@ -292,7 +298,7 @@ class TestPropertiesConfiguration(LoaderTestCase):
         assert_equal(config_data['key.with.col'], 'a value')
 
     def test_invalid_line(self):
-        self.tmpfile.write('justkey\n')
+        self.tmpfile.write('justkey\n'.encode('utf8'))
         self.tmpfile.flush()
         assert_raises(
                 errors.ConfigurationError,

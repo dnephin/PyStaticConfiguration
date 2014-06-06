@@ -18,18 +18,18 @@ class TestRemoveByKeys(object):
 
     def test_empty_dict(self):
         keys = range(3)
-        assert_equal([], list(config.remove_by_keys({}, keys)))
+        assert_equal([], config.remove_by_keys({}, keys))
 
     def test_no_keys(self):
         keys = []
         map = dict(enumerate(range(3)))
-        assert_equal(list(map.items()), list(config.remove_by_keys(map, keys)))
+        assert_equal(list(map.items()), config.remove_by_keys(map, keys))
 
     def test_overlap(self):
         keys = [1, 3, 5 ,7]
         map = dict(enumerate(range(8)))
         expected = [(0,0), (2, 2), (4, 4), (6, 6)]
-        assert_equal(expected, list(config.remove_by_keys(map, keys)))
+        assert_equal(expected, config.remove_by_keys(map, keys))
 
 
 class TestConfigMap(object):
@@ -473,7 +473,7 @@ class TestConfigFacadeAcceptance(object):
         facade.add_callback('one', callback)
         assert_equal(staticconf.get('one', namespace=self.namespace), "A")
 
-        self.write("""one: B""", 10)
+        self.write(b"one: B", 10)
         facade.reload_if_changed()
         assert_equal(staticconf.get('one', namespace=self.namespace), "B")
         callback.assert_called_with()

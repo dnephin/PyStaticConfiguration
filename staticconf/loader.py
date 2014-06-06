@@ -54,11 +54,14 @@ You can create your own loaders for other formats by using
 ."""
 import logging
 import os
-import itertools
 import re
 
 import six
-from six.moves import reload_module
+from six.moves import (
+    configparser,
+    filter,
+    reload_module,
+)
 
 from staticconf import config, errors
 
@@ -172,8 +175,7 @@ def object_loader(obj):
 
 
 def ini_file_loader(filename):
-    import ConfigParser
-    parser = ConfigParser.SafeConfigParser()
+    parser = configparser.SafeConfigParser()
     parser.read([filename])
     config_dict = {}
 
@@ -222,7 +224,7 @@ def properties_loader(filename):
         return key.strip(), value.strip()
 
     with open(filename) as fh:
-        return dict(itertools.ifilter(None, (parse_line(line) for line in fh)))
+        return dict(filter(None, (parse_line(line) for line in fh)))
 
 
 class CompositeConfiguration(object):

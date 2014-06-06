@@ -25,7 +25,7 @@ def remove_by_keys(dictionary, keys):
     def filter_by_keys(item):
         k, v = item
         return k not in keys
-    return filter(filter_by_keys, six.iteritems(dictionary))
+    return list(filter(filter_by_keys, six.iteritems(dictionary)))
 
 
 class ConfigMap(object):

@@ -20,7 +20,8 @@ UndefToken = UndefToken()
 
 
 _special_names = [
-    '__abs__', '__add__', '__and__', '__call__', '__cmp__', '__coerce__',
+    '__abs__', '__add__', '__and__', '__bool__', '__call__', '__cmp__',
+    '__coerce__',
     '__contains__', '__delitem__', '__delslice__', '__div__', '__divmod__',
     '__eq__', '__float__', '__floordiv__', '__ge__', '__getitem__',
     '__getslice__', '__gt__', '__hash__', '__hex__', '__iadd__', '__iand__',
@@ -42,7 +43,8 @@ unary_funcs = {
     '__unicode__':  six.text_type,
     '__str__':      str,
     '__repr__':     repr,
-    '__nonzero__':  bool,
+    '__nonzero__':  bool,  # Python2 bool
+    '__bool__':     bool,  # Python3 bool
     '__hash__':     hash,
 }
 
