@@ -22,8 +22,8 @@ Build Status
 ------------
 
 .. image:: https://travis-ci.org/dnephin/PyStaticConfiguration.svg?branch=master
-    :alt: Travis CI build status
     :target: https://travis-ci.org/dnephin/PyStaticConfiguration
+    :alt: Travis CI build status
 
 .. image:: https://pypip.in/v/PyStaticConfiguration/badge.png
     :target: https://crate.io/packages/PyStaticConfiguration/
@@ -32,6 +32,10 @@ Build Status
 .. image:: https://pypip.in/d/PyStaticConfiguration/badge.png
     :target: https://crate.io/packages/PyStaticConfiguration/
     :alt: Number of PyPI downloads
+
+.. image:: https://coveralls.io/repos/dnephin/PyStaticConfiguration/badge.png
+    :target: https://coveralls.io/r/dnephin/PyStaticConfiguration
+    :alt: Code Test Coverage
 
 
 
