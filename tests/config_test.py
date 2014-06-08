@@ -1,5 +1,4 @@
 import gc
-import mock
 import os
 import tempfile
 import time
@@ -9,6 +8,7 @@ import pytest
 from testing.testifycompat import (
     assert_equal,
     assert_raises,
+    mock,
 )
 from staticconf import config, errors, testing, proxy, validation, schema
 import staticconf

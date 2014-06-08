@@ -1,10 +1,10 @@
-import mock
 import pytest
 import six
 
 from testing.testifycompat import (
     assert_equal,
     assert_raises,
+    mock,
 )
 from staticconf import testing, schema, validation, config, errors
 

@@ -1,10 +1,10 @@
-import mock
 import pytest
 
 from testing.testifycompat import (
     assert_equal,
     assert_in,
     assert_is,
+    mock,
 )
 from staticconf import getters, config, testing
 

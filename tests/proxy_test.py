@@ -1,12 +1,12 @@
 import datetime
 
-import mock
 import pytest
 
 from testing.testifycompat import (
     assert_equal,
     assert_raises_and_contains,
     assert_in,
+    mock,
 )
 from staticconf import proxy, validation, errors, config
 

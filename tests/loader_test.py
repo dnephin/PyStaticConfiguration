@@ -2,7 +2,6 @@ import os
 import tempfile
 import textwrap
 
-import mock
 import pytest
 import six
 from six.moves import range
@@ -11,6 +10,7 @@ from testing.testifycompat import (
     assert_equal,
     assert_raises,
     assert_not_in,
+    mock,
 )
 from staticconf import loader, errors
 

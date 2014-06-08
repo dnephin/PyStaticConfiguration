@@ -1,9 +1,9 @@
-import mock
 import pytest
 
 from testing.testifycompat import (
     assert_equal,
     assert_raises,
+    mock,
 )
 from staticconf import config, readers, proxy, errors, testing
 

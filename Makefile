@@ -5,6 +5,7 @@
 clean:
 	find -name *.pyc -exec rm {} \;
 	rm -rf docs/build/html
+	rm -rf __pycache__
 
 
 docs:
