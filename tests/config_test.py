@@ -1,5 +1,6 @@
 import gc
 import os
+import sys
 import tempfile
 import time
 
@@ -71,6 +72,7 @@ class TestConfigurationNamespace(object):
             self.namespace.register_proxy(mock_proxy)
         assert_equal(self.namespace.get_value_proxies(), proxies)
 
+    @pytest.mark.skipif('PyPy' in sys.version, reason="Fails on PyPy")
     def test_get_value_proxies_does_not_contain_out_of_scope_proxies(self):
         assert not self.namespace.get_value_proxies()
         def a_scope():
