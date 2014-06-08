@@ -410,27 +410,24 @@ class TestReloadCallbackChain(object):
 
 class TestConfigFacade(object):
 
-    @pytest.yield_fixture(autouse=True)
-    def patch_watcher(self):
-        patcher = mock.patch(
-                'staticconf.config.ConfigurationWatcher',
-                autospec=True)
-        with patcher as self.mock_config_watcher:
-            yield
-
     @pytest.fixture(autouse=True)
     def setup_facade(self):
-        self.watcher = mock.create_autospec(config.ConfigurationWatcher)
-        self.watcher.get_reloader.return_value = mock.create_autospec(
+        self.mock_watcher = mock.create_autospec(config.ConfigurationWatcher)
+        self.mock_watcher.get_reloader.return_value = mock.create_autospec(
             config.ReloadCallbackChain)
-        self.facade = config.ConfigFacade(self.watcher)
+        self.facade = config.ConfigFacade(self.mock_watcher)
 
     def test_load(self):
         filename, namespace = "filename", "namespace"
         loader = mock.Mock()
-        facade = config.ConfigFacade.load(filename, namespace, loader)
+
+        with mock.patch(
+                'staticconf.config.ConfigurationWatcher',
+                autospec=True) as mock_watcher_class:
+            facade = config.ConfigFacade.load(filename, namespace, loader)
+
         facade.watcher.load_config.assert_called_with()
-        assert_equal(facade.watcher, self.mock_config_watcher.return_value)
+        assert_equal(facade.watcher, mock_watcher_class.return_value)
         reloader = facade.callback_chain
         assert_equal(reloader, facade.watcher.get_reloader())
 
@@ -441,7 +438,7 @@ class TestConfigFacade(object):
 
     def test_reload_if_changed(self):
         self.facade.reload_if_changed()
-        self.watcher.reload_if_changed.assert_called_with(force=False)
+        self.mock_watcher.reload_if_changed.assert_called_with(force=False)
 
 
 @pytest.mark.acceptance
