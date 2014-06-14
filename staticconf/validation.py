@@ -48,9 +48,9 @@ def validate_datetime(value):
     if isinstance(value, datetime.datetime):
         return value
 
-    for format in date_formats:
+    for format_ in date_formats:
         try:
-            return datetime.datetime.strptime(value, format)
+            return datetime.datetime.strptime(value, format_)
         except ValueError:
             pass
     raise ValidationError("Invalid date format: %s" % value)
@@ -76,9 +76,9 @@ def validate_time(value):
     if isinstance(value, datetime.time):
         return value
 
-    for format in time_formats:
+    for format_ in time_formats:
         try:
-            return datetime.time(*time.strptime(value, format)[3:6])
+            return datetime.time(*time.strptime(value, format_)[3:6])
         except ValueError:
             pass
     raise ValidationError("Invalid time format: %s" % value)

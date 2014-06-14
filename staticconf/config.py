@@ -23,7 +23,7 @@ def remove_by_keys(dictionary, keys):
     keys = set(keys)
 
     def filter_by_keys(item):
-        k, v = item
+        k, _ = item
         return k not in keys
     return list(filter(filter_by_keys, six.iteritems(dictionary)))
 
