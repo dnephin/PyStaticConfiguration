@@ -1,6 +1,15 @@
 """
 Store configuration in :class:`ConfigNamespace` objects and provide tools
-for reloading, validating and displaying help messages.
+for reloading, and displaying help messages.
+
+
+Configuration Reloading
+-----------------------
+
+Configuration reloading is supported using a :class:`ConfigFacade`, which
+composes a :class:`ConfigurationWatcher` and a :class:`ReloadCallbackChain`.
+These classes provide a way of reloading configuration when the file is
+modified.
 """
 from collections import namedtuple
 import logging
@@ -50,12 +59,12 @@ class ConfigMap(object):
 
 
 class ConfigNamespace(object):
-    """A configuration namespace, which contains the list of value proxies
-    and configuration values.
+    """A container for related configuration values. Values are stored
+    using flattened keys which map to values.
 
-    You will rarely interact with these objects directly unless you are
-    debugging. To load data into these objects see :mod:`staticconf.loader`. To
-    read config from them see :mod:`staticconf.readers`,
+    Values are added to this container using :mod:`staticconf.loader`.
+
+    To access values stored in this namespace use :mod:`staticconf.readers`
     or :mod:`staticconf.schema`.
     """
 
@@ -140,8 +149,8 @@ def get_namespaces_from_names(name, all_names):
 
 
 def get_namespace(name):
-    """Retrieve a ConfigurationNamespace by name, creating the namespace if it
-    does not exist.
+    """Return a :class:`ConfigNamespace` by name, creating the
+    namespace if it does not exist.
     """
     if name not in configuration_namespaces:
         configuration_namespaces[name] = ConfigNamespace(name)
@@ -237,6 +246,48 @@ def has_duplicate_keys(config_data, base_conf, raise_error):
 class ConfigurationWatcher(object):
     """Watches a file for modification and reloads the configuration
     when it's modified.  Accepts a min_interval to throttle checks.
+
+    .. seealso::
+
+        :func:`ConfigFacade.load` which provides a more concise interface
+        for the common case.
+
+    Usage:
+
+    .. code-block:: python
+
+        import staticconf
+        from staticconf import config
+
+        def build_configuration(filename, namespace):
+            config_loader = partial(staticconf.YamlConfiguration,
+                                    filename, namespace=namespace)
+            reloader = config.ReloadCallbackChain(namespace)
+            return config.ConfigurationWatcher(
+                config_loader, filename, min_interval=2, reloader=reloader)
+
+        config_watcher = build_configuration('config.yaml', 'my_namespace')
+
+        # Load the initial configuration
+        config_watcher.config_loader()
+
+        # Do some work
+        for item in work:
+            config_watcher.reload_if_changed()
+            ...
+
+
+    :param config_loader: a function which takes no arguments. It is called
+                          by :func:`reload_if_changed` if the file has
+                          been modified
+    :param filenames: a filename or list of filenames to watch for modifications
+    :param min_interval: minimum number of seconds to wait between calls to
+                         :func:`os.path.getmtime` to check if a file has
+                         been modified.
+
+    :param reloader: a function which is called after `config_loader` when a
+                     file has been modified. Defaults to an empty
+                     :class:`ReloadCallbackChain`
     """
 
     def __init__(self, config_loader, filenames, min_interval=0, reloader=None):
@@ -267,6 +318,12 @@ class ConfigurationWatcher(object):
         return [get_inode(os.stat(filename)) for filename in self.filenames]
 
     def reload_if_changed(self, force=False):
+        """If the file(s) being watched by this object have changed,
+        their configuration will be loaded again using `config_loader`.
+        Otherwise this is a noop.
+
+        :param force: If True ignore the modified time and force a reload
+        """
         if (force or self.should_check) and self.file_modified():
             return self.reload()
 
@@ -291,8 +348,25 @@ class ConfigurationWatcher(object):
 
 
 class ReloadCallbackChain(object):
-    """This object can be used as a convenient way of adding and removing
-    callbacks to a ConfigurationWatcher reloader function.
+    """A chain of callbacks which will be triggered after configuration is
+    reloaded. Designed to work with :class:`ConfigurationWatcher`.
+
+    Usage:
+
+    .. code-block:: python
+
+        chain = ReloadCallbackChain()
+        chain.add('some_id', callback_foo)
+        chain.add('other_id', other_callback)
+        ...
+
+        # some time later
+        chain.remove('some_id')
+
+    :param namespace: the name of the namespace to :func:`reload`
+    :param all_names: if True :func:`reload` all namespaces and ignore the
+                      `namespace` param. Defaults to False
+    :param callbacks: initial list of tuples to add to the callback chain
     """
 
     def __init__(self, namespace=DEFAULT, all_names=False, callbacks=None):
@@ -320,7 +394,24 @@ def build_loader_callable(load_func, filename, namespace):
 
 
 class ConfigFacade(object):
-    """A facade around a ConfigurationWatcher and a ReloadCallbackChain.
+    """A facade around a :class:`ConfigurationWatcher` and a
+    :class:`ReloadCallbackChain`. See :func:`ConfigFacade.load`.
+
+    Usage:
+
+    .. code-block:: python
+
+        import staticconf
+
+        watcher = staticconf.ConfigFacade.load(
+            'config.yaml', # Filename or list of filenames to watch
+            'my_namespace',
+            staticconf.YamlConfiguration, # Callable which takes the filename
+            min_interval=3 # Wait at least 3 seconds before checking modified time
+        )
+
+        watcher.add_callback('identifier', do_this_after_reload)
+        watcher.reload_if_changed()
     """
 
     def __init__(self, watcher):
@@ -329,6 +420,22 @@ class ConfigFacade(object):
 
     @classmethod
     def load(cls, filename, namespace, loader_func, min_interval=0):
+        """Create a new :class:`ConfigurationWatcher` and load the initial
+        configuration by calling `loader_func`.
+
+        :param filename: a filename or list of filenames to monitor for changes
+        :param namespace: the name of a namespace to use when loading
+                          configuration. All config data from `filename` will
+                          end up in a :class:`ConfigNamespace` with this name
+        :param loader_func: a function which accepts two arguments and uses
+                            loader functions from :mod:`staticconf.loader` to
+                            load configuration data into a namespace. The
+                            arguments are `filename` and `namespace`
+        :param min_interval: minimum number of seconds to wait between calls to
+                             :func:`os.path.getmtime` to check if a file has
+                             been modified.
+        :returns: a :class:`ConfigFacade`
+        """
         watcher = ConfigurationWatcher(
             build_loader_callable(loader_func, filename, namespace=namespace),
             filename,
@@ -341,4 +448,10 @@ class ConfigFacade(object):
         self.callback_chain.add(identifier, callback)
 
     def reload_if_changed(self, force=False):
+        """If the files being watched by this object have changed,
+        their configuration will be loaded again using `loader_func`. Otherwise
+        this is a noop.
+
+        :param force: If True ignore the modified time and force a reload
+        """
         self.watcher.reload_if_changed(force=force)

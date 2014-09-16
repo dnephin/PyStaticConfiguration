@@ -1,11 +1,35 @@
 """
-Functions used to retrieve values from a ConfigNamespace. To retrieve values
-from the default namespace use the module level getters.
+Functions used to retrieve proxies around values in a
+:class:`staticconf.config.ConfigNamespace`. All of the getter methods
+return a :class:`ValueProxy`. These proxies are wrappers around a configuration
+value. They don't access the configuration until some attribute of the object
+is accessed.
+
+
+.. warning::
+
+    This module should be considered deprecated. There are edge cases which
+    make these getters non-obvious to use (such as passing a :class:`ValueProxy`
+    to a cmodule.
+
+    Please use :class:`staticconf.readers` if you don't need static
+    definitions, or :class:`staticconf.schema` if you do.
+
+
+Example
+-------
 
 .. code-block:: python
 
-    max_size = staticconf.get_int('max_size', default=10)
-    threshold = staticconf.get_float('threshold')
+    import staticconf
+
+    # Returns a ValueProxy which can be used just like an int
+    max_cycles = staticconf.get_int('max_cycles')
+    print "Half of max_cycles", max_cycles / 2
+
+    # Using a NamespaceGetters object to retrieve from a namespace
+    config = staticconf.NamespaceGetters('special')
+    ratio = config.get_float('ratio')
 
 
 To retrieve values from a namespace, you can create a ``NamespaceGetters``
@@ -16,6 +40,24 @@ object.
     my_package_conf = staticconf.NamespaceGetters('my_package_namespace')
     max_size = my_package_conf.get_int('max_size')
     error_msg = my_package_conf.get_string('error_msg')
+
+
+
+Arguments
+---------
+
+Getters accept the following kwargs:
+
+config_key
+    string configuration key
+default
+    if no ``default`` is given, the key must be present in the configuration.
+    Raises ConfigurationError on missing key.
+help
+    a help string describing the purpose of the config value. See
+    :func:`staticconf.config.view_help()`.
+namespace
+    get the value from this namespace instead of DEFAULT.
 
 """
 
