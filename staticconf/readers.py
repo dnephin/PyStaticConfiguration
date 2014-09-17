@@ -1,17 +1,32 @@
 """
-Functions to read values directly from a configuration namespace.  Values
-will be validated, but will not be wrapped in a Proxy.
+Functions to read values directly from a
+:class:`staticconf.config.ConfigNamespace`.  Values will be validated and
+cast to the requested type.
+
+
+Examples
+--------
 
 .. code-block:: python
 
     import staticconf
 
-    max_value = staticconf.read_int('max_value')
-    # Read a value from a namespace
+    # read an int
+    max_cycles = staticconf.read_int('max_cycles')
+    start_id = staticconf.read_int('poller.init.start_id', default=0)
+
+    # start_date will be a datetime.date
+    start_date = staticconf.read_date('start_date')
+
+    # matcher will be a regex object
+    matcher = staticconf.read_regex('matcher_pattern')
+
+    # Read a value from a different namespace
     intervals = staticconf.read_float('intervals', namespace='something')
 
 
-Readers can be attached to a namespace using a NamespaceReaders object.
+Readers can be attached to a namespace using a :class:`NamespaceReaders`
+object.
 
 .. code-block:: python
 
@@ -19,30 +34,59 @@ Readers can be attached to a namespace using a NamespaceReaders object.
 
     bling_reader = staticconf.NamespaceReader('bling')
 
+    # These values are read from the `bling` ConfigNamespace
     currency = bling_reader.read_string('currency')
     value = bling_reader.read_float('value')
 
-Available reader accessors include:
 
-    - read_bool()
-    - read_date()
-    - read_datetime()
-    - read_float()
-    - read_int()
-    - read_list()
-    - read_list_of_bool()
-    - read_list_of_date()
-    - read_list_of_datetime()
-    - read_list_of_float()
-    - read_list_of_int()
-    - read_list_of_list()
-    - read_list_of_set()
-    - read_list_of_time()
-    - read_list_of_tuple()
-    - read_regex()
-    - read_set()
-    - read_string()
-    - read_tuple()
+Arguments
+---------
+
+Readers accept the following kwargs:
+
+config_key
+    string configuration key using dotted notation
+default
+    if no `default` is given, the key must be present in the configuration.
+    If the key is missing a :class:`staticconf.errors.ConfigurationError`
+    is raised.
+namespace
+    get the value from this namespace instead of DEFAULT.
+
+
+Building custom readers
+-----------------------
+:func:`build_reader` is a factory function which can be used for creating
+custom readers from a validation function.  A validation function should handle
+all exceptions and raise a :class:`staticconf.errors.ValidationError` if there
+is a problem.
+
+First create a validation function
+
+.. code-block:: python
+
+    def validate_currency(value):
+        try:
+            # Assume a tuple or a list
+            name, decimal_points = value
+            return Currency(name, decimal_points)
+        except Exception, e:
+            raise ValidationErrror(...)
+
+
+Example of a custom reader:
+
+.. code-block:: python
+
+    from staticconf import readers
+
+    read_currency = readers.build_reader(validate_currency)
+
+    # Returns a Currency object using the data from the config namespace
+    # at they key `currencies.usd`.
+    usd_currency = read_currency('currencies.usd')
+
+
 """
 from staticconf import validation, config, errors
 from staticconf.proxy import UndefToken
@@ -57,6 +101,15 @@ def _read_config(config_key, config_namespace, default):
 
 
 def build_reader(validator, reader_namespace=config.DEFAULT):
+    """A factory method for creating a custom config reader from a validation
+    function.
+
+    :param validator: a validation function which acceptance one argument (the
+                      configuration value), and returns that value casted to
+                      the appropriate type.
+    :param reader_namespace: the default namespace to use. Defaults to
+                             `DEFAULT`.
+    """
     def reader(config_key, default=UndefToken, namespace=None):
         config_namespace = config.get_namespace(namespace or reader_namespace)
         return validator(_read_config(config_key, config_namespace, default))
@@ -64,7 +117,6 @@ def build_reader(validator, reader_namespace=config.DEFAULT):
 
 
 class ReaderNameFactory(object):
-    """Factory used to create the NamespaceReaders object."""
 
     @staticmethod
     def get_name(name):
@@ -104,6 +156,9 @@ def build_accessor_type(name_factory, builder):
 
 
 NamespaceReaders = build_accessor_type(ReaderNameFactory, build_reader)
+"""An object with all reader functions which retrieve configuration from
+a named namespace, instead of `DEFAULT`.
+"""
 
 
 default_readers = NamespaceReaders(config.DEFAULT)

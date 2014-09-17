@@ -3,7 +3,8 @@ Config
 ======
 
 .. automodule:: staticconf.config
-    :members:
+    :members: ConfigNamespace, get_namespace, validate, view_help, 
+              ConfigurationWatcher, ReloadCallbackChain, ConfigFacade
 
 Errors
 ------

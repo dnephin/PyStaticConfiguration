@@ -3,5 +3,5 @@ Readers
 =======
 
 .. automodule:: staticconf.readers
-    :members:
+    :members: NamespaceReaders, build_reader
 

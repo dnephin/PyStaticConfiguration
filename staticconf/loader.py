@@ -1,17 +1,47 @@
 """
-Load configuration data from different file formats and python structures.
+Load configuration values from different file formats and python structures.
 Nested dictionaries are flattened using dotted notation.
+
+These flattened keys and values are merged into a
+:class:`staticconf.config.ConfigNamespace`.
+
+Examples
+--------
+
+Basic example:
 
 .. code-block:: python
 
     staticconf.YamlConfiguration('config.yaml')
 
 
+Multiple loaders can be used to override values from previous loaders.
+
+.. code-block:: python
+
+    import staticconf
+
+    # Start by loading some values from a defaults file
+    staticconf.YamlConfiguration('defaults.yaml')
+
+    # Override with some user specified options
+    staticconf.YamlConfiguration('user.yaml', optional=True)
+
+    # Further override with some command line options
+    staticconf.ListConfiguration(opts.config_values)
+
+
+For configuration reloading see :class:`staticconf.config.ConfigFacade`.
+
+
+Arguments
+---------
+
 Configuration loaders accept the following kwargs:
 
 error_on_unknown
-    raises an error if there are keys in the config that have not been
-    defined by a getter or a schema
+    raises a :class:`staticconf.errors.ConfigurationError` if there are keys
+    in the config that have not been defined by a getter or a schema.
 
 optional
     if True only warns on failure to load configuration (Default False)
@@ -32,26 +62,26 @@ Custom Loader
 -------------
 
 You can create your own loaders for other formats by using
-:func:`build_loader()`.
+:func:`build_loader()`.  It takes a single argument, a function, which
+can accept any arguments, but must return a dictionary of
+configuration values.
+
 
 .. code-block:: python
 
     from staticconf import loader
 
-    def custom_loader(*args):
+    def load_from_db(table_name, conn):
         ...
-        return config_dict
+        return dict((row.field, row.value) for row in cursor.fetchall())
 
-    CustomConfiguration = loader.build_loader(custom_loader)
+    DBConfiguration = loader.build_loader(load_from_db)
 
-    ...
-
-    # Use it to load config things returned from `custom_loader()`
-    # into the namespace
-    CustomConfiguration(some_arg1, namespace='this_namespace')
+    # Now lets use it
+    DBConfiguration('config_table', conn, namespace='special')
 
 
-."""
+"""
 import logging
 import os
 import re

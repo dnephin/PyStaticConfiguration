@@ -1,5 +1,8 @@
 """
-Validate and convert a configuration value to it's expected type.
+Validate a configuration value by converting it to a specific type.
+
+These functions are used by :mod:`staticconf.readers` and 
+:mod:`staticconf.schema` to coerce config values to a type.
 """
 import datetime
 import logging

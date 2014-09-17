@@ -3,5 +3,5 @@ Schema
 ======
 
 .. automodule:: staticconf.schema
-    :members:
+    :members: build_value_type, SchemaMeta, Schema
 

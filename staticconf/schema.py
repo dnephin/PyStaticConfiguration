@@ -1,7 +1,10 @@
 """
-Configuration schemas can be used instead of getters to group your
-configuration definitions together.
+Configuration schemas can be used to group configuration values
+together.  These schemas can be instantiated at import time, and values can
+be retrieved from them by accessing the attributes of the schema object.
 
+Example
+-------
 
 .. code-block:: python
 
@@ -41,22 +44,44 @@ Access the values from a schema by instantiating the schema class.
     print config.ratio
 
 
-You can also create your own custom types:
+Arguments
+---------
+
+Schema accessors accept the following kwargs:
+
+config_key
+    string configuration key
+default
+    if no ``default`` is given, the key must be present in the configuration.
+    Raises :class:`staticconf.errors.ConfigurationError` on missing key.
+help
+    a help string describing the purpose of the config value. See
+    :func:`staticconf.config.view_help`.
+
+
+
+Custom schema types
+-------------------
+
+You can also create your own custom types using :func:`build_value_type`.
 
 .. code-block:: python
 
     from staticconf import schema
 
-    validator = ...
-    custom_type = schema.build_value_type(validator)
+    def validator(value):
+        try:
+            return do_some_casting(value)
+        except Exception:
+            raise ConfigurationError("%s can't be validated as a foo" % value)
+
+    foo_type = schema.build_value_type(validator)
 
 
     class MySchema(object):
         __metaclass__ = schema.SchemaMeta
 
-        something = custom_type(default=...)
-
-
+        something = foo_type(default=...)
 
 """
 import functools
@@ -167,11 +192,17 @@ class SchemaMeta(type):
 
 @six.add_metaclass(SchemaMeta)
 class Schema(object):
+    """Base class for configuration schemas, uses :class:`SchemaMeta`."""
 
     namespace = None
 
 
 def build_value_type(validator):
+    """A factory function to create a new schema type.
+
+    :param validator: a function which accepts one argument and returns that
+                      value as the correct type.
+    """
     return functools.partial(ValueTypeDefinition, validator)
 
 
