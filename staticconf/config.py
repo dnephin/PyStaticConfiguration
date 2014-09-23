@@ -62,7 +62,12 @@ class ConfigNamespace(object):
     """A container for related configuration values. Values are stored
     using flattened keys which map to values.
 
-    Values are added to this container using :mod:`staticconf.loader`.
+    Values are added to this container using :mod:`staticconf.loader`. When a
+    :class:`ConfigNamespace` is created, it persists for the entire life of the
+    process.  Values will stay in the namespace until :func:`clear` is called
+    to remove them.
+
+    To retrieve a namespace, use :func:`get_namespace`.
 
     To access values stored in this namespace use :mod:`staticconf.readers`
     or :mod:`staticconf.schema`.
@@ -125,6 +130,7 @@ class ConfigNamespace(object):
         return item in self.configuration_values
 
     def clear(self):
+        """Remove all values from the namespace."""
         self.configuration_values.clear()
 
     def _reset(self):

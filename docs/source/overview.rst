@@ -81,7 +81,7 @@ a `application.yaml`:
             - admin
         
 
-And a `overrides.yaml`
+And an `overrides.yaml`
 
 .. code-block:: yaml
 
@@ -130,7 +130,7 @@ Next we'll want to read these values at some point.
     # Using doted notation allows us to preserve any part of the mapping
     # structure, so in this case, the admins from `application.yaml` are
     # still there
-    admins = staticconf.read_list_of_String('groups.admins')
+    admins = staticconf.read_list_of_string('groups.admins')
 
     # We can also read other types. In our config this was a string, but we're
     # reading a date, so we receive a datetime.date object
