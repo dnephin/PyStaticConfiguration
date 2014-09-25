@@ -2,6 +2,9 @@
 Configuration schemas can be used to group configuration values
 together.  These schemas can be instantiated at import time, and values can
 be retrieved from them by accessing the attributes of the schema object.
+Each field on the schema turns into an accessor for a configuration value.
+These accessors will cache the return value of the validator that they use, so
+expensive operations are not repeated.
 
 Example
 -------

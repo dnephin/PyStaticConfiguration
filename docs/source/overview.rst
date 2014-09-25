@@ -31,7 +31,7 @@ namespaces.
 Reading configuration values
 ----------------------------
 Once configuration data is loaded into a 
-:class:`staticconf.config.ConfigNamespace` there are three methods for
+:class:`staticconf.config.ConfigNamespace` there are three options for
 retrieving the configuration values. All of them have a similar set of methods
 which use validators to ensure you're getting the type you expect. When a value
 is missing they will raise :class:`staticconf.errors.ConfigurationError` unless
@@ -50,11 +50,34 @@ For example the methods for getting a date using
 * ``staticconf.get_date()``
 
 
-See the full documentation for each method:
+Readers
+~~~~~~~
 
-* :mod:`staticconf.readers`
-* :mod:`staticconf.schema`
-* :mod:`staticconf.getters`
+:mod:`staticconf.readers`
+
+Readers are the most straightforward option. They simply lookup the value in
+the namespace and return it. There is no caching of the type-coercion.
+
+
+Schema
+~~~~~~
+
+:mod:`staticconf.schema`
+
+Schemas are classes where each property is an accessor for a configuration
+value. The type-coercion is cached on the class. This can be useful if you're
+performing more involved coercion (such as converting a large list to a
+mapping, or building complex types).
+
+
+Getters
+~~~~~~~
+
+:mod:`staticconf.getters`
+
+Getters have the same properties as schema accessors, but do not use a class.
+See the module documentation for some limitations with this option.
+
 
 
 Example
