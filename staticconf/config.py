@@ -164,8 +164,14 @@ def get_namespace(name):
 
 
 def reload(name=DEFAULT, all_names=False):
-    """Reload one or more namespaces. Defaults to just the DEFAULT namespace.
-    if all_names is True, reload all namespaces.
+    """Reload one or all :class:`ConfigNamespace`. Reload clears the cache of
+    :mod:`staticconf.schema` and :mod:`staticconf.getters`, allowing them to
+    pickup the latest values in the namespace.
+
+    Defaults to reloading just the DEFAULT namespace.
+
+    :param name: the name of the :class:`ConfigNamespace` to reload
+    :param all_names: If True, reload all namespaces, and ignore `name`
     """
     for namespace in get_namespaces_from_names(name, all_names):
         for value_proxy in namespace.get_value_proxies():
@@ -252,6 +258,11 @@ def has_duplicate_keys(config_data, base_conf, raise_error):
 class ConfigurationWatcher(object):
     """Watches a file for modification and reloads the configuration
     when it's modified.  Accepts a min_interval to throttle checks.
+
+    The default :func:`reload()` operation is to reload all namespaces. To
+    only reload a specific namespace use a :class:`ReloadCallbackChain`
+    for the `reloader`.
+
 
     .. seealso::
 
@@ -357,6 +368,11 @@ class ReloadCallbackChain(object):
     """A chain of callbacks which will be triggered after configuration is
     reloaded. Designed to work with :class:`ConfigurationWatcher`.
 
+    When this class is called it performs two operations:
+
+    * calls :func:`reload` on the `namespace`
+    * calls all attached callbacks
+
     Usage:
 
     .. code-block:: python
@@ -402,6 +418,10 @@ def build_loader_callable(load_func, filename, namespace):
 class ConfigFacade(object):
     """A facade around a :class:`ConfigurationWatcher` and a
     :class:`ReloadCallbackChain`. See :func:`ConfigFacade.load`.
+
+    When a :class:`ConfigFacade` is loaded it will clear the namespace of
+    all configuration and load the file into the namespace. If this is not
+    the behaviour you want, use a :class:`ConfigurationWatcher` instead.
 
     Usage:
 
