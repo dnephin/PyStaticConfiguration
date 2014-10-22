@@ -32,7 +32,7 @@ object.
 
     import staticconf
 
-    bling_reader = staticconf.NamespaceReader('bling')
+    bling_reader = staticconf.NamespaceReaders('bling')
 
     # These values are read from the `bling` ConfigNamespace
     currency = bling_reader.read_string('currency')
