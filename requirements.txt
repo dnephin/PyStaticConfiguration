@@ -5,3 +5,7 @@ pyyaml
 pytest
 mock
 flake8
+
+# Doc requirements
+sphinx_rtd_theme
+sphinx
