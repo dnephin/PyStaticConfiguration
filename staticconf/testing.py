@@ -6,8 +6,8 @@ from staticconf import config, loader
 
 class MockConfiguration(object):
     """A a context manager which patches the configuration namespace
-    while inside the context. When the context exits the onld configuration
-    values willb e restored to that namespace.
+    while inside the context. When the context exits the old configuration
+    values will be restored to that namespace.
 
     .. code-block:: python
 
@@ -25,7 +25,7 @@ class MockConfiguration(object):
     :param flatten: if True the configuration will be flattened (default True)
     :param args: passed directly to the constructor of :class:`dict` and used
                  as configuration data
-    :param kwargs: passed directly to the consutrcotr of :class:`dict` and used
+    :param kwargs: passed directly to the constructor of :class:`dict` and used
                 as configuration data
     """
 
