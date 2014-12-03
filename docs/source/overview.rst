@@ -164,6 +164,18 @@ See :class:`staticconf.config.ConfigFacade` for examples of how to reload
 configuration on changes.
 
 
+Logging
+-------
+
+:mod:`staticconf` logs a message at `INFO` level when configuration is loaded
+with the message "Unexpected value in <namespace> configuration: ...", with the
+list of unexpected values.  Unexpected values are those that haven't been
+registered by a :mod:`staticconf.schema` or :mod:`staticconf.getter`.
+
+This message is used to debug configuration errors. If you'd like to disable it
+you can set the logging level for `staticconf.config` to `WARN`.
+
+
 Reading dicts
 -------------
 By default :mod:`staticconf` flattens all the values it receives from
