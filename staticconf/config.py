@@ -12,6 +12,7 @@ These classes provide a way of reloading configuration when the file is
 modified.
 """
 from collections import namedtuple
+import hashlib
 import logging
 import os
 import time
@@ -295,26 +296,33 @@ class ConfigurationWatcher(object):
 
 
     :param config_loader: a function which takes no arguments. It is called
-                          by :func:`reload_if_changed` if the file has
-                          been modified
+        by :func:`reload_if_changed` if the file has been modified
     :param filenames: a filename or list of filenames to watch for modifications
     :param min_interval: minimum number of seconds to wait between calls to
-                         :func:`os.path.getmtime` to check if a file has
-                         been modified.
-
+        :func:`os.path.getmtime` to check if a file has been modified.
     :param reloader: a function which is called after `config_loader` when a
-                     file has been modified. Defaults to an empty
-                     :class:`ReloadCallbackChain`
+        file has been modified. Defaults to an empty
+        :class:`ReloadCallbackChain`
+    :param comparators: a list of classes which support the
+        :class:`IComparator` interface which are used to determine if a config
+        file has been modified. Defaults to :class:`InodeComparator` and
+        :class:`MTimeComparator`.
     """
 
-    def __init__(self, config_loader, filenames, min_interval=0, reloader=None):
+    def __init__(
+            self,
+            config_loader,
+            filenames,
+            min_interval=0,
+            reloader=None,
+            comparators=None):
         self.config_loader  = config_loader
         self.filenames      = self.get_filename_list(filenames)
-        self.inodes         = self._get_inodes()
         self.min_interval   = min_interval
         self.last_check     = time.time()
-        self.last_max_mtime = self.most_recent_changed
         self.reloader       = reloader or ReloadCallbackChain(all_names=True)
+        comparators         = comparators or [InodeComparator, MTimeComparator]
+        self.comparators    = [comp(self.filenames) for comp in comparators]
 
     def get_filename_list(self, filenames):
         if isinstance(filenames, six.string_types):
@@ -325,32 +333,21 @@ class ConfigurationWatcher(object):
     def should_check(self):
         return self.last_check + self.min_interval <= time.time()
 
-    @property
-    def most_recent_changed(self):
-        return max(os.path.getmtime(name) for name in self.filenames)
-
-    def _get_inodes(self):
-        def get_inode(stbuf):
-            return stbuf.st_dev, stbuf.st_ino
-        return [get_inode(os.stat(filename)) for filename in self.filenames]
-
     def reload_if_changed(self, force=False):
         """If the file(s) being watched by this object have changed,
         their configuration will be loaded again using `config_loader`.
         Otherwise this is a noop.
 
-        :param force: If True ignore the modified time and force a reload
+        :param force: If True ignore the `min_interval` and proceed to
+            file modified comparisons.  To force a reload use
+            :func:`reload` directly.
         """
         if (force or self.should_check) and self.file_modified():
             return self.reload()
 
     def file_modified(self):
         self.last_check = time.time()
-        last_mtime, self.last_max_mtime = (
-                self.last_max_mtime, self.most_recent_changed)
-        last_inodes, self.inodes = self.inodes, self._get_inodes()
-        return (last_inodes != self.inodes or
-                last_mtime < self.last_max_mtime)
+        return any(comp.has_changed() for comp in self.comparators)
 
     def reload(self):
         config_dict = self.config_loader()
@@ -362,6 +359,90 @@ class ConfigurationWatcher(object):
 
     def load_config(self):
         return self.config_loader()
+
+
+class IComparator(object):
+    """Interface for a comparator which is used by :class:`ConfigurationWatcher`
+    to determine if a file has been modified since the last check. A comparator
+    is used to reduce the work required to reload configuration. Comparators
+    should implement a mechanism that is relatively efficient (and scalable),
+    so it can be performed frequently.
+
+    :param filenames: A list of absolute paths to configuration files.
+    """
+
+    def __init__(self, filenames):
+        pass
+
+    def has_changed(self):
+        """Returns True if any of the files have been modified since the last
+        call to :func:`has_changed`. Returns False otherwise.
+        """
+        pass
+
+
+class InodeComparator(object):
+    """Compare files by inode and device number. This is a good comparator to
+    use when your files can change multiple times per second.
+    """
+
+    def __init__(self, filenames):
+        self.filenames = filenames
+        self.inodes = self.get_inodes()
+
+    def get_inodes(self):
+        def get_inode(stbuf):
+            return stbuf.st_dev, stbuf.st_ino
+        return [get_inode(os.stat(filename)) for filename in self.filenames]
+
+    def has_changed(self):
+        last_inodes, self.inodes = self.inodes, self.get_inodes()
+        return last_inodes != self.inodes
+
+
+class MTimeComparator(object):
+    """Compare files by modified time.
+
+    .. note::
+
+        Most filesystems only store modified time with second grangularity
+        so multiple changes within the same second can be ignored.
+    """
+
+    def __init__(self, filenames):
+        self.filenames = filenames
+        self.last_max_mtime = self.get_most_recent_changed()
+
+    def get_most_recent_changed(self):
+        return max(os.path.getmtime(name) for name in self.filenames)
+
+    def has_changed(self):
+        last_mtime, self.last_max_mtime = (
+                self.last_max_mtime, self.get_most_recent_changed())
+        return last_mtime < self.last_max_mtime
+
+
+class MD5Comparator(object):
+    """Compare files by md5 hash of their contents. This comparator will be
+    slower for larger files, but is more resilient to modifications which only
+    change mtime, but not the files contents.
+    """
+
+    def __init__(self, filenames):
+        self.filenames = filenames
+        self.hashes = self.get_hashes()
+
+    def get_hashes(self):
+        def build_hash(filename):
+            hasher = hashlib.md5()
+            with open(filename, 'rb') as fh:
+                hasher.update(fh.read())
+            return hasher.digest()
+        return [build_hash(filename) for filename in self.filenames]
+
+    def has_changed(self):
+        last_hashes, self.hashes = self.hashes, self.get_hashes()
+        return last_hashes != self.hashes
 
 
 class ReloadCallbackChain(object):
@@ -474,10 +555,5 @@ class ConfigFacade(object):
         self.callback_chain.add(identifier, callback)
 
     def reload_if_changed(self, force=False):
-        """If the files being watched by this object have changed,
-        their configuration will be loaded again using `loader_func`. Otherwise
-        this is a noop.
-
-        :param force: If True ignore the modified time and force a reload
-        """
+        """See :func:`ConfigurationWatcher.reload_if_changed` """
         self.watcher.reload_if_changed(force=force)
