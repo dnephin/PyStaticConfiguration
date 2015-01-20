@@ -3,4 +3,5 @@ command:
     - 'py.test'
     - '-v'
     - '-s'
+    - '--tb=short'
     - tests

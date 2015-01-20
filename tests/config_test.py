@@ -11,7 +11,14 @@ from testing.testifycompat import (
     assert_raises,
     mock,
 )
-from staticconf import config, errors, testing, proxy, validation, schema
+from staticconf import (
+    config,
+    errors,
+    proxy,
+    schema,
+    testing,
+    validation,
+)
 import staticconf
 
 
@@ -353,7 +360,7 @@ class TestConfigurationWatcher(object):
         assert_equal(self.watcher.last_check, self.mock_time.time.return_value)
 
     def test_file_modified(self):
-        self.watcher.last_max_mtime = 123456
+        self.watcher.comparators[1].last_max_mtime = 123456
         self.mock_path.getmtime.return_value = 123460
 
         assert self.watcher.file_modified()
@@ -366,12 +373,6 @@ class TestConfigurationWatcher(object):
         self.mock_stat.return_value.st_ino = 3
         assert self.watcher.file_modified()
 
-    @mock.patch('staticconf.config.os.stat', autospec=True)
-    def test_get_inodes(self, mock_stat):
-        inodes = self.watcher._get_inodes()
-        expected = [(mock_stat.return_value.st_dev, mock_stat.return_value.st_ino)]
-        assert_equal(inodes, expected)
-
     def test_reload_default(self):
         self.watcher.reload()
         self.loader.assert_called_with()
@@ -382,6 +383,41 @@ class TestConfigurationWatcher(object):
                 self.loader, self.filename, reloader=reloader)
         watcher.reload()
         reloader.assert_called_with()
+
+
+class TestInodeComparator(object):
+
+    @mock.patch('staticconf.config.os.stat', autospec=True)
+    def test_get_inodes(self, mock_stat):
+        comparator = config.InodeComparator(['./one.file'])
+        inodes = comparator.get_inodes()
+        expected = [(mock_stat.return_value.st_dev, mock_stat.return_value.st_ino)]
+        assert_equal(inodes, expected)
+
+
+class TestMD5Comparator(object):
+
+    @pytest.yield_fixture()
+    def comparator(self):
+        self.original_contents = "abcdefghijkabcd"
+        with tempfile.NamedTemporaryFile() as self.file:
+            self.write_contents(self.original_contents)
+            yield config.MD5Comparator([self.file.name])
+
+    def write_contents(self, contents):
+        self.file.seek(0)
+        self.file.write(contents)
+        self.file.flush()
+
+    def test_has_changed_no_changes(self, comparator):
+        assert not comparator.has_changed()
+        self.write_contents(self.original_contents)
+        assert not comparator.has_changed()
+
+    def test_has_changed_with_changes(self, comparator):
+        assert not comparator.has_changed()
+        self.write_contents("this is the new content")
+        assert comparator.has_changed()
 
 
 class TestReloadCallbackChain(object):
