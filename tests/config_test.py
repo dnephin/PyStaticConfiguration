@@ -354,7 +354,8 @@ class TestConfigurationWatcher(object):
         assert self.watcher.should_check
 
     def test_file_modified_not_modified(self):
-        self.watcher.last_max_mtime = self.mock_path.getmtime.return_value = 222
+        self.watcher.comparators[1].last_max_mtime = mtime = 222
+        self.mock_path.getmtime.return_value = mtime
         self.mock_time.time.return_value = 123456
         assert not self.watcher.file_modified()
         assert_equal(self.watcher.last_check, self.mock_time.time.return_value)
@@ -367,8 +368,8 @@ class TestConfigurationWatcher(object):
         assert_equal(self.watcher.last_check, self.mock_time.time.return_value)
 
     def test_file_modified_moved(self):
-        self.mock_path.getmtime.return_value = 123456
-        self.watcher.last_max_mtime = 123456
+        self.mock_path.getmtime.return_value = mtime = 123456
+        self.watcher.comparators[1].last_max_mtime = mtime
         assert not self.watcher.file_modified()
         self.mock_stat.return_value.st_ino = 3
         assert self.watcher.file_modified()
@@ -399,7 +400,7 @@ class TestMD5Comparator(object):
 
     @pytest.yield_fixture()
     def comparator(self):
-        self.original_contents = "abcdefghijkabcd"
+        self.original_contents = b"abcdefghijkabcd"
         with tempfile.NamedTemporaryFile() as self.file:
             self.write_contents(self.original_contents)
             yield config.MD5Comparator([self.file.name])
@@ -416,7 +417,7 @@ class TestMD5Comparator(object):
 
     def test_has_changed_with_changes(self, comparator):
         assert not comparator.has_changed()
-        self.write_contents("this is the new content")
+        self.write_contents(b"this is the new content")
         assert comparator.has_changed()
 
 

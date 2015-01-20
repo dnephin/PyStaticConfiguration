@@ -1,5 +1,5 @@
 
-.PHONY: clean docs testi upload
+.PHONY: clean docs test upload
 
 
 clean:

@@ -435,10 +435,10 @@ class MD5Comparator(object):
     def get_hashes(self):
         def build_hash(filename):
             hasher = hashlib.md5()
-            with open(filename) as fh:
+            with open(filename, 'rb') as fh:
                 hasher.update(fh.read())
             return hasher.digest()
-        return map(build_hash, self.filenames)
+        return [build_hash(filename) for filename in self.filenames]
 
     def has_changed(self):
         last_hashes, self.hashes = self.hashes, self.get_hashes()
