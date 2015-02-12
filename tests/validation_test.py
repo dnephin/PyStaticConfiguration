@@ -126,7 +126,8 @@ class TestBuildMappingTypeValidator(object):
         assert_equal(pair_validator(enumerate(range(3))), expected)
 
     def test_build_map_from_list_of_dicts(self):
-        map_by_id = lambda d: (d['id'], d['value'])
+        def map_by_id(d):
+            return d['id'], d['value']
         map_validator = validation.build_map_type_validator(map_by_id)
         expected = {'a': 'b', 'c': 'd'}
         source = [dict(id='a', value='b'), dict(id='c', value='d')]
