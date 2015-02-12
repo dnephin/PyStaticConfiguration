@@ -388,12 +388,42 @@ class TestConfigurationWatcher(object):
 
 class TestInodeComparator(object):
 
+    def test_get_inodes_empty(self):
+        comparator = config.InodeComparator([])
+        assert comparator.get_inodes() == []
+
     @mock.patch('staticconf.config.os.stat', autospec=True)
     def test_get_inodes(self, mock_stat):
         comparator = config.InodeComparator(['./one.file'])
         inodes = comparator.get_inodes()
         expected = [(mock_stat.return_value.st_dev, mock_stat.return_value.st_ino)]
         assert_equal(inodes, expected)
+
+
+class TestMTimeComparator(object):
+
+    def test_get_most_recent_empty(self):
+        comparator = config.MTimeComparator([])
+        assert comparator.get_most_recent_changed() == -1
+
+    @mock.patch('staticconf.config.os.path.getmtime', autospec=True, side_effect=[0,0,1,2,3])
+    def test_get_most_recent(self, mock_mtime):
+        comparator = config.MTimeComparator(['./one.file', './two.file'])
+        assert comparator.get_most_recent_changed() == 2
+        assert mock_mtime.call_count == 4
+
+    @mock.patch('staticconf.config.os.path.getmtime', autospec=True, return_value=1)
+    def test_no_change(self, mock_mtime):
+        comparator = config.MTimeComparator(['./one.file'])
+        assert not comparator.has_changed()
+        assert not comparator.has_changed()
+
+    @mock.patch('staticconf.config.os.path.getmtime', autospec=True, side_effect=[0,1,1,2])
+    def test_changes(self, mock_mtime):
+        comparator = config.MTimeComparator(['./one.file'])
+        assert comparator.has_changed()
+        assert not comparator.has_changed()
+        assert comparator.has_changed()
 
 
 class TestMD5Comparator(object):
@@ -409,6 +439,10 @@ class TestMD5Comparator(object):
         self.file.seek(0)
         self.file.write(contents)
         self.file.flush()
+
+    def test_get_hashes_empty(self):
+        comparator = config.MD5Comparator([])
+        assert comparator.get_hashes() == []
 
     def test_has_changed_no_changes(self, comparator):
         assert not comparator.has_changed()
