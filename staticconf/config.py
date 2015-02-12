@@ -414,6 +414,8 @@ class MTimeComparator(object):
         self.last_max_mtime = self.get_most_recent_changed()
 
     def get_most_recent_changed(self):
+        if not self.filenames:
+            return -1
         return max(os.path.getmtime(name) for name in self.filenames)
 
     def has_changed(self):
