@@ -126,7 +126,7 @@ a watcher for reloading, and read some config values.
             (k[5:].lower(), v) for k, v in os.environ if k.startswith('MYAPP_'))
 
 
-    def build_watcher(loader, filename):
+    def build_watcher(filename):
         return staticconf.ConfigFacade.load(
             filenames, 'DEFAULT', partial(load_config, filename))
 
