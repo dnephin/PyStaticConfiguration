@@ -327,7 +327,11 @@ class ConfigurationWatcher(object):
     def get_filename_list(self, filenames):
         if isinstance(filenames, six.string_types):
             filenames = [filenames]
-        return sorted(os.path.abspath(name) for name in filenames)
+        filenames = sorted(os.path.abspath(name) for name in filenames)
+        if not filenames:
+            raise ValueError(
+                "ConfigurationWatcher requires at least one filename to watch")
+        return filenames
 
     @property
     def should_check(self):
