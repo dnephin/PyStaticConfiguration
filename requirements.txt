@@ -1,7 +1,0 @@
--e .
-
-# Testing requirements
-pyyaml
-pytest
-mock
-flake8
