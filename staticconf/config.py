@@ -101,6 +101,18 @@ class ConfigNamespace(object):
         """
         return self.configuration_values
 
+    def get_config_dict(self):
+        """Reconstruct the nested structure of this object's configuration
+        and return it as a dict.
+        """
+        config_dict = {}
+        for dotted_key, value in self.get_config_values().items():
+            subkeys = dotted_key.split('.')
+            d = config_dict
+            for key in subkeys:
+                d = d.setdefault(key, value if key == subkeys[-1] else {})
+        return config_dict
+
     def get_known_keys(self):
         return set(vproxy.config_key for vproxy in self.get_value_proxies())
 
