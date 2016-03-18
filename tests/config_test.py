@@ -104,19 +104,25 @@ class TestConfigurationNamespace(object):
 
     def test_get_config_dict(self):
         self.namespace['one.two.three.four'] = 5
-        self.namespace['a.b'] = 'c'
+        self.namespace['one.two.three.five'] = 'six'
+        self.namespace['one.b.cats'] = [1, 2, 3]
+        self.namespace['a.two'] = 'c'
         self.namespace['first'] = True
         d = self.namespace.get_config_dict()
         assert_equal(d, {
             'one': {
+                'b': {
+                    'cats': [1, 2, 3],
+                },
                 'two': {
                     'three': {
                         'four': 5,
+                        'five': 'six',
                     },
                 },
             },
             'a': {
-                'b': 'c',
+                'two': 'c',
             },
             'first': True,
         })
