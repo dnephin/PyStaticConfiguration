@@ -102,6 +102,31 @@ class TestConfigurationNamespace(object):
         values = self.namespace.get_config_values()
         assert_equal(values, {'stars': 'foo'})
 
+    def test_get_config_dict(self):
+        self.namespace['one.two.three.four'] = 5
+        self.namespace['one.two.three.five'] = 'six'
+        self.namespace['one.b.cats'] = [1, 2, 3]
+        self.namespace['a.two'] = 'c'
+        self.namespace['first'] = True
+        d = self.namespace.get_config_dict()
+        assert_equal(d, {
+            'one': {
+                'b': {
+                    'cats': [1, 2, 3],
+                },
+                'two': {
+                    'three': {
+                        'four': 5,
+                        'five': 'six',
+                    },
+                },
+            },
+            'a': {
+                'two': 'c',
+            },
+            'first': True,
+        })
+
     def test_get_known_keys(self):
         proxies = [mock.Mock(), mock.Mock()]
         for mock_proxy in proxies:
