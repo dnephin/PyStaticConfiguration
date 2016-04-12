@@ -317,8 +317,7 @@ class ConfigurationWatcher(object):
         :class:`ReloadCallbackChain`
     :param comparators: a list of classes which support the
         :class:`IComparator` interface which are used to determine if a config
-        file has been modified. Defaults to :class:`InodeComparator` and
-        :class:`MTimeComparator`.
+        file has been modified. Defaults to :class:`MTimeComparator`.
     """
 
     def __init__(
@@ -333,7 +332,7 @@ class ConfigurationWatcher(object):
         self.min_interval   = min_interval
         self.last_check     = time.time()
         self.reloader       = reloader or ReloadCallbackChain(all_names=True)
-        comparators         = comparators or [InodeComparator, MTimeComparator]
+        comparators         = comparators or [MTimeComparator]
         self.comparators    = [comp(self.filenames) for comp in comparators]
 
     def get_filename_list(self, filenames):
