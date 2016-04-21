@@ -1,11 +1,13 @@
 """
 Facilitate testing of code which uses staticconf.
 """
+import copy
+
 from staticconf import config, loader
 
 
 class MockConfiguration(object):
-    """A a context manager which patches the configuration namespace
+    """A context manager which replaces the configuration namespace
     while inside the context. When the context exits the old configuration
     values will be restored to that namespace.
 
@@ -56,3 +58,35 @@ class MockConfiguration(object):
 
     def __exit__(self, *args):
         self.teardown()
+
+
+class PatchConfiguration(MockConfiguration):
+    """A context manager which updates the configuration namespace while inside
+    the context. When the context exits the old configuration values will be
+    restored to that namespace.
+
+    Unlike MockConfiguration which completely replaces the configuration with
+    the new one, this class instead only updates the keys in the configuration
+    which are passed to it.  It preserves all previous values that weren't
+    updated.
+
+    .. code-block:: python
+
+        import staticconf.testing
+
+        config = {
+            ...
+        }
+        with staticconf.testing.PatchConfiguration(config, namespace='special'):
+            # Run your tests.
+        ...
+
+    The arguments are identical to MockConfiguration.
+    """
+
+    def setup(self):
+        self.old_values = copy.deepcopy(dict(self.namespace.get_config_values()))
+        new_configuration = copy.deepcopy(self.old_values)
+        new_configuration.update(self.config_data)
+        self.reset_namespace(new_configuration)
+        config.reload(name=self.namespace.name)
