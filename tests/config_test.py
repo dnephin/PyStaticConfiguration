@@ -379,25 +379,18 @@ class TestConfigurationWatcher(object):
         assert self.watcher.should_check
 
     def test_file_modified_not_modified(self):
-        self.watcher.comparators[1].last_max_mtime = mtime = 222
+        self.watcher.comparators[0].last_max_mtime = mtime = 222
         self.mock_path.getmtime.return_value = mtime
         self.mock_time.time.return_value = 123456
         assert not self.watcher.file_modified()
         assert_equal(self.watcher.last_check, self.mock_time.time.return_value)
 
     def test_file_modified(self):
-        self.watcher.comparators[1].last_max_mtime = 123456
+        self.watcher.comparators[0].last_max_mtime = 123456
         self.mock_path.getmtime.return_value = 123460
 
         assert self.watcher.file_modified()
         assert_equal(self.watcher.last_check, self.mock_time.time.return_value)
-
-    def test_file_modified_moved(self):
-        self.mock_path.getmtime.return_value = mtime = 123456
-        self.watcher.comparators[1].last_max_mtime = mtime
-        assert not self.watcher.file_modified()
-        self.mock_stat.return_value.st_ino = 3
-        assert self.watcher.file_modified()
 
     def test_reload_default(self):
         self.watcher.reload()
