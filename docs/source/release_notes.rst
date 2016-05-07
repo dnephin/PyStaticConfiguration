@@ -2,6 +2,12 @@
 Release Notes
 =============
 
+v0.10.0
+-------
+* add ``get_config_dict()`` to retrieve a mapping
+* remove ``InodeComparator`` from the list of default comparators
+* add ``PatchConfiguration`` for testing
+
 v0.9.0
 ------
 * support different file comparison strategies for the ConfigurationWatcher
