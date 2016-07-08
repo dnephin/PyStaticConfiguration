@@ -93,7 +93,7 @@ def _validate_iterable(iterable_type, value):
     """
     if isinstance(value, six.string_types):
         msg = "Invalid iterable of type(%s): %s"
-        raise ValidationError(msg % (tuple(value), value))
+        raise ValidationError(msg % (type(value), value))
 
     try:
         return iterable_type(value)
