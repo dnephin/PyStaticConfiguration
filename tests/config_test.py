@@ -444,6 +444,51 @@ class TestMTimeComparator(object):
         assert comparator.has_changed()
 
 
+class TestLoggingMTimeComparator(object):
+
+    def __init__(self):
+        self._LoggingMTimeComparator = config.create_LoggingMTimeComparator(self._err_logger)
+
+    @pytest.fixture(autouse=True)
+    def _reset_err_logger(self):
+        self._err_filename = None
+
+    def _err_logger(self, filename):
+        self._err_filename = filename
+
+    def test_get_most_recent_empty(self):
+        comparator = self._LoggingMTimeComparator([])
+        assert comparator.get_most_recent_changed() == -1
+        assert self._err_filename is None
+
+    def test_logs_error(self):
+        comparator = self._LoggingMTimeComparator(['./not.a.file'])
+        assert comparator.get_most_recent_changed() == -1
+        assert self._err_filename == "./not.a.file"
+
+    @mock.patch('staticconf.config.os.path.getmtime', autospec=True, side_effect=[0,0,1,2,3])
+    def test_get_most_recent(self, mock_mtime):
+        comparator = self._LoggingMTimeComparator(['./one.file', './two.file'])
+        assert comparator.get_most_recent_changed() == 2
+        assert mock_mtime.call_count == 4
+        assert self._err_filename is None
+
+    @mock.patch('staticconf.config.os.path.getmtime', autospec=True, return_value=1)
+    def test_no_change(self, mock_mtime):
+        comparator = self._LoggingMTimeComparator(['./one.file'])
+        assert not comparator.has_changed()
+        assert not comparator.has_changed()
+        assert self._err_filename is None
+
+    @mock.patch('staticconf.config.os.path.getmtime', autospec=True, side_effect=[0,1,1,2])
+    def test_changes(self, mock_mtime):
+        comparator = self._LoggingMTimeComparator(['./one.file'])
+        assert comparator.has_changed()
+        assert not comparator.has_changed()
+        assert comparator.has_changed()
+        assert self._err_filename is None
+
+
 class TestMD5Comparator(object):
 
     @pytest.yield_fixture()
