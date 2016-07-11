@@ -456,15 +456,15 @@ class TestLoggingMTimeComparator(object):
     def _err_logger(self, filename):
         self._err_filename = filename
 
-    def test_get_most_recent_empty(self):
-        comparator = self._LoggingMTimeComparator([])
-        assert comparator.get_most_recent_changed() == -1
-        assert self._err_filename is None
-
     def test_logs_error(self):
         comparator = self._LoggingMTimeComparator(['./not.a.file'])
         assert comparator.get_most_recent_changed() == -1
         assert self._err_filename == "./not.a.file"
+
+    def test_get_most_recent_empty(self):
+        comparator = self._LoggingMTimeComparator([])
+        assert comparator.get_most_recent_changed() == -1
+        assert self._err_filename is None
 
     @mock.patch('staticconf.config.os.path.getmtime', autospec=True, side_effect=[0,0,1,2,3])
     def test_get_most_recent(self, mock_mtime):

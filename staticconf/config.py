@@ -443,21 +443,21 @@ def create_LoggingMTimeComparator(err_logger):
     """Return an MTimeComparator subclass that calls err_logger(filename)
     if os.path.getmtime(filename) fails."""
 
+    def try_getmtime_else_log(filename):
+        try:
+            return os.path.getmtime(filename)
+        except OSError:
+            err_logger(filename)
+        return -1
+
     class LoggingMTimeComparator(MTimeComparator):
         """Same as MTimeComparator but calls err_logger(filename)
         if os.path.getmtime(filename) fails."""
 
         def get_most_recent_changed(self):
-            max_time = -1
-            for filename in self.filenames:
-                try:
-                    time = os.path.getmtime(filename)
-                except OSError:
-                    err_logger(filename)
-                else:
-                    if time > max_time:
-                        max_time = time
-            return max_time
+            if not self.filenames:
+                return -1
+            return max(try_getmtime_else_log(name) for name in self.filenames)
 
     return LoggingMTimeComparator
 
