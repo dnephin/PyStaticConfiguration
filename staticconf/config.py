@@ -441,7 +441,9 @@ class MTimeComparator(object):
 
 def create_LoggingMTimeComparator(err_logger):
     """Return an MTimeComparator subclass that calls err_logger(filename)
-    if os.path.getmtime(filename) fails."""
+    if os.path.getmtime(filename) fails. err_logger is called within the
+    context of the raised OSError, thus sys.exc_info() can be used to
+    examine the exception."""
 
     def try_getmtime_else_log(filename):
         try:
@@ -451,8 +453,8 @@ def create_LoggingMTimeComparator(err_logger):
         return -1
 
     class LoggingMTimeComparator(MTimeComparator):
-        """Same as MTimeComparator but calls err_logger(filename)
-        if os.path.getmtime(filename) fails."""
+        """Same as MTimeComparator but calls err_logger(filename) in the
+        exception context if os.path.getmtime(filename) fails."""
 
         def get_most_recent_changed(self):
             if not self.filenames:
