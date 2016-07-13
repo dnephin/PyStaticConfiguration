@@ -415,10 +415,27 @@ class InodeComparator(object):
         return last_inodes != self.inodes
 
 
+def build_compare_func(err_logger=None):
+    """Returns a compare_func that can be passed to MTimeComparator.
+
+    The returned compare_func first tries os.path.getmtime(filename),
+    then calls err_logger(filename) if that fails. If err_logger is None,
+    then it does nothing. err_logger is always called within the context of
+    an OSError raised by os.path.getmtime(filename). Information on this
+    error can be retrieved by calling sys.exc_info inside of err_logger."""
+    def compare_func(filename):
+        try:
+            return os.path.getmtime(filename)
+        except OSError:
+            if err_logger is not None:
+                err_logger(filename)
+        return -1
+    return compare_func
+
+
 class MTimeComparator(object):
-    """Compare files by modified time. If os.path.getmtime(filename) fails,
-    calls err_logger(filename) if it exists in the context of the raised
-    OSError, thus sys.exc_info() can be used to examine the exception.
+    """Compare files by modified time, or using compare_func,
+    if it is not None.
 
     .. note::
 
@@ -426,18 +443,11 @@ class MTimeComparator(object):
         so multiple changes within the same second can be ignored.
     """
 
-    def __init__(self, filenames, err_logger=None):
+    def __init__(self, filenames, compare_func=None):
         self.filenames = filenames
-        self.err_logger = err_logger
+        self.compare_func = (os.path.getmtime if compare_func is None
+                             else compare_func)
         self.last_max_mtime = self.get_most_recent_changed()
-
-    def compare_func(self, filename):
-        try:
-            return os.path.getmtime(filename)
-        except OSError:
-            if self.err_logger is not None:
-                self.err_logger(filename)
-        return -1
 
     def get_most_recent_changed(self):
         if not self.filenames:

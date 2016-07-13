@@ -446,10 +446,11 @@ class TestMTimeComparator(object):
         assert comparator.has_changed()
 
 
-class TestLoggingMTimeComparator(object):
+class TestMTimeComparatorWithCompareFunc(object):
 
     def __init__(self):
-        self._LoggingMTimeComparator = functools.partial(config.MTimeComparator, err_logger=self._err_logger)
+        self._LoggingMTimeComparator = functools.partial(
+            config.MTimeComparator, compare_func=config.build_compare_func(self._err_logger))
 
     @pytest.fixture(autouse=True)
     def _reset_err_logger(self):
