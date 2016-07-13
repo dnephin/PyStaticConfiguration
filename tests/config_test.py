@@ -4,6 +4,7 @@ import platform
 import tempfile
 import time
 import sys
+import functools
 
 import pytest
 
@@ -448,7 +449,7 @@ class TestMTimeComparator(object):
 class TestLoggingMTimeComparator(object):
 
     def __init__(self):
-        self._LoggingMTimeComparator = config.create_LoggingMTimeComparator(self._err_logger)
+        self._LoggingMTimeComparator = functools.partial(config.MTimeComparator, err_logger=self._err_logger)
 
     @pytest.fixture(autouse=True)
     def _reset_err_logger(self):

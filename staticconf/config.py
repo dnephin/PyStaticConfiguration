@@ -416,7 +416,9 @@ class InodeComparator(object):
 
 
 class MTimeComparator(object):
-    """Compare files by modified time.
+    """Compare files by modified time. If os.path.getmtime(filename) fails,
+    calls err_logger(filename) if it exists in the context of the raised
+    OSError, thus sys.exc_info() can be used to examine the exception.
 
     .. note::
 
@@ -424,44 +426,28 @@ class MTimeComparator(object):
         so multiple changes within the same second can be ignored.
     """
 
-    def __init__(self, filenames):
+    def __init__(self, filenames, err_logger=None):
         self.filenames = filenames
+        self.err_logger = err_logger
         self.last_max_mtime = self.get_most_recent_changed()
+
+    def compare_func(self, filename):
+        try:
+            return os.path.getmtime(filename)
+        except OSError:
+            if self.err_logger is not None:
+                self.err_logger(filename)
+        return -1
 
     def get_most_recent_changed(self):
         if not self.filenames:
             return -1
-        return max(os.path.getmtime(name) for name in self.filenames)
+        return max(self.compare_func(name) for name in self.filenames)
 
     def has_changed(self):
         last_mtime, self.last_max_mtime = (
                 self.last_max_mtime, self.get_most_recent_changed())
         return last_mtime < self.last_max_mtime
-
-
-def create_LoggingMTimeComparator(err_logger):
-    """Return an MTimeComparator subclass that calls err_logger(filename)
-    if os.path.getmtime(filename) fails. err_logger is called within the
-    context of the raised OSError, thus sys.exc_info() can be used to
-    examine the exception."""
-
-    def try_getmtime_else_log(filename):
-        try:
-            return os.path.getmtime(filename)
-        except OSError:
-            err_logger(filename)
-        return -1
-
-    class LoggingMTimeComparator(MTimeComparator):
-        """Same as MTimeComparator but calls err_logger(filename) in the
-        exception context if os.path.getmtime(filename) fails."""
-
-        def get_most_recent_changed(self):
-            if not self.filenames:
-                return -1
-            return max(try_getmtime_else_log(name) for name in self.filenames)
-
-    return LoggingMTimeComparator
 
 
 class MD5Comparator(object):
