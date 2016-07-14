@@ -3,6 +3,8 @@ import os
 import platform
 import tempfile
 import time
+import sys
+import functools
 
 import pytest
 
@@ -442,6 +444,59 @@ class TestMTimeComparator(object):
         assert comparator.has_changed()
         assert not comparator.has_changed()
         assert comparator.has_changed()
+
+
+class TestMTimeComparatorWithCompareFunc(object):
+
+    def __init__(self):
+        self._LoggingMTimeComparator = functools.partial(
+            config.MTimeComparator, compare_func=config.build_compare_func(self._err_logger))
+
+    @pytest.fixture(autouse=True)
+    def _reset_err_logger(self):
+        self._err_filename = None
+        self._exc_info = (None, None, None)
+
+    def _err_logger(self, filename):
+        self._err_filename = filename
+        self._exc_info = sys.exc_info()
+
+    def test_logs_error(self):
+        comparator = self._LoggingMTimeComparator(['./not.a.file'])
+        assert comparator.get_most_recent_changed() == -1
+        assert self._err_filename == "./not.a.file"
+        assert all(x is not None for x in self._exc_info)
+
+    def test_get_most_recent_empty(self):
+        comparator = self._LoggingMTimeComparator([])
+        assert comparator.get_most_recent_changed() == -1
+        assert self._err_filename is None
+        assert all(x is None for x in self._exc_info)
+
+    @mock.patch('staticconf.config.os.path.getmtime', autospec=True, side_effect=[0,0,1,2,3])
+    def test_get_most_recent(self, mock_mtime):
+        comparator = self._LoggingMTimeComparator(['./one.file', './two.file'])
+        assert comparator.get_most_recent_changed() == 2
+        assert mock_mtime.call_count == 4
+        assert self._err_filename is None
+        assert all(x is None for x in self._exc_info)
+
+    @mock.patch('staticconf.config.os.path.getmtime', autospec=True, return_value=1)
+    def test_no_change(self, mock_mtime):
+        comparator = self._LoggingMTimeComparator(['./one.file'])
+        assert not comparator.has_changed()
+        assert not comparator.has_changed()
+        assert self._err_filename is None
+        assert all(x is None for x in self._exc_info)
+
+    @mock.patch('staticconf.config.os.path.getmtime', autospec=True, side_effect=[0,1,1,2])
+    def test_changes(self, mock_mtime):
+        comparator = self._LoggingMTimeComparator(['./one.file'])
+        assert comparator.has_changed()
+        assert not comparator.has_changed()
+        assert comparator.has_changed()
+        assert self._err_filename is None
+        assert all(x is None for x in self._exc_info)
 
 
 class TestMD5Comparator(object):
