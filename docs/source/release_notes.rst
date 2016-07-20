@@ -2,6 +2,11 @@
 Release Notes
 =============
 
+v0.10.1
+-------
+* add ``compare_func`` support to ``MTimeComparator`` and adds ``build_compare_func`` helper
+* fixes an error in ``_validate_iterable``
+
 v0.10.0
 -------
 * add ``get_config_dict()`` to retrieve a mapping
