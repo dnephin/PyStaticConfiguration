@@ -88,8 +88,18 @@ class ConfigNamespace(object):
     def register_proxy(self, proxy):
         self.value_proxies[id(proxy)] = proxy
 
-    def apply_config_data(self, config_data, error_on_unknown, error_on_dupe):
-        self.validate_keys(config_data, error_on_unknown)
+    def apply_config_data(
+        self,
+        config_data,
+        error_on_unknown,
+        error_on_dupe,
+        log_keys_only=False,
+    ):
+        self.validate_keys(
+            config_data,
+            error_on_unknown,
+            log_keys_only=log_keys_only,
+        )
         self.has_duplicate_keys(config_data, error_on_dupe)
         self.update_values(config_data)
 
@@ -116,10 +126,18 @@ class ConfigNamespace(object):
     def get_known_keys(self):
         return set(vproxy.config_key for vproxy in self.get_value_proxies())
 
-    def validate_keys(self, config_data, error_on_unknown):
+    def validate_keys(
+        self,
+        config_data,
+        error_on_unknown,
+        log_keys_only=False,
+    ):
         unknown = remove_by_keys(config_data, self.get_known_keys())
         if not unknown:
             return
+
+        if log_keys_only:
+            unknown = [k for k, _ in unknown]
 
         msg = "Unexpected value in %s configuration: %s" % (self.name, unknown)
         if error_on_unknown:
