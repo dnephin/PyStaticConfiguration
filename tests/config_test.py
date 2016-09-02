@@ -10,8 +10,6 @@ import pytest
 
 from testing.testifycompat import (
     assert_equal,
-    assert_in,
-    assert_not_in,
     assert_raises,
     mock,
 )
@@ -168,8 +166,8 @@ class TestConfigurationNamespace(object):
             for k, v in unknown:
                 # Have to cast to strings here, since log_msg is a string
                 key_string, val_string = str(k), str(v)
-                assert_in(key_string, log_msg)
-                assert_not_in(val_string, log_msg)
+                assert key_string in log_msg
+                assert val_string not in log_msg
 
     def test_validate_keys_unknown_raise(self):
         assert_raises(errors.ConfigurationError,
