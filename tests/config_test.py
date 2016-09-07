@@ -150,6 +150,25 @@ class TestConfigurationNamespace(object):
             self.namespace.validate_keys(self.config_data, False)
             assert_equal(len(mock_log.info.mock_calls), 1)
 
+    def test_validate_keys_unknown_log_keys_only(self):
+        with mock.patch('staticconf.config.log') as mock_log:
+            self.namespace.validate_keys(
+                self.config_data,
+                False,
+                log_keys_only=True,
+            )
+            assert_equal(len(mock_log.info.mock_calls), 1)
+            log_msg = mock_log.info.call_args[0][0]
+            unknown = config.remove_by_keys(
+                self.config_data,
+                self.namespace.get_known_keys(),
+            )
+            for k, v in unknown:
+                # Have to cast to strings here, since log_msg is a string
+                key_string, val_string = str(k), str(v)
+                assert key_string in log_msg
+                assert val_string not in log_msg
+
     def test_validate_keys_unknown_raise(self):
         assert_raises(errors.ConfigurationError,
                 self.namespace.validate_keys, self.config_data, True)
