@@ -29,3 +29,6 @@ htmlcov/
 
 .idea
 .*.sw[po]
+
+.dobi
+.cache

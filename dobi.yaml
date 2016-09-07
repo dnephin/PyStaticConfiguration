@@ -1,0 +1,24 @@
+
+meta:
+  project: pystaticconf
+
+mount=source:
+    bind: .
+    path: /work
+
+image=builder:
+    image: staticconf-dev
+    context: dockerfiles/
+    dockerfile: Dockerfile
+
+job=test:
+    use: builder
+    mounts: [source]
+    interactive: true
+    command: tox
+
+job=shell:
+    use: builder
+    mounts: [source]
+    interactive: true
+    command: bash
