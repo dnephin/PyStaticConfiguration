@@ -16,7 +16,9 @@ RUN     export DEBIAN_FRONTEND=noninteractive; \
             pypy \
             curl
 
-RUN     curl -LS https://bootstrap.pypa.io/get-pip.py | python3 && \
-            pip install tox
+RUN     curl -Ls https://bootstrap.pypa.io/get-pip.py | python3
+RUN     pip install \
+            tox \
+            yapyautotest
 
 WORKDIR /work

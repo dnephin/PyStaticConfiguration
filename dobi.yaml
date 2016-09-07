@@ -1,24 +1,51 @@
 
 meta:
   project: pystaticconf
+  default: test
+
 
 mount=source:
     bind: .
     path: /work
+
+mount=pypiconf:
+    bind: ~/.pypirc
+    path: /root/.pypirc
+    file: true
 
 image=builder:
     image: staticconf-dev
     context: dockerfiles/
     dockerfile: Dockerfile
 
+
 job=test:
     use: builder
     mounts: [source]
     interactive: true
     command: tox
+    env: ['TOXENV={env.TOXENV:}']
 
 job=shell:
     use: builder
-    mounts: [source]
+    mounts: [source, pypiconf]
     interactive: true
     command: bash
+
+job=clean:
+    use: builder
+    mounts: [source]
+    command: "find -name *.pyc -o -name __pycache__ -exec rm -rf {} \\;"
+
+job=docs:
+    use: builder
+    mounts: [source]
+    command: "tox -e docs"
+    artifact: docs/build
+
+job=release:
+    use: builder
+    mounts: [source, pypiconf]
+    interactive: true
+    depends: [docs]
+    command: "python3 setup.py sdist upload upload_docs"
