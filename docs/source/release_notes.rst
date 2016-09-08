@@ -2,6 +2,10 @@
 Release Notes
 =============
 
+v0.10.2
+-------
+* add ``log_keys_only`` to loaders to prevent the printing of unknown values.
+
 v0.10.1
 -------
 * add ``compare_func`` support to ``MTimeComparator`` and adds ``build_compare_func`` helper
