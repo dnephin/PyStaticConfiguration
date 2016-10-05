@@ -137,7 +137,7 @@ def load_config_data(loader_func, *args, **kwargs):
 def build_loader(loader_func):
     def loader(*args, **kwargs):
         err_on_unknown      = kwargs.pop('error_on_unknown', False)
-        log_keys_only       = kwargs.pop('log_keys_only', False)
+        log_keys_only       = kwargs.pop('log_keys_only', True)
         err_on_dupe         = kwargs.pop('error_on_duplicate', False)
         flatten             = kwargs.pop('flatten', True)
         name                = kwargs.pop('namespace', config.DEFAULT)
