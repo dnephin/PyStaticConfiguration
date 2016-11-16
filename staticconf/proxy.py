@@ -16,6 +16,7 @@ class UndefToken(object):
     def __repr__(self):
         return "<Undefined>"
 
+
 UndefToken = UndefToken()
 
 
