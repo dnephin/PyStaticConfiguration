@@ -40,8 +40,8 @@ Build Status
     :target: https://pypi.python.org/pypi/PyStaticConfiguration
     :alt: Latest PyPI version
 
-.. image:: https://coveralls.io/repos/dnephin/PyStaticConfiguration/badge.png?branch=master
-    :target: https://coveralls.io/r/dnephin/PyStaticConfiguration
+.. image:: https://coveralls.io/repos/github/dnephin/PyStaticConfiguration/badge.svg?branch=master
+    :target: https://coveralls.io/github/dnephin/PyStaticConfiguration?branch=master
     :alt: Code Test Coverage
 
 
