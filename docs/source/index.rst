@@ -5,20 +5,17 @@ PyStaticConfiguration Documentation
 Build Status
 ------------
 
+
 .. image:: https://travis-ci.org/dnephin/PyStaticConfiguration.svg?branch=master
     :target: https://travis-ci.org/dnephin/PyStaticConfiguration
     :alt: Travis CI build status
 
-.. image:: https://pypip.in/v/PyStaticConfiguration/badge.png
-    :target: https://crate.io/packages/PyStaticConfiguration/
+.. image:: https://img.shields.io/pypi/v/PyStaticConfiguration.svg
+    :target: https://pypi.python.org/pypi/PyStaticConfiguration
     :alt: Latest PyPI version
 
-.. image:: https://pypip.in/d/PyStaticConfiguration/badge.png
-    :target: https://crate.io/packages/PyStaticConfiguration/
-    :alt: Number of PyPI downloads
-
-.. image:: https://coveralls.io/repos/dnephin/PyStaticConfiguration/badge.png?branch=master
-    :target: https://coveralls.io/r/dnephin/PyStaticConfiguration
+.. image:: https://coveralls.io/repos/github/dnephin/PyStaticConfiguration/badge.svg?branch=master
+    :target: https://coveralls.io/github/dnephin/PyStaticConfiguration?branch=master
     :alt: Code Test Coverage
 
 
