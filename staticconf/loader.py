@@ -160,12 +160,12 @@ def build_loader(loader_func):
 def yaml_loader(filename):
     import yaml
     try:
-        from yaml import CLoader as Loader
+        from yaml import CSafeLoader as SafeLoader
     except ImportError:
-        from yaml import Loader
+        from yaml import SafeLoader
 
     with open(filename) as fh:
-        return yaml.load(fh, Loader=Loader) or {}
+        return yaml.load(fh, Loader=SafeLoader) or {}
 
 
 def json_loader(filename):
