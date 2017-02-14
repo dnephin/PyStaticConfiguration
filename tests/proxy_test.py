@@ -1,4 +1,5 @@
 import datetime
+import os.path
 
 import pytest
 
@@ -79,6 +80,7 @@ class TestValueProxy(object):
         assert_equal(value_proxy, 'one%s')
         assert value_proxy < 'two'
         assert value_proxy > 'ab'
+        assert os.path.join(value_proxy, 'a') == os.path.join('one%s', 'a')
         assert_equal(value_proxy + '!', 'one%s!')
         assert_equal(value_proxy % '!', 'one!')
         assert_equal(repr(value_proxy), "'one%s'")
