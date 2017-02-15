@@ -36,13 +36,18 @@ _special_names = [
     '__rmul__', '__ror__', '__rpow__', '__rrshift__', '__rshift__', '__rsub__',
     '__rtruediv__', '__rxor__', '__setitem__', '__setslice__', '__sub__',
     '__truediv__', '__xor__', 'next', '__nonzero__', '__str__', '__unicode__',
-    '__index__',
+    '__index__', '__fspath__',
 ]
+
+
+def identity(x):
+    return x
 
 
 unary_funcs = {
     '__unicode__':  six.text_type,
     '__str__':      str,
+    '__fspath__':   identity,  # python3.6+ os.PathLike interface
     '__repr__':     repr,
     '__nonzero__':  bool,  # Python2 bool
     '__bool__':     bool,  # Python3 bool
