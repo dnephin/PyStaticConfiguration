@@ -80,7 +80,7 @@ file and read some values from it.
     namespace = 'hosts'
 
     # Load configuration from the file into namespace `hosts`
-    staticconf.YamlConfiguration(file, namespace=namespace)
+    staticconf.YamlConfiguration(filename, namespace=namespace)
     ...
 
     # Some time later on, read values from that namespace
