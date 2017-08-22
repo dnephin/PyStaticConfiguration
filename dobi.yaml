@@ -48,4 +48,4 @@ job=release:
     mounts: [source, pypiconf]
     interactive: true
     depends: [docs]
-    command: "python3 setup.py sdist upload upload_docs"
+    command: "python3 setup.py sdist bdist_wheel upload upload_docs"
