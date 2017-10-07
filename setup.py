@@ -32,4 +32,6 @@ setup(
     },
     packages=['staticconf'],
     install_requires=['six'],
+    license='APACHE20',
+    data_files=[("", ["LICENSE"])],
 )
