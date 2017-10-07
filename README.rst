@@ -119,7 +119,7 @@ a watcher for reloading, and read some config values.
 
         # Now let's override it with some environment settings
         staticconf.DictConfiguration(
-            (k[5:].lower(), v) for k, v in os.environ if k.startswith('MYAPP_'))
+            (k[6:].lower(), v) for k, v in os.environ.items() if k.startswith('MYAPP_'))
 
 
     def build_watcher(filename):
