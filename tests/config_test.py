@@ -32,14 +32,14 @@ class TestRemoveByKeys(object):
 
     def test_no_keys(self):
         keys = []
-        map = dict(enumerate(range(3)))
-        assert_equal(list(map.items()), config.remove_by_keys(map, keys))
+        testMap = dict(enumerate(range(3)))
+        assert_equal(list(testMap.items()), config.remove_by_keys(testMap, keys))
 
     def test_overlap(self):
-        keys = [1, 3, 5 ,7]
-        map = dict(enumerate(range(8)))
-        expected = [(0,0), (2, 2), (4, 4), (6, 6)]
-        assert_equal(expected, config.remove_by_keys(map, keys))
+        keys = [1, 3, 5, 7]
+        testMap = dict(enumerate(range(8)))
+        expected = [(0, 0), (2, 2), (4, 4), (6, 6)]
+        assert_equal(expected, config.remove_by_keys(testMap, keys))
 
 
 class TestConfigMap(object):
@@ -445,7 +445,7 @@ class TestMTimeComparator(object):
         comparator = config.MTimeComparator([])
         assert comparator.get_most_recent_changed() == -1
 
-    @mock.patch('staticconf.config.os.path.getmtime', autospec=True, side_effect=[0,0,1,2,3])
+    @mock.patch('staticconf.config.os.path.getmtime', autospec=True, side_effect=[0, 0, 1, 2, 3])
     def test_get_most_recent(self, mock_mtime):
         comparator = config.MTimeComparator(['./one.file', './two.file'])
         assert comparator.get_most_recent_changed() == 2
@@ -457,7 +457,7 @@ class TestMTimeComparator(object):
         assert not comparator.has_changed()
         assert not comparator.has_changed()
 
-    @mock.patch('staticconf.config.os.path.getmtime', autospec=True, side_effect=[0,1,1,2])
+    @mock.patch('staticconf.config.os.path.getmtime', autospec=True, side_effect=[0, 1, 1, 2])
     def test_changes(self, mock_mtime):
         comparator = config.MTimeComparator(['./one.file'])
         assert comparator.has_changed()
@@ -494,7 +494,7 @@ class TestMTimeComparatorWithCompareFunc(object):
         assert self._err_filename is None
         assert all(x is None for x in self._exc_info)
 
-    @mock.patch('staticconf.config.os.path.getmtime', autospec=True, side_effect=[0,0,1,2,3])
+    @mock.patch('staticconf.config.os.path.getmtime', autospec=True, side_effect=[0, 0, 1, 2, 3])
     def test_get_most_recent(self, mock_mtime):
         comparator = self._LoggingMTimeComparator(['./one.file', './two.file'])
         assert comparator.get_most_recent_changed() == 2
@@ -510,7 +510,7 @@ class TestMTimeComparatorWithCompareFunc(object):
         assert self._err_filename is None
         assert all(x is None for x in self._exc_info)
 
-    @mock.patch('staticconf.config.os.path.getmtime', autospec=True, side_effect=[0,1,1,2])
+    @mock.patch('staticconf.config.os.path.getmtime', autospec=True, side_effect=[0, 1, 1, 2])
     def test_changes(self, mock_mtime):
         comparator = self._LoggingMTimeComparator(['./one.file'])
         assert comparator.has_changed()
@@ -644,7 +644,6 @@ class TestConfigFacadeAcceptance(object):
 
     def test_reload_end_to_end(self):
         loader = mock.Mock()
-        callback = mock.Mock()
         facade = staticconf.ConfigFacade.load(
                 self.file.name,
                 self.namespace,
