@@ -7,7 +7,7 @@ RUN     export DEBIAN_FRONTEND=noninteractive; \
             software-properties-common
 
 RUN     export DEBIAN_FRONTEND=noninteractive; \
-        add-apt-repository ppa:fkrull/deadsnakes && \
+        add-apt-repository ppa:deadsnakes/ppa && \
         apt-get update && apt-get install -y --no-install-recommends \
             python2.6 \
             python2.7 \
