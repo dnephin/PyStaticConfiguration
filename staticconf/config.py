@@ -582,7 +582,14 @@ class ConfigFacade(object):
         self.callback_chain = watcher.get_reloader()
 
     @classmethod
-    def load(cls, filename, namespace, loader_func, min_interval=0):
+    def load(
+            cls,
+            filename,
+            namespace,
+            loader_func,
+            min_interval=0,
+            comparators=None,
+    ):
         """Create a new :class:`ConfigurationWatcher` and load the initial
         configuration by calling `loader_func`.
 
@@ -597,13 +604,18 @@ class ConfigFacade(object):
         :param min_interval: minimum number of seconds to wait between calls to
                              :func:`os.path.getmtime` to check if a file has
                              been modified.
+        :param comparators: a list of classes which support the
+            :class:`IComparator` interface which are used to determine if a config
+            file has been modified. See ConfigurationWatcher::__init__.
         :returns: a :class:`ConfigFacade`
         """
         watcher = ConfigurationWatcher(
             build_loader_callable(loader_func, filename, namespace=namespace),
             filename,
             min_interval=min_interval,
-            reloader=ReloadCallbackChain(namespace=namespace))
+            reloader=ReloadCallbackChain(namespace=namespace),
+            comparators=comparators,
+        )
         watcher.load_config()
         return cls(watcher)
 

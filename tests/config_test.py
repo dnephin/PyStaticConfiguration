@@ -598,6 +598,18 @@ class TestConfigFacade(object):
         reloader = facade.callback_chain
         assert_equal(reloader, facade.watcher.get_reloader())
 
+    def test_load_passes_comparators_to_configuration_watcher(self):
+        filename, namespace = "filename", "namespace"
+        loader = mock.Mock()
+        comparator = mock.Mock(name='MockComparator')
+
+        with mock.patch(
+            'staticconf.config.ConfigurationWatcher',
+            autospec=True
+        ) as mock_watcher_class:
+            config.ConfigFacade.load(filename, namespace, loader, comparators=[comparator])
+            mock_watcher_class.assert_called_with(mock.ANY, filename, min_interval=mock.ANY, reloader=mock.ANY, comparators=[comparator])
+
     def test_add_callback(self):
         name, func = 'name', mock.Mock()
         self.facade.add_callback(name, func)
