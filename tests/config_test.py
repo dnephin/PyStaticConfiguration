@@ -365,6 +365,8 @@ class TestConfigurationWatcher(object):
                 with tempfile.NamedTemporaryFile() as file:
                     with mock.patch('staticconf.config.os.path') as self.mock_path:
                         file.flush()
+                        self.mtime = 234
+                        self.mock_path.getmtime.return_value = self.mtime
                         self.mock_stat.return_value.st_ino = 1
                         self.mock_stat.return_value.st_dev = 2
                         self.filename = file.name
@@ -400,9 +402,7 @@ class TestConfigurationWatcher(object):
         assert self.watcher.should_check
 
     def test_file_modified_not_modified(self):
-        self.watcher.comparators[0].last_max_mtime = mtime = 222
-        self.mock_path.getmtime.return_value = mtime
-        self.mock_time.time.return_value = 123456
+        self.mock_time.time.return_value = 123460
         assert not self.watcher.file_modified()
         assert_equal(self.watcher.last_check, self.mock_time.time.return_value)
 
@@ -440,17 +440,6 @@ class TestInodeComparator(object):
 
 
 class TestMTimeComparator(object):
-
-    def test_get_most_recent_empty(self):
-        comparator = config.MTimeComparator([])
-        assert comparator.get_most_recent_changed() == -1
-
-    @mock.patch('staticconf.config.os.path.getmtime', autospec=True, side_effect=[0, 0, 1, 2, 3])
-    def test_get_most_recent(self, mock_mtime):
-        comparator = config.MTimeComparator(['./one.file', './two.file'])
-        assert comparator.get_most_recent_changed() == 2
-        assert mock_mtime.call_count == 4
-
     @mock.patch('staticconf.config.os.path.getmtime', autospec=True, return_value=1)
     def test_no_change(self, mock_mtime):
         comparator = config.MTimeComparator(['./one.file'])
@@ -484,21 +473,11 @@ class TestMTimeComparatorWithCompareFunc(object):
 
     def test_logs_error(self):
         comparator = self._LoggingMTimeComparator(['./not.a.file'])
-        assert comparator.get_most_recent_changed() == -1
         assert self._err_filename == "./not.a.file"
         assert all(x is not None for x in self._exc_info)
 
     def test_get_most_recent_empty(self):
         comparator = self._LoggingMTimeComparator([])
-        assert comparator.get_most_recent_changed() == -1
-        assert self._err_filename is None
-        assert all(x is None for x in self._exc_info)
-
-    @mock.patch('staticconf.config.os.path.getmtime', autospec=True, side_effect=[0, 0, 1, 2, 3])
-    def test_get_most_recent(self, mock_mtime):
-        comparator = self._LoggingMTimeComparator(['./one.file', './two.file'])
-        assert comparator.get_most_recent_changed() == 2
-        assert mock_mtime.call_count == 4
         assert self._err_filename is None
         assert all(x is None for x in self._exc_info)
 
