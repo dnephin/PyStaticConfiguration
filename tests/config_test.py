@@ -453,6 +453,14 @@ class TestMTimeComparator(object):
         assert not comparator.has_changed()
         assert comparator.has_changed()
 
+    @mock.patch('staticconf.config.os.path.getmtime', autospec=True, side_effect=[1, 2, 1])
+    def test_change_when_newer_time_before_older_time(self, mock_mtime):
+        comparator = config.MTimeComparator(['./one.file'])
+        # 1 -> 2
+        assert comparator.has_changed()
+        # 2 -> 1 (can happen as a result of a revert)
+        assert comparator.has_changed()
+
 
 class TestMTimeComparatorWithCompareFunc(object):
 
