@@ -462,20 +462,20 @@ class MTimeComparator(object):
     """
 
     def __init__(self, filenames, compare_func=None):
-        self.filenames = filenames
         self.compare_func = (os.path.getmtime if compare_func is None
                              else compare_func)
-        self.last_max_mtime = self.get_most_recent_changed()
-
-    def get_most_recent_changed(self):
-        if not self.filenames:
-            return -1
-        return max(self.compare_func(name) for name in self.filenames)
+        self.filenames_mtimes = {
+            filename: self.compare_func(filename) for filename in filenames
+        }
 
     def has_changed(self):
-        last_mtime, self.last_max_mtime = (
-                self.last_max_mtime, self.get_most_recent_changed())
-        return last_mtime < self.last_max_mtime
+        for filename, compare_val in self.filenames_mtimes.items():
+            current_compare_val = self.compare_func(filename)
+            if compare_val != current_compare_val:
+                self.filenames_mtimes[filename] = current_compare_val
+                return True
+
+        return False
 
 
 class MD5Comparator(object):
