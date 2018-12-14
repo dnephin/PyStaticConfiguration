@@ -32,6 +32,9 @@ class LoaderTestCase(object):
             yield
 
     @pytest.fixture(autouse=True)
+    def content_to_file(self):
+        self.write_content_to_file()
+
     def write_content_to_file(self, content=None):
         content = content or self.content
         if not content:
