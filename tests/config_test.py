@@ -363,10 +363,10 @@ class TestConfigurationWatcher(object):
         with mock.patch('staticconf.config.time') as self.mock_time:
             with mock.patch('staticconf.config.os.stat') as self.mock_stat:
                 with tempfile.NamedTemporaryFile() as file:
-                    with mock.patch('staticconf.config.os.path') as self.mock_path:
+                    with mock.patch('staticconf.config.os.path.getmtime') as self.mock_getmtime:
                         file.flush()
                         self.mtime = 234
-                        self.mock_path.getmtime.return_value = self.mtime
+                        self.mock_getmtime.return_value = self.mtime
                         self.mock_stat.return_value.st_ino = 1
                         self.mock_stat.return_value.st_dev = 2
                         self.filename = file.name
@@ -375,16 +375,18 @@ class TestConfigurationWatcher(object):
                         yield
 
     def test_get_filename_list_from_string(self):
-        self.mock_path.abspath.side_effect = lambda p: p
-        filename = 'thefilename.yaml'
-        filenames = self.watcher.get_filename_list(filename)
-        assert_equal(filenames, [filename])
+        with mock.patch('staticconf.config.os.path.abspath') as mock_path_abspath:
+            mock_path_abspath.side_effect = lambda p: p
+            filename = 'thefilename.yaml'
+            filenames = self.watcher.get_filename_list(filename)
+            assert_equal(filenames, [filename])
 
     def test_get_filename_list_from_list(self):
-        self.mock_path.abspath.side_effect = lambda p: p
-        filenames = ['b', 'g', 'z', 'a']
-        expected = ['a', 'b', 'g', 'z']
-        assert_equal(self.watcher.get_filename_list(filenames), expected)
+        with mock.patch('staticconf.config.os.path.abspath') as mock_path_abspath:
+            mock_path_abspath.side_effect = lambda p: p
+            filenames = ['b', 'g', 'z', 'a']
+            expected = ['a', 'b', 'g', 'z']
+            assert_equal(self.watcher.get_filename_list(filenames), expected)
 
     def test_should_check(self):
         self.watcher.last_check = 123456789
@@ -408,7 +410,7 @@ class TestConfigurationWatcher(object):
 
     def test_file_modified(self):
         self.watcher.comparators[0].last_max_mtime = 123456
-        self.mock_path.getmtime.return_value = 123460
+        self.mock_getmtime.return_value = 123460
 
         assert self.watcher.file_modified()
         assert_equal(self.watcher.last_check, self.mock_time.time.return_value)
