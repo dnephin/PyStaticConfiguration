@@ -81,9 +81,13 @@ class TestConfigurationNamespace(object):
             self.namespace.register_proxy(mock_proxy)
         assert_equal(self.namespace.get_value_proxies(), proxies)
 
-    @pytest.mark.skipif('PyPy' in platform.python_implementation(), reason="Fails on PyPy")
+    @pytest.mark.skipif(
+        'PyPy' in platform.python_implementation(),
+        reason="Fails on PyPy",
+    )
     def test_get_value_proxies_does_not_contain_out_of_scope_proxies(self):
         assert not self.namespace.get_value_proxies()
+
         def a_scope():
             mock_proxy = mock.create_autospec(proxy.ValueProxy)
             self.namespace.register_proxy(mock_proxy)
@@ -255,12 +259,12 @@ class TestValidateConfig(object):
     def test_validate_single_passes(self):
         staticconf.DictConfiguration({})
         config.validate()
-        _ = staticconf.get_string('one.two')
+        _ = staticconf.get_string('one.two')  # noqa: F841
         staticconf.DictConfiguration({'one.two': 'nice'})
         config.validate()
 
     def test_validate_single_fails(self):
-        _ = staticconf.get_int('one.two')
+        _ = staticconf.get_int('one.two')  # noqa: F841
         assert_raises(errors.ConfigurationError, config.validate)
 
     def test_validate_all_passes(self):
@@ -277,7 +281,7 @@ class TestValidateConfig(object):
 
     def test_validate_all_fails(self):
         name = 'yan'
-        _ = staticconf.get_string('foo', namespace=name)  # flake8: noqa
+        _ = staticconf.get_string('foo', namespace=name)  # noqa: F841
         assert_raises(errors.ConfigurationError,
                       config.validate,
                       all_names=True)
@@ -363,7 +367,9 @@ class TestConfigurationWatcher(object):
         with mock.patch('staticconf.config.time') as self.mock_time:
             with mock.patch('staticconf.config.os.stat') as self.mock_stat:
                 with tempfile.NamedTemporaryFile() as file:
-                    with mock.patch('staticconf.config.os.path.getmtime') as self.mock_getmtime:
+                    with mock.patch(
+                        'staticconf.config.os.path.getmtime',
+                    ) as self.mock_getmtime:
                         file.flush()
                         self.mtime = 234
                         self.mock_getmtime.return_value = self.mtime
@@ -448,14 +454,22 @@ class TestMTimeComparator(object):
         assert not comparator.has_changed()
         assert not comparator.has_changed()
 
-    @mock.patch('staticconf.config.os.path.getmtime', autospec=True, side_effect=[0, 1, 1, 2])
+    @mock.patch(
+        'staticconf.config.os.path.getmtime',
+        autospec=True,
+        side_effect=[0, 1, 1, 2],
+    )
     def test_changes(self, mock_mtime):
         comparator = config.MTimeComparator(['./one.file'])
         assert comparator.has_changed()
         assert not comparator.has_changed()
         assert comparator.has_changed()
 
-    @mock.patch('staticconf.config.os.path.getmtime', autospec=True, side_effect=[1, 2, 1])
+    @mock.patch(
+        'staticconf.config.os.path.getmtime',
+        autospec=True,
+        side_effect=[1, 2, 1],
+    )
     def test_change_when_newer_time_before_older_time(self, mock_mtime):
         comparator = config.MTimeComparator(['./one.file'])
         # 1 -> 2
@@ -482,12 +496,12 @@ class TestMTimeComparatorWithCompareFunc(object):
         self._exc_info = sys.exc_info()
 
     def test_logs_error(self):
-        comparator = self._LoggingMTimeComparator(['./not.a.file'])
+        self._LoggingMTimeComparator(['./not.a.file'])
         assert self._err_filename == "./not.a.file"
         assert all(x is not None for x in self._exc_info)
 
     def test_get_most_recent_empty(self):
-        comparator = self._LoggingMTimeComparator([])
+        self._LoggingMTimeComparator([])
         assert self._err_filename is None
         assert all(x is None for x in self._exc_info)
 
@@ -499,7 +513,11 @@ class TestMTimeComparatorWithCompareFunc(object):
         assert self._err_filename is None
         assert all(x is None for x in self._exc_info)
 
-    @mock.patch('staticconf.config.os.path.getmtime', autospec=True, side_effect=[0, 1, 1, 2])
+    @mock.patch(
+        'staticconf.config.os.path.getmtime',
+        autospec=True,
+        side_effect=[0, 1, 1, 2],
+    )
     def test_changes(self, mock_mtime):
         comparator = self._LoggingMTimeComparator(['./one.file'])
         assert comparator.has_changed()
@@ -596,8 +614,19 @@ class TestConfigFacade(object):
             'staticconf.config.ConfigurationWatcher',
             autospec=True
         ) as mock_watcher_class:
-            config.ConfigFacade.load(filename, namespace, loader, comparators=[comparator])
-            mock_watcher_class.assert_called_with(mock.ANY, filename, min_interval=mock.ANY, reloader=mock.ANY, comparators=[comparator])
+            config.ConfigFacade.load(
+                filename,
+                namespace,
+                loader,
+                comparators=[comparator],
+            )
+            mock_watcher_class.assert_called_with(
+                mock.ANY,
+                filename,
+                min_interval=mock.ANY,
+                reloader=mock.ANY,
+                comparators=[comparator],
+            )
 
     def test_add_callback(self):
         name, func = 'name', mock.Mock()

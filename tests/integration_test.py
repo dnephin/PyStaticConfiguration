@@ -34,7 +34,7 @@ class TestEndToEnd(object):
         },
         'globals': False,
         'enable': 'True',
-        'matcher': '\d+',
+        'matcher': r'\d+',
         'options': ['1', '7', '3', '9'],
         'level': 'INFO',
     }

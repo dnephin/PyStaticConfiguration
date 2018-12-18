@@ -73,7 +73,7 @@ class TestIterableValidation(object):
 class TestRegexValidation(object):
 
     def test_validate_regex_success(self):
-        pattern = '^(:?what)\s+could\s+go\s+(wrong)[!?.,]$'
+        pattern = r'^(:?what)\s+could\s+go\s+(wrong)[!?.,]$'
         actual = validation.validate_regex(pattern)
         assert_equal(pattern, actual.pattern)
 
