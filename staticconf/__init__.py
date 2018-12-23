@@ -1,8 +1,8 @@
-from . import config
-from .version import version
-from .loader import *   # flake8: noqa
-from .getters import *  # flake8: noqa
-from .readers import *  # flake8: noqa
+from . import config  # noqa: F401
+from .version import version  # noqa: F401
+from .loader import *   # noqa: F401,F403
+from .getters import *  # noqa: F401,F403
+from .readers import *  # noqa: F401,F403
 
 view_help       = config.view_help
 reload          = config.reload

@@ -33,7 +33,7 @@ class TestExtractValue(object):
     def test_get_value_fails_validation(self):
         expected = [self.name, self.config_key]
         validator = mock.Mock(side_effect=validation.ValidationError)
-        _ = proxy.ValueProxy(  # flake8: noqa
+        _ = proxy.ValueProxy(  # noqa: F841
                 validator,
                 self.namespace,
                 'something.broken')
