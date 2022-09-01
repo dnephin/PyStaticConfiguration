@@ -89,7 +89,6 @@ import re
 import six
 from six.moves import (
     configparser,
-    filter,
     reload_module,
 )
 
@@ -114,10 +113,10 @@ log = logging.getLogger(__name__)
 
 
 def flatten_dict(config_data):
-    for key, value in six.iteritems(config_data):
+    for key, value in config_data.items():
         if hasattr(value, 'items') or hasattr(value, 'iteritems'):
             for k, v in flatten_dict(value):
-                yield '%s.%s' % (key, k), v
+                yield '{}.{}'.format(key, k), v
             continue
 
         yield key, value
@@ -206,8 +205,8 @@ def python_loader(module_name):
 
 
 def object_loader(obj):
-    return dict((name, getattr(obj, name))
-                for name in dir(obj) if not name.startswith('_'))
+    return {name: getattr(obj, name)
+                for name in dir(obj) if not name.startswith('_')}
 
 
 def ini_file_loader(filename):
@@ -217,7 +216,7 @@ def ini_file_loader(filename):
 
     for section in parser.sections():
         for key, value in parser.items(section, True):
-            config_dict['%s.%s' % (section, key)] = value
+            config_dict['{}.{}'.format(section, key)] = value
 
     return config_dict
 
@@ -227,9 +226,9 @@ def xml_loader(filename, safe=False):
 
     def build_from_element(element):
         items = dict(element.items())
-        child_items = dict(
-            (child.tag, build_from_element(child))
-            for child in element)
+        child_items = {
+            child.tag: build_from_element(child)
+            for child in element}
 
         config.has_duplicate_keys(child_items, items, safe)
         items.update(child_items)
@@ -263,7 +262,7 @@ def properties_loader(filename):
         return dict(filter(None, (parse_line(line) for line in fh)))
 
 
-class CompositeConfiguration(object):
+class CompositeConfiguration:
     """Store a list of configuration loaders and their params, so they can
     be reloaded in the correct order.
     """

@@ -73,7 +73,7 @@ def register_value_proxy(namespace, value_proxy, help_text):
         namespace.get_name(), help_text)
 
 
-class ProxyFactory(object):
+class ProxyFactory:
     """Create ProxyValue objects so that there is never a duplicate
     proxy for any (namespace, validator, config_key, default) group.
     """
@@ -110,7 +110,7 @@ def build_getter(validator, getter_namespace=None):
     return proxy_register
 
 
-class GetterNameFactory(object):
+class GetterNameFactory:
 
     @staticmethod
     def get_name(validator_name):

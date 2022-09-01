@@ -1,4 +1,3 @@
-
 class ValidationError(Exception):
     """Thrown when a configuration value can not be coerced into the expected
     type by a validator.

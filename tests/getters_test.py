@@ -9,7 +9,7 @@ from testing.testifycompat import (
 from staticconf import getters, config, testing
 
 
-class TestBuildGetter(object):
+class TestBuildGetter:
 
     @pytest.yield_fixture(autouse=True)
     def teardown_proxies(self):
@@ -38,7 +38,7 @@ class TestBuildGetter(object):
         assert_equal(value_proxy.namespace, namespace)
 
 
-class TestNamespaceGetters(object):
+class TestNamespaceGetters:
 
     @pytest.yield_fixture(autouse=True)
     def teardown_proxies(self):
@@ -59,7 +59,7 @@ class TestNamespaceGetters(object):
             assert_in(id(proxy), namespace.value_proxies)
 
 
-class TestProxyFactory(object):
+class TestProxyFactory:
 
     @pytest.yield_fixture(autouse=True)
     def patch_registries(self):

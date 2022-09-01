@@ -24,7 +24,7 @@ from staticconf import (
 import staticconf
 
 
-class TestRemoveByKeys(object):
+class TestRemoveByKeys:
 
     def test_empty_dict(self):
         keys = range(3)
@@ -42,7 +42,7 @@ class TestRemoveByKeys(object):
         assert_equal(expected, config.remove_by_keys(testMap, keys))
 
 
-class TestConfigMap(object):
+class TestConfigMap:
 
     @pytest.fixture(autouse=True)
     def setup_config_map(self):
@@ -67,7 +67,7 @@ class TestConfigMap(object):
         assert_equal(len(self.config_map), 3)
 
 
-class TestConfigurationNamespace(object):
+class TestConfigurationNamespace:
 
     @pytest.fixture(autouse=True)
     def setup_namespace(self):
@@ -137,7 +137,7 @@ class TestConfigurationNamespace(object):
         proxies = [mock.Mock(), mock.Mock()]
         for mock_proxy in proxies:
             self.namespace.register_proxy(mock_proxy)
-        expected = set([mock_proxy.config_key for mock_proxy in proxies])
+        expected = {mock_proxy.config_key for mock_proxy in proxies}
         assert_equal(self.namespace.get_known_keys(), expected)
 
     def test_validate_keys_no_unknown_keys(self):
@@ -184,7 +184,7 @@ class TestConfigurationNamespace(object):
         assert_equal(self.namespace.get_config_values(), {})
 
 
-class TestGetNamespace(object):
+class TestGetNamespace:
 
     @pytest.yield_fixture(autouse=True)
     def mock_namespaces(self):
@@ -203,7 +203,7 @@ class TestGetNamespace(object):
         assert_equal(namespace, config.get_namespace(name))
 
 
-class TestReload(object):
+class TestReload:
 
     @pytest.yield_fixture(autouse=True)
     def mock_namespaces(self):
@@ -248,7 +248,7 @@ class TestReload(object):
         assert_equal(two, 'three')
 
 
-class TestValidateConfig(object):
+class TestValidateConfig:
 
     @pytest.yield_fixture(autouse=True)
     def patch_config(self):
@@ -297,7 +297,7 @@ class TestValidateConfig(object):
                       all_names=True)
 
 
-class TestConfigHelp(object):
+class TestConfigHelp:
 
     @pytest.fixture(autouse=True)
     def setup_config_help(self):
@@ -334,7 +334,7 @@ class TestConfigHelp(object):
         assert_equal(lines, expected)
 
 
-class TestHasDuplicateKeys(object):
+class TestHasDuplicateKeys:
 
     @pytest.fixture(autouse=True)
     def setup_base_conf(self):
@@ -359,7 +359,7 @@ class TestHasDuplicateKeys(object):
         assert config.has_duplicate_keys(config_data, self.base_conf, False)
 
 
-class TestConfigurationWatcher(object):
+class TestConfigurationWatcher:
 
     @pytest.yield_fixture(autouse=True)
     def setup_mocks_and_config_watcher(self):
@@ -433,7 +433,7 @@ class TestConfigurationWatcher(object):
         reloader.assert_called_with()
 
 
-class TestInodeComparator(object):
+class TestInodeComparator:
 
     def test_get_inodes_empty(self):
         comparator = config.InodeComparator([])
@@ -447,7 +447,7 @@ class TestInodeComparator(object):
         assert_equal(inodes, expected)
 
 
-class TestMTimeComparator(object):
+class TestMTimeComparator:
     @mock.patch('staticconf.config.os.path.getmtime', autospec=True, return_value=1)
     def test_no_change(self, mock_mtime):
         comparator = config.MTimeComparator(['./one.file'])
@@ -478,7 +478,7 @@ class TestMTimeComparator(object):
         assert comparator.has_changed()
 
 
-class TestMTimeComparatorWithCompareFunc(object):
+class TestMTimeComparatorWithCompareFunc:
 
     @pytest.fixture(autouse=True)
     def setup_comparator(self):
@@ -527,7 +527,7 @@ class TestMTimeComparatorWithCompareFunc(object):
         assert all(x is None for x in self._exc_info)
 
 
-class TestMD5Comparator(object):
+class TestMD5Comparator:
 
     @pytest.yield_fixture()
     def comparator(self):
@@ -556,7 +556,7 @@ class TestMD5Comparator(object):
         assert comparator.has_changed()
 
 
-class TestReloadCallbackChain(object):
+class TestReloadCallbackChain:
 
     @pytest.fixture(autouse=True)
     def setup_callback_chain(self):
@@ -582,7 +582,7 @@ class TestReloadCallbackChain(object):
                 mock_reload.assert_called_with(name='the_namespace', all_names=False)
 
 
-class TestConfigFacade(object):
+class TestConfigFacade:
 
     @pytest.fixture(autouse=True)
     def setup_facade(self):
@@ -639,7 +639,7 @@ class TestConfigFacade(object):
 
 
 @pytest.mark.acceptance
-class TestConfigFacadeAcceptance(object):
+class TestConfigFacadeAcceptance:
 
     @pytest.fixture(autouse=True)
     def setup_env(self):
@@ -689,7 +689,7 @@ class TestConfigFacadeAcceptance(object):
         assert_equal(loader.call_count, 2)
 
 
-class TestBuildLoaderCallable(object):
+class TestBuildLoaderCallable:
 
     @pytest.yield_fixture(autouse=True)
     def patch_namespace(self):

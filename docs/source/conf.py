@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 import staticconf
 import sphinx_rtd_theme
 
@@ -18,8 +16,8 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'PyStaticConfiguration'
-copyright = u'2013, Daniel Nephin'
+project = 'PyStaticConfiguration'
+copyright = '2013, Daniel Nephin'
 
 version = staticconf.version
 release = version

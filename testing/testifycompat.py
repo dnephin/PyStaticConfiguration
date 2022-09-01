@@ -3,7 +3,7 @@
 try:
     from unittest import mock  # noqa
 except ImportError:
-    import mock  # noqa
+    from unittest import mock  # noqa
 
 import pytest
 

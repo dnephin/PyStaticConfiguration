@@ -5,7 +5,6 @@ import textwrap
 
 import pytest
 import six
-from six.moves import range
 
 from testing.testifycompat import (
     assert_equal,
@@ -22,7 +21,7 @@ def get_bytecode_filename(module_name):
     return __import__(module_name).__cached__
 
 
-class LoaderTestCase(object):
+class LoaderTestCase:
 
     content = None
 
@@ -304,7 +303,7 @@ class TestPropertiesConfiguration(LoaderTestCase):
         assert_equal(config_data['key.with.col'], 'a value')
 
     def test_invalid_line(self):
-        self.tmpfile.write('justkey\n'.encode('utf8'))
+        self.tmpfile.write(b'justkey\n')
         self.tmpfile.flush()
         assert_raises(
                 errors.ConfigurationError,
@@ -312,7 +311,7 @@ class TestPropertiesConfiguration(LoaderTestCase):
                 self.tmpfile.name)
 
 
-class TestCompositeConfiguration(object):
+class TestCompositeConfiguration:
 
     def test_load(self):
         loaders = [(mock.Mock(return_value={i: 0}), 1, 2) for i in range(3)]
@@ -323,7 +322,7 @@ class TestCompositeConfiguration(object):
             loader_call.assert_called_with(arg_one, arg_two)
 
 
-class StubObject(object):
+class StubObject:
     year = 2012
     month = 3
     hour = 15

@@ -15,7 +15,7 @@ from staticconf.errors import ValidationError
 
 
 def validate_string(value):
-    return None if value is None else six.text_type(value)
+    return None if value is None else str(value)
 
 
 def validate_bool(value):
@@ -26,7 +26,7 @@ def validate_numeric(type_func, value):
     try:
         return type_func(value)
     except ValueError:
-        raise ValidationError("Invalid %s: %s" % (type_func.__name__, value))
+        raise ValidationError("Invalid {}: {}".format(type_func.__name__, value))
 
 
 def validate_int(value):
@@ -91,7 +91,7 @@ def _validate_iterable(iterable_type, value):
     """Convert the iterable to iterable_type, or raise a Configuration
     exception.
     """
-    if isinstance(value, six.string_types):
+    if isinstance(value, str):
         msg = "Invalid iterable of type(%s): %s"
         raise ValidationError(msg % (type(value), value))
 
@@ -117,7 +117,7 @@ def validate_regex(value):
     try:
         return re.compile(value)
     except (re.error, TypeError) as e:
-        raise ValidationError("Invalid regex: %s, %s" % (e, value))
+        raise ValidationError("Invalid regex: {}, {}".format(e, value))
 
 
 def build_list_type_validator(item_validator):
@@ -172,4 +172,4 @@ validators = {
 
 def get_validators():
     """Return an iterator of (validator_name, validator) pairs."""
-    return six.iteritems(validators)
+    return validators.items()

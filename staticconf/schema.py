@@ -94,7 +94,7 @@ import six
 from staticconf import validation, proxy, config, errors, getters
 
 
-class ValueTypeDefinition(object):
+class ValueTypeDefinition:
     __slots__ = ['validator', 'config_key', 'default', 'help']
 
     def __init__(
@@ -109,7 +109,7 @@ class ValueTypeDefinition(object):
         self.help           = help
 
 
-class ValueToken(object):
+class ValueToken:
     __slots__ = [
         'validator',
         'config_key',
@@ -154,7 +154,7 @@ class SchemaMeta(type):
     def __new__(mcs, name, bases, attributes):
         namespace = mcs.get_namespace(attributes)
         attributes = mcs.build_attributes(attributes, namespace)
-        return super(SchemaMeta, mcs).__new__(mcs, name, bases, attributes)
+        return super().__new__(mcs, name, bases, attributes)
 
     @classmethod
     def get_namespace(cls, attributes):
@@ -172,7 +172,7 @@ class SchemaMeta(type):
 
         def build_config_key(value_def, config_key):
             key = value_def.config_key or config_key
-            return '%s.%s' % (config_path, key) if config_path else key
+            return '{}.{}'.format(config_path, key) if config_path else key
 
         def build_token(name, value_def):
             config_key = build_config_key(value_def, name)
@@ -188,13 +188,12 @@ class SchemaMeta(type):
             return build_token(name, attribute)
 
         attributes = dict(build_attr(*item)
-                          for item in six.iteritems(attributes))
+                          for item in attributes.items())
         attributes['_tokens'] = tokens
         return attributes
 
 
-@six.add_metaclass(SchemaMeta)
-class Schema(object):
+class Schema(metaclass=SchemaMeta):
     """Base class for configuration schemas, uses :class:`SchemaMeta`."""
 
     namespace = None
