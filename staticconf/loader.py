@@ -202,7 +202,7 @@ def python_loader(module_name):
 
 def object_loader(obj):
     return {name: getattr(obj, name)
-                for name in dir(obj) if not name.startswith('_')}
+            for name in dir(obj) if not name.startswith('_')}
 
 
 def ini_file_loader(filename):
