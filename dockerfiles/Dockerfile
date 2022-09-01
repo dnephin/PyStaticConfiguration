@@ -13,7 +13,11 @@ RUN     export DEBIAN_FRONTEND=noninteractive; \
             python2.7 \
             python3.4 \
             python3.5 \
+            python3.6 \
+            python3.7 \
+            python3.8 \
             pypy \
+            pypy3 \
             curl
 
 RUN     curl -Ls https://bootstrap.pypa.io/get-pip.py | python3
