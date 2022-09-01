@@ -9,14 +9,9 @@ RUN     export DEBIAN_FRONTEND=noninteractive; \
 RUN     export DEBIAN_FRONTEND=noninteractive; \
         add-apt-repository ppa:deadsnakes/ppa && \
         apt-get update && apt-get install -y --no-install-recommends \
-            python2.6 \
-            python2.7 \
-            python3.4 \
-            python3.5 \
             python3.6 \
             python3.7 \
             python3.8 \
-            pypy \
             pypy3 \
             curl
 
