@@ -4,7 +4,6 @@ import tempfile
 import textwrap
 
 import pytest
-import six
 
 from testing.testifycompat import (
     assert_equal,
@@ -16,8 +15,6 @@ from staticconf import loader, errors
 
 
 def get_bytecode_filename(module_name):
-    if six.PY2:
-        return module_name + '.pyc'
     return __import__(module_name).__cached__
 
 

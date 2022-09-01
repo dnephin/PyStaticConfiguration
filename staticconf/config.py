@@ -18,8 +18,6 @@ import os
 import time
 import weakref
 
-import six
-
 from staticconf import errors
 
 log = logging.getLogger(__name__)

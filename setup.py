@@ -31,6 +31,5 @@ setup(
         'yaml': ['pyyaml'],
     },
     packages=['staticconf'],
-    install_requires=['six'],
     license='APACHE20',
 )

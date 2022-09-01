@@ -9,8 +9,6 @@ import logging
 import re
 import time
 
-import six
-
 from staticconf.errors import ValidationError
 
 

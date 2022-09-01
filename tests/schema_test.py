@@ -1,5 +1,4 @@
 import pytest
-import six
 
 from testing.testifycompat import (
     assert_equal,

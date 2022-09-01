@@ -6,7 +6,6 @@ import functools
 import operator
 
 from staticconf import errors
-import six
 
 
 class UndefToken:

@@ -82,15 +82,11 @@ configuration values.
 
 
 """
+import configparser
 import logging
+import importlib
 import os
 import re
-
-import six
-from six.moves import (
-    configparser,
-    reload_module,
-)
 
 from staticconf import config, errors
 
@@ -200,7 +196,7 @@ def auto_loader(base_dir='.', auto_configurations=None):
 
 def python_loader(module_name):
     module = __import__(module_name, fromlist=['*'])
-    reload_module(module)
+    importlib.reload(module)
     return object_loader(module)
 
 

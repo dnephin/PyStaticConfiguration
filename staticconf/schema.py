@@ -89,8 +89,6 @@ You can also create your own custom types using :func:`build_value_type`.
 """
 import functools
 
-import six
-
 from staticconf import validation, proxy, config, errors, getters
 
 
