@@ -137,7 +137,7 @@ class ConfigNamespace:
         if log_keys_only:
             unknown = [k for k, _ in unknown]
 
-        msg = "Unexpected value in {} configuration: {}".format(self.name, unknown)
+        msg = f"Unexpected value in {self.name} configuration: {unknown}"
         if error_on_unknown:
             raise errors.ConfigurationError(msg)
         log.info(msg)
@@ -167,7 +167,7 @@ class ConfigNamespace:
         self.value_proxies.clear()
 
     def __str__(self):
-        return "{}({})".format(type(self).__name__, self.name)
+        return f"{type(self).__name__}({self.name})"
 
 
 configuration_namespaces = {DEFAULT: ConfigNamespace(DEFAULT)}

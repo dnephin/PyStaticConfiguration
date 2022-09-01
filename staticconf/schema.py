@@ -170,7 +170,7 @@ class SchemaMeta(type):
 
         def build_config_key(value_def, config_key):
             key = value_def.config_key or config_key
-            return '{}.{}'.format(config_path, key) if config_path else key
+            return f"{config_path}.{key}" if config_path else key
 
         def build_token(name, value_def):
             config_key = build_config_key(value_def, name)

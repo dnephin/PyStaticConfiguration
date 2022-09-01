@@ -24,7 +24,7 @@ def validate_numeric(type_func, value):
     try:
         return type_func(value)
     except ValueError:
-        raise ValidationError("Invalid {}: {}".format(type_func.__name__, value))
+        raise ValidationError(f"Invalid {type_func.__name__}: {value}")
 
 
 def validate_int(value):
@@ -54,7 +54,7 @@ def validate_datetime(value):
             return datetime.datetime.strptime(value, format_)
         except ValueError:
             pass
-    raise ValidationError("Invalid date format: %s" % value)
+    raise ValidationError(f"Invalid date format: {value}")
 
 
 def validate_date(value):
@@ -82,7 +82,7 @@ def validate_time(value):
             return datetime.time(*time.strptime(value, format_)[3:6])
         except ValueError:
             pass
-    raise ValidationError("Invalid time format: %s" % value)
+    raise ValidationError(f"Invalid time format: {value}")
 
 
 def _validate_iterable(iterable_type, value):
@@ -115,7 +115,7 @@ def validate_regex(value):
     try:
         return re.compile(value)
     except (re.error, TypeError) as e:
-        raise ValidationError("Invalid regex: {}, {}".format(e, value))
+        raise ValidationError(f"Invalid regex: {e}, {value}")
 
 
 def build_list_type_validator(item_validator):
@@ -144,7 +144,7 @@ def validate_log_level(value):
     try:
         return getattr(logging, value)
     except AttributeError:
-        raise ValidationError("Unknown log level: %s" % value)
+        raise ValidationError(f"Unknown log level: {value}")
 
 
 def validate_any(value):
