@@ -8,7 +8,7 @@ import operator
 from staticconf import errors
 
 
-class UndefToken:
+class UndefTokenType:
     """A token to represent an undefined value, so that None can be used
     as a default value.
     """
@@ -16,7 +16,7 @@ class UndefToken:
         return "<Undefined>"
 
 
-UndefToken = UndefToken()
+UndefToken = UndefTokenType()
 
 
 _special_names = [
