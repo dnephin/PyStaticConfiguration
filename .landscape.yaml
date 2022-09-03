@@ -1,5 +1,0 @@
-
-strictness: high
-
-ignore-patterns:
-    - docs/source/conf.py
