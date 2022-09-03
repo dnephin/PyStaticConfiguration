@@ -32,18 +32,13 @@ converted to the requested type.
 Build Status
 ------------
 
-.. image:: https://travis-ci.org/dnephin/PyStaticConfiguration.svg?branch=master
-    :target: https://travis-ci.org/dnephin/PyStaticConfiguration
-    :alt: Travis CI build status
+.. image:: https://github.com/dnephin/PyStaticConfiguration/actions/workflows/build.yaml/badge.svg
+    :target: https://github.com/dnephin/PyStaticConfiguration/actions
+    :alt: Build status
 
 .. image:: https://img.shields.io/pypi/v/PyStaticConfiguration.svg
     :target: https://pypi.python.org/pypi/PyStaticConfiguration
     :alt: Latest PyPI version
-
-.. image:: https://coveralls.io/repos/github/dnephin/PyStaticConfiguration/badge.svg?branch=master
-    :target: https://coveralls.io/github/dnephin/PyStaticConfiguration?branch=master
-    :alt: Code Test Coverage
-
 
 
 Install
