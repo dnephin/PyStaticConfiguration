@@ -6,10 +6,9 @@ import functools
 import operator
 
 from staticconf import errors
-import six
 
 
-class UndefToken(object):
+class UndefToken:
     """A token to represent an undefined value, so that None can be used
     as a default value.
     """
@@ -45,7 +44,7 @@ def identity(x):
 
 
 unary_funcs = {
-    '__unicode__':  six.text_type,
+    '__unicode__':  str,
     '__str__':      str,
     '__fspath__':   identity,  # python3.6+ os.PathLike interface
     '__repr__':     repr,
@@ -67,7 +66,7 @@ def build_class_def(cls):
             return getattr(self.value, name)(*args, **kwargs)
         return method
 
-    namespace = dict((name, build_method(name)) for name in _special_names)
+    namespace = {name: build_method(name) for name in _special_names}
     return type(cls.__name__, (cls,), namespace)
 
 
@@ -103,7 +102,7 @@ def extract_value(proxy):
             (proxy.namespace, proxy.config_key, e))
 
 
-class ValueProxy(object):
+class ValueProxy:
     """Proxy a configuration value so it can be loaded after import time."""
     __slots__ = [
         'validator',

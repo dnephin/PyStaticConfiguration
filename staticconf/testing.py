@@ -6,7 +6,7 @@ import copy
 from staticconf import config, loader
 
 
-class MockConfiguration(object):
+class MockConfiguration:
     """A context manager which replaces the configuration namespace
     while inside the context. When the context exits the old configuration
     values will be restored to that namespace.

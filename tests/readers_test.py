@@ -8,7 +8,7 @@ from testing.testifycompat import (
 from staticconf import config, readers, proxy, errors, testing
 
 
-class TestBuildReader(object):
+class TestBuildReader:
 
     @pytest.fixture(autouse=True)
     def namespace(self):
@@ -40,7 +40,7 @@ class TestBuildReader(object):
         assert_equal(value, validator.return_value)
 
 
-class TestNamespaceReader(object):
+class TestNamespaceReader:
 
     config = {
         'one':     '1',

@@ -1,9 +1,6 @@
 """Compatiblity functions for py.test to migrate code from testify.
 """
-try:
-    from unittest import mock  # noqa
-except ImportError:
-    import mock  # noqa
+from unittest import mock  # noqa
 
 import pytest
 

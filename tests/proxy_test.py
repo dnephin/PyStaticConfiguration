@@ -12,7 +12,7 @@ from testing.testifycompat import (
 from staticconf import proxy, validation, errors, config
 
 
-class TestExtractValue(object):
+class TestExtractValue:
 
     @pytest.fixture(autouse=True)
     def setup_configuration_values(self):
@@ -43,7 +43,7 @@ class TestExtractValue(object):
                 lambda: self.value_proxy.value)
 
 
-class TestValueProxy(object):
+class TestValueProxy:
 
     @pytest.fixture(autouse=True)
     def setup_configuration_values(self):

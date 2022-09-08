@@ -8,7 +8,7 @@ import staticconf
 from staticconf import testing, errors
 
 
-class SomeClass(object):
+class SomeClass:
 
     namespace = 'UniqueNamespaceForEndToEndTesting'
     alt_name  = 'UniqueNamespaceForEndToEndTestingAlternative'
@@ -24,7 +24,7 @@ class SomeClass(object):
     real_min  = staticconf.get_int('SomeClass.min', namespace=alt_name)
 
 
-class TestEndToEnd(object):
+class TestEndToEnd:
 
     config = {
         'SomeClass': {
@@ -72,7 +72,7 @@ class TestEndToEnd(object):
         assert_equal(staticconf.read_list_of_int('options'), [1, 7, 3, 9])
 
 
-class TestMockConfiguration(object):
+class TestMockConfiguration:
 
     namespace = 'UniqueNamespaceForMockConfigurationTesting'
     getters = staticconf.NamespaceGetters(namespace)

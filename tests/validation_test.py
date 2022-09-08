@@ -8,7 +8,7 @@ from testing.testifycompat import (
 )
 
 
-class TestValidation(object):
+class TestValidation:
 
     def test_validate_string(self):
         assert_equal(None, validation.validate_string(None))
@@ -16,7 +16,7 @@ class TestValidation(object):
         assert_equal('123', validation.validate_string(123))
 
 
-class TestDateTimeValidation(object):
+class TestDateTimeValidation:
 
     def test_validate_datetime(self):
         actual = validation.validate_datetime("2012-03-14 05:05:05")
@@ -59,18 +59,18 @@ class TestDateTimeValidation(object):
         assert_equal(actual, expected)
 
 
-class TestIterableValidation(object):
+class TestIterableValidation:
 
     def test_validate_list(self):
         assert_equal([0, 1, 2], validation.validate_list((0, 1, 2)))
 
     def test_validate_set(self):
-        expected = set([3, 2, 1])
+        expected = {3, 2, 1}
         actual = validation.validate_set([1, 3, 2, 2, 1, 3, 2])
         assert_equal(expected, actual)
 
 
-class TestRegexValidation(object):
+class TestRegexValidation:
 
     def test_validate_regex_success(self):
         pattern = r'^(:?what)\s+could\s+go\s+(wrong)[!?.,]$'
@@ -93,7 +93,7 @@ class TestRegexValidation(object):
                 None)
 
 
-class TestBuildListOfTypeValidator(object):
+class TestBuildListOfTypeValidator:
 
     def test_build_list_of_type_ints_success(self):
         validator = validation.build_list_type_validator(
@@ -118,7 +118,7 @@ class TestBuildListOfTypeValidator(object):
             errors.ValidationError, 'Invalid iterable', validator, None)
 
 
-class TestBuildMappingTypeValidator(object):
+class TestBuildMappingTypeValidator:
 
     def test_build_map_from_list_of_pairs(self):
         pair_validator = validation.build_map_type_validator(lambda i: i)
@@ -134,7 +134,7 @@ class TestBuildMappingTypeValidator(object):
         assert_equal(map_validator(source), expected)
 
 
-class TestValidateLogLevel(object):
+class TestValidateLogLevel:
 
     def test_valid_log_level(self):
         assert_equal(validation.validate_log_level('WARN'), logging.WARN)

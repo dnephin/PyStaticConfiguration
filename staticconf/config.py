@@ -18,8 +18,6 @@ import os
 import time
 import weakref
 
-import six
-
 from staticconf import errors
 
 log = logging.getLogger(__name__)
@@ -35,10 +33,10 @@ def remove_by_keys(dictionary, keys):
     def filter_by_keys(item):
         k, _ = item
         return k not in keys
-    return list(filter(filter_by_keys, six.iteritems(dictionary)))
+    return list(filter(filter_by_keys, dictionary.items()))
 
 
-class ConfigMap(object):
+class ConfigMap:
     """A ConfigMap can be used to wrap a dictionary in your configuration.
     It will allow you to retain your mapping structure (and prevent it
     from being flattened).
@@ -59,7 +57,7 @@ class ConfigMap(object):
         return len(self.data)
 
 
-class ConfigNamespace(object):
+class ConfigNamespace:
     """A container for related configuration values. Values are stored
     using flattened keys which map to values.
 
@@ -124,7 +122,7 @@ class ConfigNamespace(object):
         return config_dict
 
     def get_known_keys(self):
-        return set(vproxy.config_key for vproxy in self.get_value_proxies())
+        return {vproxy.config_key for vproxy in self.get_value_proxies()}
 
     def validate_keys(
         self,
@@ -139,7 +137,7 @@ class ConfigNamespace(object):
         if log_keys_only:
             unknown = [k for k, _ in unknown]
 
-        msg = "Unexpected value in %s configuration: %s" % (self.name, unknown)
+        msg = f"Unexpected value in {self.name} configuration: {unknown}"
         if error_on_unknown:
             raise errors.ConfigurationError(msg)
         log.info(msg)
@@ -169,7 +167,7 @@ class ConfigNamespace(object):
         self.value_proxies.clear()
 
     def __str__(self):
-        return "%s(%s)" % (type(self).__name__, self.name)
+        return f"{type(self).__name__}({self.name})"
 
 
 configuration_namespaces = {DEFAULT: ConfigNamespace(DEFAULT)}
@@ -225,7 +223,7 @@ def validate(name=DEFAULT, all_names=False):
         all(value_proxy.get_value() for value_proxy in namespace.get_value_proxies())
 
 
-class ConfigHelp(object):
+class ConfigHelp:
     """Register and display help messages about config keys."""
 
     def __init__(self):
@@ -239,14 +237,14 @@ class ConfigHelp(object):
         """Return a help message describing all the statically configured keys.
         """
         def format_desc(desc):
-            return "%s (Type: %s, Default: %s)\n%s" % (
+            return "{} (Type: {}, Default: {})\n{}".format(
                     desc.name,
                     desc.validator.__name__.replace('validate_', ''),
                     desc.default,
                     desc.help or '')
 
         def format_namespace(key, desc_list):
-            return "\nNamespace: %s\n%s" % (
+            return "\nNamespace: {}\n{}".format(
                     key,
                     '\n'.join(sorted(format_desc(desc) for desc in desc_list)))
 
@@ -255,7 +253,7 @@ class ConfigHelp(object):
             return chr(0) if name == DEFAULT else name
 
         return '\n'.join(format_namespace(*desc) for desc in
-                         sorted(six.iteritems(self.descriptions),
+                         sorted(self.descriptions.items(),
                                 key=namespace_cmp))
 
     def clear(self):
@@ -286,7 +284,7 @@ def has_duplicate_keys(config_data, base_conf, raise_error):
     return True
 
 
-class ConfigurationWatcher(object):
+class ConfigurationWatcher:
     """Watches a file for modification and reloads the configuration
     when it's modified.  Accepts a min_interval to throttle checks.
 
@@ -354,7 +352,7 @@ class ConfigurationWatcher(object):
         self.comparators    = [comp(self.filenames) for comp in comparators]
 
     def get_filename_list(self, filenames):
-        if isinstance(filenames, six.string_types):
+        if isinstance(filenames, str):
             filenames = [filenames]
         filenames = sorted(os.path.abspath(name) for name in filenames)
         if not filenames:
@@ -394,7 +392,7 @@ class ConfigurationWatcher(object):
         return self.config_loader()
 
 
-class IComparator(object):
+class IComparator:
     """Interface for a comparator which is used by :class:`ConfigurationWatcher`
     to determine if a file has been modified since the last check. A comparator
     is used to reduce the work required to reload configuration. Comparators
@@ -414,7 +412,7 @@ class IComparator(object):
         pass
 
 
-class InodeComparator(object):
+class InodeComparator:
     """Compare files by inode and device number. This is a good comparator to
     use when your files can change multiple times per second.
     """
@@ -451,7 +449,7 @@ def build_compare_func(err_logger=None):
     return compare_func
 
 
-class MTimeComparator(object):
+class MTimeComparator:
     """Compare files by modified time, or using compare_func,
     if it is not None.
 
@@ -478,7 +476,7 @@ class MTimeComparator(object):
         return False
 
 
-class MD5Comparator(object):
+class MD5Comparator:
     """Compare files by md5 hash of their contents. This comparator will be
     slower for larger files, but is more resilient to modifications which only
     change mtime, but not the files contents.
@@ -501,7 +499,7 @@ class MD5Comparator(object):
         return last_hashes != self.hashes
 
 
-class ReloadCallbackChain(object):
+class ReloadCallbackChain:
     """A chain of callbacks which will be triggered after configuration is
     reloaded. Designed to work with :class:`ConfigurationWatcher`.
 
@@ -541,7 +539,7 @@ class ReloadCallbackChain(object):
 
     def __call__(self):
         reload(name=self.namespace, all_names=self.all_names)
-        for callback in six.itervalues(self.callbacks):
+        for callback in self.callbacks.values():
             callback()
 
 
@@ -552,7 +550,7 @@ def build_loader_callable(load_func, filename, namespace):
     return load_configuration
 
 
-class ConfigFacade(object):
+class ConfigFacade:
     """A facade around a :class:`ConfigurationWatcher` and a
     :class:`ReloadCallbackChain`. See :func:`ConfigFacade.load`.
 

@@ -95,7 +95,7 @@ from staticconf.proxy import UndefToken
 def _read_config(config_key, config_namespace, default):
     value = config_namespace.get(config_key, default=default)
     if value is UndefToken:
-        msg = '%s missing value for %s' % (config_namespace, config_key)
+        msg = '{} missing value for {}'.format(config_namespace, config_key)
         raise errors.ConfigurationError(msg)
     return value
 
@@ -116,7 +116,7 @@ def build_reader(validator, reader_namespace=config.DEFAULT):
     return reader
 
 
-class ReaderNameFactory(object):
+class ReaderNameFactory:
 
     @staticmethod
     def get_name(name):
@@ -134,7 +134,7 @@ def get_all_accessors(name_factory):
                validation.build_list_type_validator(validator))
 
 
-class NamespaceAccessor(object):
+class NamespaceAccessor:
 
     def __init__(self, name, accessor_map, builder):
         self.accessor_map       = accessor_map
@@ -147,7 +147,7 @@ class NamespaceAccessor(object):
         return self.builder(self.accessor_map[item], self.namespace)
 
     def get_methods(self):
-        return dict((name, getattr(self, name)) for name in self.accessor_map)
+        return {name: getattr(self, name) for name in self.accessor_map}
 
 
 def build_accessor_type(name_factory, builder):

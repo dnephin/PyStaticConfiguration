@@ -1,11 +1,10 @@
-
 import staticconf
 from staticconf import testing
 
 from testing.testifycompat import assert_equal
 
 
-class TestMockConfiguration(object):
+class TestMockConfiguration:
 
     def test_init(self):
         with testing.MockConfiguration(a='one', b='two'):
@@ -24,7 +23,7 @@ class TestMockConfiguration(object):
             assert_equal(staticconf.get('c'), 'three')
 
 
-class TestPatchConfiguration(object):
+class TestPatchConfiguration:
 
     def test_nested(self):
         with testing.MockConfiguration(a='one', b='two'):

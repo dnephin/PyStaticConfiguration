@@ -1,5 +1,4 @@
 import pytest
-import six
 
 from testing.testifycompat import (
     assert_equal,
@@ -9,7 +8,7 @@ from testing.testifycompat import (
 from staticconf import testing, schema, validation, config, errors
 
 
-class TestCreateValueType(object):
+class TestCreateValueType:
 
     def test_build_value_type(self):
         help_text = 'what?'
@@ -22,8 +21,7 @@ class TestCreateValueType(object):
         assert_equal(value_def.config_key, config_key)
 
 
-@six.add_metaclass(schema.SchemaMeta)
-class ATestingSchema(object):
+class ATestingSchema(metaclass=schema.SchemaMeta):
 
     namespace = 'my_testing_namespace'
 
@@ -52,7 +50,7 @@ def meta_schema():
             yield schema_object.__class__, mock_config, mock_getters
 
 
-class TestSchemaMeta(object):
+class TestSchemaMeta:
 
     def test_get_namespace_missing(self, meta_schema):
         meta, _, _ = meta_schema
@@ -95,7 +93,7 @@ def testing_schema_namespace():
         yield
 
 
-class TestSchemaAcceptance(object):
+class TestSchemaAcceptance:
 
     def test_schema(self, testing_schema_namespace):
         config_schema = ATestingSchema()
