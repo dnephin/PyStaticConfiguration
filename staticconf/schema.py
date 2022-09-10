@@ -88,60 +88,60 @@ You can also create your own custom types using :func:`build_value_type`.
 
 """
 import functools
+from typing import Any
+from typing import Callable
+from typing import cast
+from typing import Dict
+from typing import Optional
+from typing import Tuple
+from typing import Type
 
 from staticconf import validation, proxy, config, errors, getters
+from staticconf.config import ConfigNamespace
+from staticconf.proxy import ValueProxy
+from staticconf.validation import Validator
 
 
 class ValueTypeDefinition:
     __slots__ = ['validator', 'config_key', 'default', 'help']
 
     def __init__(
-            self,
-            validator,
-            config_key=None,
-            default=proxy.UndefToken,
-            help=None):
+        self,
+        validator: Validator,
+        config_key: Optional[str] = None,
+        default: Any = proxy.UndefToken,
+        help: Optional[str] = None
+    ) -> None:
         self.validator      = validator
         self.config_key     = config_key
         self.default        = default
         self.help           = help
 
 
-class ValueToken:
-    __slots__ = [
-        'validator',
-        'config_key',
-        'default',
-        '_value',
-        'namespace',
-        '__weakref__'
-    ]
-
-    def __init__(self, validator, namespace, key, default):
-        self.validator      = validator
-        self.namespace      = namespace
-        self.config_key     = key
-        self.default        = default
-        self._value         = proxy.UndefToken
-
+class ValueToken(ValueProxy):
     @classmethod
-    def from_definition(cls, value_def, namespace, key):
+    def from_definition(
+        cls,
+        value_def: ValueTypeDefinition,
+        namespace: ConfigNamespace,
+        key: str
+    ) -> "ValueToken":
         return cls(value_def.validator, namespace, key, value_def.default)
 
     @proxy.cache_as_field('_value')
-    def get_value(self):
+    def get_value(self) -> Any:
         return proxy.extract_value(self)
 
-    def reset(self):
+    def reset(self) -> None:
         """Clear the cached value so that configuration can be reloaded."""
         self._value = proxy.UndefToken
 
 
-def build_property(value_token):
+def build_property(value_token: ValueToken) -> property:
     """Construct a property from a ValueToken. The callable gets passed an
     instance of the schema class, which is ignored.
     """
-    def caller(_):
+    def caller(_: Any) -> Any:
         return value_token.get_value()
     return property(caller)
 
@@ -149,30 +149,43 @@ def build_property(value_token):
 class SchemaMeta(type):
     """Metaclass to construct config schema object."""
 
-    def __new__(mcs, name, bases, attributes):
+    def __new__(
+        mcs: Type["SchemaMeta"],
+        name: str,
+        bases: Tuple[type, ...],
+        attributes: Dict[str, Any],
+    ) -> "SchemaMeta":
         namespace = mcs.get_namespace(attributes)
         attributes = mcs.build_attributes(attributes, namespace)
-        return super().__new__(mcs, name, bases, attributes)
+        cls = super().__new__(mcs, name, bases, attributes)
+        return cast("SchemaMeta", cls)
 
     @classmethod
-    def get_namespace(cls, attributes):
+    def get_namespace(cls, attributes: Dict[str, Any]) -> ConfigNamespace:
         if 'namespace' not in attributes:
             raise errors.ConfigurationError("ConfigSchema requires a namespace.")
         return config.get_namespace(attributes['namespace'])
 
     @classmethod
-    def build_attributes(cls, attributes, namespace):
+    def build_attributes(
+        cls,
+        attributes: Dict[str, Any],
+        namespace: ConfigNamespace
+    ) -> Dict[str, Any]:
         """Return an attributes dictionary with ValueTokens replaced by a
         property which returns the config value.
         """
         config_path = attributes.get('config_path')
         tokens = {}
 
-        def build_config_key(value_def, config_key):
+        def build_config_key(value_def: ValueTypeDefinition, config_key: str) -> str:
             key = value_def.config_key or config_key
             return f"{config_path}.{key}" if config_path else key
 
-        def build_token(name, value_def):
+        def build_token(
+            name: str,
+            value_def: ValueTypeDefinition
+        ) -> Tuple[str, property]:
             config_key = build_config_key(value_def, name)
             value_token = ValueToken.from_definition(
                                             value_def, namespace, config_key)
@@ -180,7 +193,7 @@ class SchemaMeta(type):
             tokens[name] = value_token
             return name, build_property(value_token)
 
-        def build_attr(name, attribute):
+        def build_attr(name: str, attribute: Any) -> Tuple[str, property]:
             if not isinstance(attribute, ValueTypeDefinition):
                 return name, attribute
             return build_token(name, attribute)
@@ -197,7 +210,7 @@ class Schema(metaclass=SchemaMeta):
     namespace = None
 
 
-def build_value_type(validator):
+def build_value_type(validator: Validator) -> Callable[[Any, Any], Any]:
     """A factory function to create a new schema type.
 
     :param validator: a function which accepts one argument and returns that

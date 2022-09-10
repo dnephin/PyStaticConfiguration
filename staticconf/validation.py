@@ -8,30 +8,44 @@ import datetime
 import logging
 import re
 import time
+from typing import Any
+from typing import Callable
+from typing import Dict
+from typing import ItemsView
+from typing import List
+from typing import Optional
+from typing import Pattern
+from typing import Set
+from typing import Tuple
+from typing import TypeVar
 
 from staticconf.errors import ValidationError
 
 
-def validate_string(value):
+Validator = Callable[[Any], Any]
+T = TypeVar("T")
+
+
+def validate_string(value: Any) -> Optional[str]:
     return None if value is None else str(value)
 
 
-def validate_bool(value):
+def validate_bool(value: Any) -> Optional[bool]:
     return None if value is None else bool(value)
 
 
-def validate_numeric(type_func, value):
+def validate_numeric(type_func: Callable[[Any], float], value: Any) -> float:
     try:
         return type_func(value)
     except ValueError:
         raise ValidationError(f"Invalid {type_func.__name__}: {value}")
 
 
-def validate_int(value):
+def validate_int(value: Any) -> float:
     return validate_numeric(int, value)
 
 
-def validate_float(value):
+def validate_float(value: Any) -> float:
     return validate_numeric(float, value)
 
 
@@ -45,7 +59,7 @@ date_formats = [
 ]
 
 
-def validate_datetime(value):
+def validate_datetime(value: Any) -> datetime.datetime:
     if isinstance(value, datetime.datetime):
         return value
 
@@ -57,7 +71,7 @@ def validate_datetime(value):
     raise ValidationError(f"Invalid date format: {value}")
 
 
-def validate_date(value):
+def validate_date(value: Any) -> datetime.date:
     if isinstance(value, datetime.date):
         return value
 
@@ -73,7 +87,7 @@ time_formats = [
 ]
 
 
-def validate_time(value):
+def validate_time(value: Any) -> datetime.time:
     if isinstance(value, datetime.time):
         return value
 
@@ -85,7 +99,7 @@ def validate_time(value):
     raise ValidationError(f"Invalid time format: {value}")
 
 
-def _validate_iterable(iterable_type, value):
+def _validate_iterable(iterable_type: Callable[[Any], T], value: Any) -> T:
     """Convert the iterable to iterable_type, or raise a Configuration
     exception.
     """
@@ -99,45 +113,49 @@ def _validate_iterable(iterable_type, value):
         raise ValidationError("Invalid iterable: %s" % (value))
 
 
-def validate_list(value):
+def validate_list(value: Any) -> List[Any]:
     return _validate_iterable(list, value)
 
 
-def validate_set(value):
+def validate_set(value: Any) -> Set[Any]:
     return _validate_iterable(set, value)
 
 
-def validate_tuple(value):
+def validate_tuple(value: Any) -> Tuple[Any, ...]:
     return _validate_iterable(tuple, value)
 
 
-def validate_regex(value):
+def validate_regex(value: Any) -> Pattern[str]:
     try:
         return re.compile(value)
     except (re.error, TypeError) as e:
         raise ValidationError(f"Invalid regex: {e}, {value}")
 
 
-def build_list_type_validator(item_validator):
+def build_list_type_validator(
+    item_validator: Validator
+) -> Callable[[Any], List[Any]]:
     """Return a function which validates that the value is a list of items
     which are validated using item_validator.
     """
-    def validate_list_of_type(value):
+    def validate_list_of_type(value: Any) -> List[Any]:
         return [item_validator(item) for item in validate_list(value)]
     return validate_list_of_type
 
 
-def build_map_type_validator(item_validator):
+def build_map_type_validator(
+    item_validator: Validator,
+) -> Callable[[Any], Dict[Any, Any]]:
     """Return a function which validates that the value is a mapping of
     items. The function should return pairs of items that will be
     passed to the `dict` constructor.
     """
-    def validate_mapping(value):
+    def validate_mapping(value: Any) -> Dict[Any, Any]:
         return dict(item_validator(item) for item in validate_list(value))
     return validate_mapping
 
 
-def validate_log_level(value):
+def validate_log_level(value: Any) -> int:
     """Validate a log level from a string value. Returns a constant from
     the :mod:`logging` module.
     """
@@ -147,7 +165,7 @@ def validate_log_level(value):
         raise ValidationError(f"Unknown log level: {value}")
 
 
-def validate_any(value):
+def validate_any(value: Any) -> Any:
     return value
 
 
@@ -168,6 +186,6 @@ validators = {
 }
 
 
-def get_validators():
+def get_validators() -> ItemsView[str, Validator]:
     """Return an iterator of (validator_name, validator) pairs."""
     return validators.items()

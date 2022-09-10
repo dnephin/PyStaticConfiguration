@@ -88,11 +88,36 @@ Example of a custom reader:
 
 
 """
+from typing import Any
+from typing import Callable
+from typing import Dict
+from typing import Iterator
+from typing import Optional
+from typing import Tuple
+from typing import Type
+
 from staticconf import validation, config, errors
+from staticconf.config import ConfigNamespace
+from staticconf.config import ConfigGetValue
 from staticconf.proxy import UndefToken
+from staticconf.validation import Validator
+import sys
 
 
-def _read_config(config_key, config_namespace, default):
+if sys.version_info >= (3, 10):
+    from typing import Protocol
+else:
+    from typing_extensions import Protocol
+
+
+Builder = Callable[[Validator, str], ConfigGetValue]
+
+
+def _read_config(
+    config_key: str,
+    config_namespace: ConfigNamespace,
+    default: Any
+) -> Any:
     value = config_namespace.get(config_key, default=default)
     if value is UndefToken:
         msg = '{} missing value for {}'.format(config_namespace, config_key)
@@ -100,7 +125,10 @@ def _read_config(config_key, config_namespace, default):
     return value
 
 
-def build_reader(validator, reader_namespace=config.DEFAULT):
+def build_reader(
+    validator: Validator,
+    reader_namespace: str = config.DEFAULT,
+) -> ConfigGetValue:
     """A factory method for creating a custom config reader from a validation
     function.
 
@@ -110,24 +138,40 @@ def build_reader(validator, reader_namespace=config.DEFAULT):
     :param reader_namespace: the default namespace to use. Defaults to
                              `DEFAULT`.
     """
-    def reader(config_key, default=UndefToken, namespace=None):
+    def reader(
+        config_key: str,
+        default: Any = UndefToken,
+        namespace: Optional[str] = None
+    ) -> Any:
         config_namespace = config.get_namespace(namespace or reader_namespace)
         return validator(_read_config(config_key, config_namespace, default))
     return reader
 
 
+class NameFactory(Protocol):
+    @staticmethod
+    def get_name(name: str) -> str:
+        ...
+
+    @staticmethod
+    def get_list_of_name(validator_name: str) -> str:
+        ...
+
+
 class ReaderNameFactory:
 
     @staticmethod
-    def get_name(name):
+    def get_name(name: str) -> str:
         return 'read_%s' % name if name else 'read'
 
     @staticmethod
-    def get_list_of_name(name):
+    def get_list_of_name(name: str) -> str:
         return 'read_list_of_%s' % name
 
 
-def get_all_accessors(name_factory):
+def get_all_accessors(
+    name_factory: Type[NameFactory],
+) -> Iterator[Tuple[str, Validator]]:
     for name, validator in validation.get_validators():
         yield name_factory.get_name(name), validator
         yield (name_factory.get_list_of_name(name),
@@ -136,21 +180,29 @@ def get_all_accessors(name_factory):
 
 class NamespaceAccessor:
 
-    def __init__(self, name, accessor_map, builder):
+    def __init__(
+        self,
+        name: str,
+        accessor_map: Dict[str, Any],
+        builder: Builder,
+    ) -> None:
         self.accessor_map       = accessor_map
         self.builder            = builder
         self.namespace          = name
 
-    def __getattr__(self, item):
+    def __getattr__(self, item: str) -> Any:
         if item not in self.accessor_map:
             raise AttributeError(item)
         return self.builder(self.accessor_map[item], self.namespace)
 
-    def get_methods(self):
+    def get_methods(self) -> Dict[str, Any]:
         return {name: getattr(self, name) for name in self.accessor_map}
 
 
-def build_accessor_type(name_factory, builder):
+def build_accessor_type(
+    name_factory: Type[NameFactory],
+    builder: Builder,
+) -> Callable[[str], NamespaceAccessor]:
     accessor_map = dict(get_all_accessors(name_factory))
     return lambda name: NamespaceAccessor(name, accessor_map, builder)
 

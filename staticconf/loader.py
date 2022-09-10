@@ -87,8 +87,16 @@ import logging
 import importlib
 import os
 import re
+from typing import Any
+from typing import Callable
+from typing import Dict
+from typing import Iterator
+from typing import List
+from typing import Optional
+from typing import Tuple
 
 from staticconf import config, errors
+
 
 __all__ = [
     'YamlConfiguration',
@@ -107,8 +115,11 @@ __all__ = [
 
 log = logging.getLogger(__name__)
 
+ConfigDict = Dict[str, Any]
+ConfigLoader = Callable[..., ConfigDict]
 
-def flatten_dict(config_data):
+
+def flatten_dict(config_data: ConfigDict) -> Iterator[Tuple[str, Any]]:
     for key, value in config_data.items():
         if hasattr(value, 'items') or hasattr(value, 'iteritems'):
             for k, v in flatten_dict(value):
@@ -118,7 +129,11 @@ def flatten_dict(config_data):
         yield key, value
 
 
-def load_config_data(loader_func, *args, **kwargs):
+def load_config_data(
+    loader_func: ConfigLoader,
+    *args: Any,
+    **kwargs: Any
+) -> ConfigDict:
     optional = kwargs.pop('optional', False)
     try:
         return loader_func(*args, **kwargs)
@@ -129,8 +144,8 @@ def load_config_data(loader_func, *args, **kwargs):
         return {}
 
 
-def build_loader(loader_func):
-    def loader(*args, **kwargs):
+def build_loader(loader_func: ConfigLoader) -> ConfigLoader:
+    def loader(*args: Any, **kwargs: Any) -> Dict[str, Any]:
         err_on_unknown      = kwargs.pop('error_on_unknown', False)
         log_keys_only       = kwargs.pop('log_keys_only', True)
         err_on_dupe         = kwargs.pop('error_on_duplicate', False)
@@ -152,32 +167,35 @@ def build_loader(loader_func):
     return loader
 
 
-def yaml_loader(filename):
+def yaml_loader(filename: str) -> ConfigDict:
     import yaml
     try:
         from yaml import CSafeLoader as SafeLoader
     except ImportError:
-        from yaml import SafeLoader
+        from yaml import SafeLoader  # type: ignore
 
     with open(filename) as fh:
         return yaml.load(fh, Loader=SafeLoader) or {}
 
 
-def json_loader(filename):
+def json_loader(filename: str) -> ConfigDict:
     try:
         import simplejson as json
         assert json
     except ImportError:
-        import json
+        import json  # type: ignore
     with open(filename) as fh:
         return json.load(fh)
 
 
-def list_loader(seq):
+def list_loader(seq: List[str]) -> ConfigDict:
     return dict(pair.split('=', 1) for pair in seq)
 
 
-def auto_loader(base_dir='.', auto_configurations=None):
+def auto_loader(
+    base_dir: str = '.',
+    auto_configurations: Optional[List[Tuple[ConfigLoader, str]]] = None
+) -> ConfigDict:
     auto_configurations = auto_configurations or [
         (yaml_loader,       'config.yaml'),
         (json_loader,       'config.json'),
@@ -194,18 +212,18 @@ def auto_loader(base_dir='.', auto_configurations=None):
     raise errors.ConfigurationError(msg)
 
 
-def python_loader(module_name):
+def python_loader(module_name: str) -> ConfigDict:
     module = __import__(module_name, fromlist=['*'])
     importlib.reload(module)
     return object_loader(module)
 
 
-def object_loader(obj):
+def object_loader(obj: Any) -> ConfigDict:
     return {name: getattr(obj, name)
             for name in dir(obj) if not name.startswith('_')}
 
 
-def ini_file_loader(filename):
+def ini_file_loader(filename: str) -> ConfigDict:
     parser = configparser.SafeConfigParser()
     parser.read([filename])
     config_dict = {}
@@ -217,11 +235,11 @@ def ini_file_loader(filename):
     return config_dict
 
 
-def xml_loader(filename, safe=False):
+def xml_loader(filename: str, safe: bool = False) -> ConfigDict:
     from xml.etree import ElementTree
 
-    def build_from_element(element):
-        items = dict(element.items())
+    def build_from_element(element: ElementTree.Element) -> Dict[str, Any]:
+        items: Dict[str, Any] = dict(element.items())
         child_items = {
             child.tag: build_from_element(child)
             for child in element}
@@ -239,13 +257,13 @@ def xml_loader(filename, safe=False):
     return build_from_element(tree.getroot())
 
 
-def properties_loader(filename):
+def properties_loader(filename: str) -> ConfigDict:
     split_pattern = re.compile(r'[=:]')
 
-    def parse_line(line):
+    def parse_line(line: str) -> Optional[Tuple[str, str]]:
         line = line.strip()
         if not line or line.startswith('#'):
-            return
+            return None
 
         try:
             key, value = split_pattern.split(line, 1)
@@ -263,19 +281,19 @@ class CompositeConfiguration:
     be reloaded in the correct order.
     """
 
-    def __init__(self, loaders=None):
+    def __init__(self, loaders: Optional[List[Any]] = None) -> None:
         self.loaders = loaders or []
 
-    def append(self, loader):
+    def append(self, loader: Any) -> None:
         self.loaders.append(loader)
 
-    def load(self):
+    def load(self) -> ConfigDict:
         output = {}
         for loader_with_args in self.loaders:
             output.update(loader_with_args[0](*loader_with_args[1:]))
         return output
 
-    def __call__(self, *args):
+    def __call__(self, *args: Any) -> ConfigDict:
         return self.load()
 
 
