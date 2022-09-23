@@ -31,5 +31,8 @@ setup(
         'yaml': ['pyyaml'],
     },
     packages=['staticconf'],
+    package_data={
+        "staticconf": ["py.typed"],
+    },
     license='APACHE20',
 )

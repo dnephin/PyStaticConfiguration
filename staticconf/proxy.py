@@ -4,19 +4,30 @@ values can be read statically at import time.
 """
 import functools
 import operator
+from typing import Any
+from typing import Callable
+from typing import cast
+from typing import Type
+from typing import TypeVar
+from typing import TYPE_CHECKING
 
 from staticconf import errors
+from staticconf.validation import Validator
 
 
-class UndefToken:
+if TYPE_CHECKING:
+    from staticconf.config import ConfigNamespace
+
+
+class UndefTokenType:
     """A token to represent an undefined value, so that None can be used
     as a default value.
     """
-    def __repr__(self):
+    def __repr__(self) -> str:
         return "<Undefined>"
 
 
-UndefToken = UndefToken()
+UndefToken = UndefTokenType()
 
 
 _special_names = [
@@ -39,24 +50,24 @@ _special_names = [
 ]
 
 
-def identity(x):
+def identity(x: Any) -> Any:
     return x
 
 
 unary_funcs = {
-    '__unicode__':  str,
-    '__str__':      str,
+    '__unicode__':  cast(Callable[[Any], Any], str),
+    '__str__':      cast(Callable[[Any], Any], str),
     '__fspath__':   identity,  # python3.6+ os.PathLike interface
-    '__repr__':     repr,
-    '__nonzero__':  bool,  # Python2 bool
-    '__bool__':     bool,  # Python3 bool
-    '__hash__':     hash,
+    '__repr__':     cast(Callable[[Any], Any], repr),
+    '__nonzero__':  cast(Callable[[Any], Any], bool),  # Python2 bool
+    '__bool__':     cast(Callable[[Any], Any], bool),  # Python3 bool
+    '__hash__':     cast(Callable[[Any], Any], hash),
 }
 
 
-def build_class_def(cls):
-    def build_method(name):
-        def method(self, *args, **kwargs):
+def build_class_def(cls: Type["ValueProxy"]) -> type:
+    def build_method(name: str) -> Callable[["ValueProxy", Any, Any], Any]:
+        def method(self: "ValueProxy", *args: Any, **kwargs: Any) -> Any:
             if name in unary_funcs:
                 return unary_funcs[name](self.value)
 
@@ -70,11 +81,14 @@ def build_class_def(cls):
     return type(cls.__name__, (cls,), namespace)
 
 
-def cache_as_field(cache_name):
+F = TypeVar("F", bound=Callable[..., Any])
+
+
+def cache_as_field(cache_name: str) -> Callable[[F], F]:
     """Cache a functions return value as the field 'cache_name'."""
-    def cache_wrapper(func):
+    def cache_wrapper(func: F) -> F:
         @functools.wraps(func)
-        def inner_wrapper(self, *args, **kwargs):
+        def inner_wrapper(self: object, *args: Any, **kwargs: Any) -> Any:
             value = getattr(self, cache_name, UndefToken)
             if value != UndefToken:
                 return value
@@ -82,11 +96,11 @@ def cache_as_field(cache_name):
             ret = func(self, *args, **kwargs)
             setattr(self, cache_name, ret)
             return ret
-        return inner_wrapper
+        return cast(F, inner_wrapper)
     return cache_wrapper
 
 
-def extract_value(proxy):
+def extract_value(proxy: "ValueProxy") -> Any:
     """Given a value proxy type, Retrieve a value from a namespace, raising
     exception if no value is found, or the value does not validate.
     """
@@ -115,17 +129,23 @@ class ValueProxy:
 
     @classmethod
     @cache_as_field('_class_def')
-    def get_class_def(cls):
+    def get_class_def(cls) -> type:
         return build_class_def(cls)
 
-    def __new__(cls, *args, **kwargs):
+    def __new__(cls, *args: Any, **kwargs: Any) -> "ValueProxy":
         """Create instances of this class with proxied special names."""
-        klass = cls.get_class_def()
-        instance = object.__new__(klass)
+        klass = cast(Type["ValueProxy"], cls.get_class_def())
+        instance = cast("ValueProxy", object.__new__(klass))
         klass.__init__(instance, *args, **kwargs)
         return instance
 
-    def __init__(self, validator, namespace, key, default=UndefToken):
+    def __init__(
+        self,
+        validator: Validator,
+        namespace: "ConfigNamespace",
+        key: str,
+        default: Any = UndefToken,
+    ) -> None:
         self.validator      = validator
         self.config_key     = key
         self.default        = default
@@ -133,14 +153,14 @@ class ValueProxy:
         self._value         = UndefToken
 
     @cache_as_field('_value')
-    def get_value(self):
+    def get_value(self) -> Any:
         return extract_value(self)
 
     value = property(get_value)
 
-    def __getattr__(self, item):
+    def __getattr__(self, item: str) -> Any:
         return getattr(self.value, item)
 
-    def reset(self):
+    def reset(self) -> None:
         """Clear the cached value so that configuration can be reloaded."""
         self._value = UndefToken

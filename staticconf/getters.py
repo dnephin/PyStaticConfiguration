@@ -62,10 +62,21 @@ namespace
 """
 
 from staticconf import config, proxy, readers
+from staticconf.config import ConfigGetValue
+from staticconf.config import ConfigNamespace
 from staticconf.proxy import UndefToken
+from staticconf.validation import Validator
+from staticconf.proxy import ValueProxy
+from typing import Any
+from typing import Dict
+from typing import Optional
 
 
-def register_value_proxy(namespace, value_proxy, help_text):
+def register_value_proxy(
+    namespace: ConfigNamespace,
+    value_proxy: ValueProxy,
+    help_text: Optional[str]
+) -> None:
     """Register a value proxy with the namespace, and add the help_text."""
     namespace.register_proxy(value_proxy)
     config.config_help.add(
@@ -74,14 +85,21 @@ def register_value_proxy(namespace, value_proxy, help_text):
 
 
 class ProxyFactory:
-    """Create ProxyValue objects so that there is never a duplicate
+    """Create ValueProxy objects so that there is never a duplicate
     proxy for any (namespace, validator, config_key, default) group.
     """
 
-    def __init__(self):
-        self.proxies = {}
+    def __init__(self) -> None:
+        self.proxies: Dict[str, ValueProxy] = {}
 
-    def build(self, validator, namespace, config_key, default, help):
+    def build(
+        self,
+        validator: Validator,
+        namespace: ConfigNamespace,
+        config_key: str,
+        default: Any,
+        help: Optional[str]
+    ) -> ValueProxy:
         """Build or retrieve a ValueProxy from the attributes. Proxies are
         keyed using a repr because default values can be mutable types.
         """
@@ -98,14 +116,28 @@ class ProxyFactory:
 proxy_factory = ProxyFactory()
 
 
-def build_getter(validator, getter_namespace=None):
+def build_getter(
+    validator: Validator,
+    getter_namespace: Optional[str] = None
+) -> ConfigGetValue:
     """Create a getter function for retrieving values from the config cache.
     Getters will default to the DEFAULT namespace.
     """
-    def proxy_register(key_name, default=UndefToken, help=None, namespace=None):
+    def proxy_register(
+        key_name: str,
+        default: Any = UndefToken,
+        help: Optional[str] = None,
+        namespace: Optional[str] = None
+    ) -> ValueProxy:
         name        = namespace or getter_namespace or config.DEFAULT
-        namespace   = config.get_namespace(name)
-        return proxy_factory.build(validator, namespace, key_name, default, help)
+        config_namespace   = config.get_namespace(name)
+        return proxy_factory.build(
+            validator,
+            config_namespace,
+            key_name,
+            default,
+            help
+        )
 
     return proxy_register
 
@@ -113,11 +145,11 @@ def build_getter(validator, getter_namespace=None):
 class GetterNameFactory:
 
     @staticmethod
-    def get_name(validator_name):
+    def get_name(validator_name: str) -> str:
         return 'get_%s' % validator_name if validator_name else 'get'
 
     @staticmethod
-    def get_list_of_name(validator_name):
+    def get_list_of_name(validator_name: str) -> str:
         return 'get_list_of_%s' % validator_name
 
 

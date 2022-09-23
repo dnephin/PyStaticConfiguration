@@ -2,6 +2,9 @@
 Facilitate testing of code which uses staticconf.
 """
 import copy
+from typing import Any
+from typing import Dict
+from typing import Optional
 
 from staticconf import config, loader
 
@@ -31,32 +34,32 @@ class MockConfiguration:
                 as configuration data
     """
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         name                = kwargs.pop('namespace', config.DEFAULT)
         flatten             = kwargs.pop('flatten', True)
         config_data         = dict(*args, **kwargs)
         self.namespace      = config.get_namespace(name)
         self.config_data    = (dict(loader.flatten_dict(config_data)) if flatten
                               else config_data)
-        self.old_values     = None
+        self.old_values: Optional[Dict[str, Any]] = None
 
-    def setup(self):
+    def setup(self) -> None:
         self.old_values = dict(self.namespace.get_config_values())
         self.reset_namespace(self.config_data)
         config.reload(name=self.namespace.name)
 
-    def teardown(self):
+    def teardown(self) -> None:
         self.reset_namespace(self.old_values)
         config.reload(name=self.namespace.name)
 
-    def reset_namespace(self, new_values):
+    def reset_namespace(self, new_values: Optional[Dict[str, Any]]) -> None:
         self.namespace.configuration_values.clear()
         self.namespace.update_values(new_values)
 
-    def __enter__(self):
+    def __enter__(self) -> None:
         return self.setup()
 
-    def __exit__(self, *args):
+    def __exit__(self, *args: Any) -> None:
         self.teardown()
 
 
@@ -84,7 +87,7 @@ class PatchConfiguration(MockConfiguration):
     The arguments are identical to MockConfiguration.
     """
 
-    def setup(self):
+    def setup(self) -> None:
         self.old_values = copy.deepcopy(dict(self.namespace.get_config_values()))
         new_configuration = copy.deepcopy(self.old_values)
         new_configuration.update(self.config_data)
