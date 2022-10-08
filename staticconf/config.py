@@ -381,7 +381,7 @@ class ConfigurationWatcher:
             self,
             config_loader: Callable[[], Dict[str, Any]],
             filenames: Union[str, List[str]],
-            min_interval: int = 0,
+            min_interval: float = 0,
             reloader: Optional["Reloader"] = None,
             comparators: Optional[List[Type["IComparator"]]] = None,
     ) -> None:
@@ -667,7 +667,7 @@ class ConfigFacade:
             filename: str,
             namespace: str,
             loader_func: LoadFunc,
-            min_interval: int = 0,
+            min_interval: float = 0,
             comparators: Optional[List[Type[IComparator]]] = None,
     ) -> "ConfigFacade":
         """Create a new :class:`ConfigurationWatcher` and load the initial
