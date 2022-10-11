@@ -207,7 +207,7 @@ class SchemaMeta(type):
 class Schema(metaclass=SchemaMeta):
     """Base class for configuration schemas, uses :class:`SchemaMeta`."""
 
-    namespace = None
+    namespace: Optional[str] = None
 
 
 def build_value_type(validator: Validator) -> Callable[[Any, Any], Any]:
