@@ -99,6 +99,7 @@ from typing import Type
 from staticconf import validation, config, errors
 from staticconf.config import ConfigNamespace
 from staticconf.config import ConfigGetValue
+from staticconf.proxy import ValueProxy
 from staticconf.proxy import UndefToken
 from staticconf.validation import Validator
 import sys
@@ -138,14 +139,17 @@ def build_reader(
     :param reader_namespace: the default namespace to use. Defaults to
                              `DEFAULT`.
     """
-    def reader(
-        config_key: str,
-        default: Any = UndefToken,
-        namespace: Optional[str] = None
-    ) -> Any:
-        config_namespace = config.get_namespace(namespace or reader_namespace)
-        return validator(_read_config(config_key, config_namespace, default))
-    return reader
+    class Reader(ConfigGetValue):
+        def __call__(
+            self,
+            config_key: str,
+            default: Any = UndefToken,
+            namespace: Optional[str] = None,
+            unsued: Optional[str] = None,
+        ) -> ValueProxy:
+            config_namespace = config.get_namespace(namespace or reader_namespace)
+            return validator(_read_config(config_key, config_namespace, default))
+    return Reader()
 
 
 class NameFactory(Protocol):
