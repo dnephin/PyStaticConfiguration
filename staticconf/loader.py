@@ -224,7 +224,7 @@ def object_loader(obj: Any) -> ConfigDict:
 
 
 def ini_file_loader(filename: str) -> ConfigDict:
-    parser = configparser.SafeConfigParser()
+    parser = configparser.ConfigParser()
     parser.read([filename])
     config_dict = {}
 
