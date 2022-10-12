@@ -41,7 +41,7 @@ class ATestingSchema(metaclass=schema.SchemaMeta):
     options = schema.list_of_bool()
 
 
-@pytest.yield_fixture
+@pytest.fixture
 def meta_schema():
     with mock.patch('staticconf.schema.config', autospec=True) as mock_config:
         with mock.patch('staticconf.schema.getters',
@@ -82,7 +82,7 @@ class TestSchemaMeta:
             namespace, token, value_def.help)
 
 
-@pytest.yield_fixture
+@pytest.fixture
 def testing_schema_namespace():
     conf = {
         'my.thing.one': '1',
