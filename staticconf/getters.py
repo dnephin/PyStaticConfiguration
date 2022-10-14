@@ -131,8 +131,8 @@ def build_getter(
             help: Optional[str] = None,
             namespace: Optional[str] = None,
         ) -> ValueProxy:
-            name        = namespace or getter_namespace or config.DEFAULT
-            config_namespace   = config.get_namespace(name)
+            name                = namespace or getter_namespace or config.DEFAULT
+            config_namespace    = config.get_namespace(name)
             return proxy_factory.build(
                 validator,
                 config_namespace,
