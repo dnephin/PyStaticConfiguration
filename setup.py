@@ -27,6 +27,9 @@ setup(
         "Development Status :: 5 - Production/Stable",
     ],
     python_requires=">=3.6",
+    install_requires=[
+        'typing-extensions',
+    ],
     extras_require={
         'yaml': ['pyyaml'],
     },
