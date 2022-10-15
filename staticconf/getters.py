@@ -123,23 +123,25 @@ def build_getter(
     """Create a getter function for retrieving values from the config cache.
     Getters will default to the DEFAULT namespace.
     """
-    def proxy_register(
-        key_name: str,
-        default: Any = UndefToken,
-        help: Optional[str] = None,
-        namespace: Optional[str] = None
-    ) -> ValueProxy:
-        name        = namespace or getter_namespace or config.DEFAULT
-        config_namespace   = config.get_namespace(name)
-        return proxy_factory.build(
-            validator,
-            config_namespace,
-            key_name,
-            default,
-            help
-        )
+    class ProxyRegister(ConfigGetValue):
+        def __call__(
+            self,
+            key_name: str,
+            default: Any = UndefToken,
+            help: Optional[str] = None,
+            namespace: Optional[str] = None,
+        ) -> ValueProxy:
+            name                = namespace or getter_namespace or config.DEFAULT
+            config_namespace    = config.get_namespace(name)
+            return proxy_factory.build(
+                validator,
+                config_namespace,
+                key_name,
+                default,
+                help
+            )
 
-    return proxy_register
+    return ProxyRegister()
 
 
 class GetterNameFactory:

@@ -31,6 +31,7 @@ from typing import Union
 
 from staticconf import errors
 from staticconf.proxy import ValueProxy
+from staticconf.proxy import UndefToken
 from staticconf.validation import Validator
 
 
@@ -707,10 +708,15 @@ class ConfigFacade:
         self.watcher.reload_if_changed(force=force)
 
 
-ConfigGetValue = Union[
-    Callable[[str, Any, Optional[str]], Any],
-    Callable[[str, Any, Optional[str], Optional[str]], Any]
-]
+class ConfigGetValue(Protocol):
+    def __call__(
+        self,
+        key_name: str,
+        default: Any = UndefToken,
+        help_or_namespace: Optional[str] = None,
+        namespace_or_unused: Optional[str] = None
+    ) -> ValueProxy:
+        ...
 
 
 class NameFactory(Protocol):
