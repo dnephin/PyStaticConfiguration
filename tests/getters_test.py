@@ -11,7 +11,7 @@ from staticconf import getters, config, testing
 
 class TestBuildGetter:
 
-    @pytest.yield_fixture(autouse=True)
+    @pytest.fixture(autouse=True)
     def teardown_proxies(self):
         with testing.MockConfiguration():
             yield
@@ -40,7 +40,7 @@ class TestBuildGetter:
 
 class TestNamespaceGetters:
 
-    @pytest.yield_fixture(autouse=True)
+    @pytest.fixture(autouse=True)
     def teardown_proxies(self):
         self.namespace = 'the_test_namespace'
         with testing.MockConfiguration(namespace=self.namespace):
@@ -61,7 +61,7 @@ class TestNamespaceGetters:
 
 class TestProxyFactory:
 
-    @pytest.yield_fixture(autouse=True)
+    @pytest.fixture(autouse=True)
     def patch_registries(self):
         patcher = mock.patch('staticconf.getters.register_value_proxy')
         with patcher as self.mock_register:

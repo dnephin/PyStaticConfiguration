@@ -186,7 +186,7 @@ class TestConfigurationNamespace:
 
 class TestGetNamespace:
 
-    @pytest.yield_fixture(autouse=True)
+    @pytest.fixture(autouse=True)
     def mock_namespaces(self):
         with mock.patch.dict(config.configuration_namespaces):
             yield
@@ -205,7 +205,7 @@ class TestGetNamespace:
 
 class TestReload:
 
-    @pytest.yield_fixture(autouse=True)
+    @pytest.fixture(autouse=True)
     def mock_namespaces(self):
         with mock.patch.dict(config.configuration_namespaces):
             yield
@@ -250,7 +250,7 @@ class TestReload:
 
 class TestValidateConfig:
 
-    @pytest.yield_fixture(autouse=True)
+    @pytest.fixture(autouse=True)
     def patch_config(self):
         with mock.patch.dict(config.configuration_namespaces, clear=True):
             with testing.MockConfiguration():
@@ -361,7 +361,7 @@ class TestHasDuplicateKeys:
 
 class TestConfigurationWatcher:
 
-    @pytest.yield_fixture(autouse=True)
+    @pytest.fixture(autouse=True)
     def setup_mocks_and_config_watcher(self):
         self.loader = mock.Mock()
         with mock.patch('staticconf.config.time') as self.mock_time:
@@ -529,7 +529,7 @@ class TestMTimeComparatorWithCompareFunc:
 
 class TestMD5Comparator:
 
-    @pytest.yield_fixture()
+    @pytest.fixture()
     def comparator(self):
         self.original_contents = b"abcdefghijkabcd"
         with tempfile.NamedTemporaryFile() as self.file:
@@ -654,7 +654,7 @@ class TestConfigFacadeAcceptance:
         tstamp = time.time() + mtime_seconds
         os.utime(self.file.name, (tstamp, tstamp))
 
-    @pytest.yield_fixture(autouse=True)
+    @pytest.fixture(autouse=True)
     def patch_namespace(self):
         self.namespace = 'testing_namespace'
         with testing.MockConfiguration(namespace=self.namespace):
@@ -691,7 +691,7 @@ class TestConfigFacadeAcceptance:
 
 class TestBuildLoaderCallable:
 
-    @pytest.yield_fixture(autouse=True)
+    @pytest.fixture(autouse=True)
     def patch_namespace(self):
         self.namespace = 'the_namespace'
         patcher = mock.patch('staticconf.config.get_namespace', autospec=True)

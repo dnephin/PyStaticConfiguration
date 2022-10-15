@@ -22,7 +22,7 @@ class LoaderTestCase:
 
     content = None
 
-    @pytest.yield_fixture(autouse=True)
+    @pytest.fixture(autouse=True)
     def mock_config(self):
         with mock.patch('staticconf.config') as self.mock_config:
             yield
@@ -126,7 +126,7 @@ class TestAutoConfiguration(LoaderTestCase):
     def setup_filename(self):
         self.filename = None
 
-    @pytest.yield_fixture(autouse=True)
+    @pytest.fixture(autouse=True)
     def cleanup_file(self):
         yield
         if self.filename:
@@ -165,7 +165,7 @@ class TestPythonConfiguration(LoaderTestCase):
         }
     """)
 
-    @pytest.yield_fixture(autouse=True)
+    @pytest.fixture(autouse=True)
     def teardown_module(self):
         yield
         self.remove_module()

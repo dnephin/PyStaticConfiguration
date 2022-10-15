@@ -48,7 +48,7 @@ class TestNamespaceReader:
         'options': ['seven', 'stars']
     }
 
-    @pytest.yield_fixture(autouse=True)
+    @pytest.fixture(autouse=True)
     def patch_config(self):
         self.namespace = 'the_name'
         with testing.MockConfiguration(self.config, namespace=self.namespace):
